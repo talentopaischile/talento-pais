@@ -983,7 +983,7 @@
       derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$180–350 USD', acuerdo:'Apostilla', alerta:'El J.D. estadounidense (common law) requiere habilitación especial en Chile. Apostilla simplifica documentación pero no el proceso sustantivo.', paso3:'Apostilla + proceso ante Corte Suprema. Diferencias entre common law y civil law chileno son evaluadas.' },
       medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Apostilla', alerta:'EUNACOM obligatorio. Médicos con formación en EE.UU. tienen muy alta tasa de aprobación del EUNACOM.', paso3:'Apostilla + convalidación U. de Chile + EUNACOM. Alta tasa de éxito para médicos con formación en EE.UU.' },
       negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–140 USD', acuerdo:'Sí (Apostilla)', alerta:'El proceso más rápido del sistema. MBA y títulos de negocios de EE.UU. tienen reconocimiento casi automático en Chile.', paso3:'Apostilla + convalidación directa. Proceso más expedito disponible para cualquier título extranjero.' }
-    }
+    },
     espana: {
         ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (MINEDUC 2017)', alerta:'Acuerdo bilateral España–Chile (2017). Muy expedito.', paso3:'Convalidación directa en MINEDUC + Colegio profesional.' },
         ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (MINEDUC)', alerta:'Acuerdo bilateral vigente.', paso3:'MINEDUC.' },
@@ -1018,7 +1018,7 @@
         derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Sí', alerta:'Corte Suprema.', paso3:'Corte Suprema.' },
         medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Sí', alerta:'EUNACOM.', paso3:'U. de Chile + EUNACOM.' },
         negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–130 USD', acuerdo:'Sí', alerta:'Convenio bilateral.', paso3:'MINREL.' }
-      },
+      }
   
   };
 
@@ -1102,7 +1102,7 @@
 </script>
 
 <!-- CHATBOT FLOTANTE TALENTO PAÍS -->
-<!-- CHATBOT FLOTANTE - Versión corregida y simplificada -->
+
 <div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
   <button id="chat-toggle" 
           style="width:60px;height:60px;border-radius:50%;background:#c8733a;color:white;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(200,115,58,0.5);font-size:26px;">
@@ -1110,88 +1110,88 @@
   </button>
   
   <div id="chat-window" style="display:none;position:absolute;bottom:75px;right:0;width:350px;height:480px;background:#1a1d22;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.6);border:1px solid #4a4f57;">
-    
-    <!-- Header -->
     <div style="background:#c8733a;padding:14px 16px;color:white;display:flex;align-items:center;justify-content:space-between;font-weight:600;">
       Asistente Talento País
       <span id="chat-close" style="cursor:pointer;font-size:22px;line-height:1;">×</span>
     </div>
-    
-    <!-- Mensajes -->
     <div id="chat-messages" style="height:360px;padding:16px;overflow-y:auto;background:#0f1114;color:#e0e0e0;font-size:14.5px;line-height:1.5;">
-      <div style="color:#888;margin-bottom:15px;">¡Hola! Soy el asistente de Talento País.<br>¿En qué te puedo ayudar?</div>
+      <div style="color:#888;margin-bottom:15px;">¡Hola! Soy el asistente de Talento País.<br>¿En qué te puedo ayudar hoy?</div>
     </div>
-    
-    <!-- Input -->
     <div style="padding:12px;background:#1a1d22;border-top:1px solid #4a4f57;">
-      <input id="chat-input" 
-             type="text" 
-             placeholder="Escribe tu pregunta aquí..." 
+      <input id="chat-input" type="text" placeholder="Escribe tu pregunta aquí..." 
              style="width:100%;padding:12px 14px;border-radius:8px;border:1px solid #4a4f57;background:#25282e;color:white;font-size:14px;">
     </div>
   </div>
 </div>
 
 <script>
-// CHATBOT - Código limpio y corregido
-const GEMINI_API_KEY = "AIzaSyBuo7rnbwovBgjrakzNOu5SBj71GPG1ckw";   // ← PEGA AQUÍ TU CLAVE REAL DE GEMINI (temporalmente)
-
-const chatToggle = document.getElementById('chat-toggle');
-const chatWindow = document.getElementById('chat-window');
-const chatClose = document.getElementById('chat-close');
-const chatInput = document.getElementById('chat-input');
-const chatMessages = document.getElementById('chat-messages');
-
-chatToggle.addEventListener('click', () => {
-  chatWindow.style.display = chatWindow.style.display === 'none' ? 'block' : 'none';
-});
-
-chatClose.addEventListener('click', () => {
-  chatWindow.style.display = 'none';
-});
+// CHATBOT CORREGIDO - Modelo actualizado 2026 + fix syntax
+const GEMINI_API_KEY = "AIzaSyBuo7rnbwovBgjrakzNOu5SBj71GPG1ckw";   // ← Tu clave actual (puedes cambiarla)
 
 async function sendToGemini(message) {
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: `Eres el asistente de Talento País Chile. Responde en español, claro y útil. Pregunta: ${message}` }] }]
-      })
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Eres un asistente útil y profesional de la plataforma Talento País Chile. 
+                     Responde siempre en español, de forma clara, concisa y motivadora. 
+                     Pregunta del usuario: ${message}`
+            }]
+          }]
+        })
+      }
+    );
 
-    if (!res.ok) throw new Error('Error HTTP');
+    if (!response.ok) {
+      console.error("Gemini HTTP error:", response.status);
+      return "Lo siento, no pude conectar con la IA en este momento. Inténtalo de nuevo.";
+    }
 
-    const data = await res.json();
-    return data.candidates[0].content.parts[0].text;
-  } catch (e) {
-    console.error(e);
-    return "Lo siento, no pude conectar con la IA en este momento. Inténtalo de nuevo.";
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "No recibí una respuesta válida.";
+  } catch (err) {
+    console.error("Error en Gemini:", err);
+    return "Lo siento, no pude conectar con la IA en este momento. Inténtalo de nuevo en unos segundos.";
   }
 }
 
-chatInput.addEventListener('keypress', async (e) => {
-  if (e.key === 'Enter' && chatInput.value.trim() !== '') {
-    const userMessage = chatInput.value.trim();
-    
-    // Mostrar mensaje del usuario
-    chatMessages.innerHTML += `<div style="text-align:right;margin:8px 0;"><span style="background:#c8733a;color:white;padding:8px 14px;border-radius:18px;">${userMessage}</span></div>`;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    const tempInput = chatInput.value;
-    chatInput.value = '';
+// Interfaz del chat
+document.getElementById('chat-toggle').addEventListener('click', () => {
+  const win = document.getElementById('chat-window');
+  win.style.display = (win.style.display === 'none' || win.style.display === '') ? 'block' : 'none';
+});
 
-    // Mostrar "escribiendo"
+document.getElementById('chat-close').addEventListener('click', () => {
+  document.getElementById('chat-window').style.display = 'none';
+});
+
+document.getElementById('chat-input').addEventListener('keypress', async (e) => {
+  if (e.key === 'Enter') {
+    const input = e.target;
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const messages = document.getElementById('chat-messages');
+    messages.innerHTML += `<div style="text-align:right;margin:8px 0;"><span style="background:#c8733a;color:white;padding:8px 14px;border-radius:18px;">${msg}</span></div>`;
+    messages.scrollTop = messages.scrollHeight;
+
+    const tempMsg = msg;
+    input.value = '';
+
     const loadingId = 'loading-' + Date.now();
-    chatMessages.innerHTML += `<div id="${loadingId}" style="color:#888;margin:10px 0;">Escribiendo...</div>`;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    messages.innerHTML += `<div id="${loadingId}" style="color:#888;margin:10px 0;">Escribiendo...</div>`;
+    messages.scrollTop = messages.scrollHeight;
 
-    const reply = await sendToGemini(tempInput);
-    
-    // Quitar loading y mostrar respuesta
+    const reply = await sendToGemini(tempMsg);
+
     document.getElementById(loadingId).remove();
-    chatMessages.innerHTML += `<div style="margin:8px 0;"><span style="background:#2a2d32;padding:8px 14px;border-radius:18px;">${reply}</span></div>`;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    messages.innerHTML += `<div style="margin:8px 0;"><span style="background:#2a2d32;padding:8px 14px;border-radius:18px;">${reply}</span></div>`;
+    messages.scrollTop = messages.scrollHeight;
   }
 });
 </script>
