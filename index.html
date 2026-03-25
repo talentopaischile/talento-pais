@@ -562,7 +562,9 @@
     </div>
     <div class="brechas-grid">
       <div class="brecha-card urgente">
-    
+        <div class="bc-header">
+          <span class="bc-sector litio">Litio</span>
+          <span class="bc-urgencia alta">Urgencia alta</span>
         </div>
         <div class="bc-title">Técnicos en electromovilidad e hidróxido de litio</div>
         <div class="bc-region">📍 Antofagasta · Atacama</div>
@@ -910,43 +912,137 @@
     <span id="toast-msg">CORFO ha sido notificado del match detectado</span>
   </div>
 </div>
-
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
 <script>
-// ==================== TUS LINKS ====================
+// ==================== NAVEGACIÓN ====================
+function goPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('pg-'+id).classList.add('active');
+  event.target.classList.add('active');
+  
+  // Cargar datos al entrar a páginas específicas
+  if (id === 'brechas') cargarBrechas();
+  if (id === 'institucional') cargarSinergias();
+}
+
+function toggleChip(el) {
+  el.classList.toggle('on');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3500);
+}
+
+// ==================== REGISTRO - STEPS ====================
+let currentStep = 0;
+function nextStep() {
+  document.getElementById('rf-step'+currentStep).style.display = 'none';
+  document.getElementById('rs'+currentStep).classList.remove('active');
+  document.getElementById('rs'+currentStep).classList.add('done');
+  currentStep++;
+  document.getElementById('rf-step'+currentStep).style.display = 'block';
+  document.getElementById('rs'+currentStep).classList.add('active');
+}
+
+function submitForm() {
+  showToast('✅ Registro exitoso. Recibirás tu informe por correo en 24h.');
+  setTimeout(() => goPage('inicio'), 2000);
+}
+
+// ==================== GUÍA DE TÍTULOS ====================
+let paisSeleccionado = 'china';
+
+function selectPais(el, pais) {
+  document.querySelectorAll('.tit-pais').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  paisSeleccionado = pais;
+  updateResult();
+}
+
+function updateResult() {
+  const area = document.getElementById('tit-area').value;
+  const paisNombres = {
+    china: 'China', corea: 'Corea del Sur', japon: 'Japón',
+    alemania: 'Alemania', australia: 'Australia', eeuu: 'EE.UU.',
+    espana: 'España', argentina: 'Argentina', reinounido: 'Reino Unido', brasil: 'Brasil'
+  };
+  
+  const areaNombres = {
+    ingenieria: 'Ingeniería', ciencias: 'Ciencias', tecnico: 'Técnico/CFT',
+    derecho: 'Derecho', medicina: 'Medicina', negocios: 'Negocios'
+  };
+
+  document.getElementById('tit-res-titulo').textContent = 
+    `${areaNombres[area]} · ${paisNombres[paisSeleccionado]}`;
+
+  // Lógica simplificada de reconocimiento
+  const tieneAcuerdo = ['china', 'corea', 'espana', 'argentina'].includes(paisSeleccionado);
+  const badge = document.getElementById('tit-res-badge');
+  
+  if (tieneAcuerdo && area !== 'derecho' && area !== 'medicina') {
+    badge.className = 'tit-res-badge badge-posible';
+    badge.textContent = 'Reconocimiento posible';
+  } else if (area === 'medicina' || area === 'derecho') {
+    badge.className = 'tit-res-badge badge-complejo';
+    badge.textContent = 'Proceso complejo';
+  } else {
+    badge.className = 'tit-res-badge badge-directo';
+    badge.textContent = 'Convalidación directa';
+  }
+
+  // Actualizar alerta
+  if (tieneAcuerdo) {
+    document.getElementById('alerta-title').textContent = 'Acuerdo bilateral vigente';
+    document.getElementById('alerta-desc').textContent = 
+      `Chile y ${paisNombres[paisSeleccionado]} tienen acuerdos que facilitan el reconocimiento mutuo de títulos.`;
+  } else {
+    document.getElementById('alerta-title').textContent = 'Sin acuerdo específico';
+    document.getElementById('alerta-desc').textContent = 
+      'Requiere proceso estándar de convalidación. Cancillería puede orientarte sobre el procedimiento.';
+  }
+}
+
+// ==================== CARGA DE DATOS DESDE GOOGLE SHEETS ====================
 const BRECHAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=0&single=true&output=csv";
 const SINERGIAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=1759317245&single=true&output=csv";
 
-// ==================== CARGAR BRECHAS ====================
 async function cargarBrechas() {
-  console.log("🚀 Cargando Brechas...");
   try {
-    const res = await fetch(BRECHAS_CSV);
-    const csv = await res.text();
+    const response = await fetch(BRECHAS_CSV);
+    const csv = await response.text();
     const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
 
     const grid = document.querySelector('.brechas-grid');
-    if (!grid) return;
+    if (!grid || data.length === 0) return;
+
     grid.innerHTML = '';
 
     data.forEach(row => {
       if (!row.titulo) return;
+      
+      const sectorClass = (row.sector || 'litio').toLowerCase().replace(/\s/g, '');
+      const fillClass = sectorClass === 'solar' ? 'fill-azul' : 
+                        sectorClass === 'hidrogenoverde' || sectorClass.includes('hidro') ? 'fill-verde' : 
+                        'fill-cobre';
+
       const card = document.createElement('div');
       card.className = `brecha-card ${row.urgencia === 'alta' ? 'urgente' : ''}`;
       card.innerHTML = `
         <div class="bc-header">
-          <span class="bc-sector ${row.sector ? row.sector.toLowerCase() : 'litio'}">${row.sector || 'Litio'}</span>
-          <span class="bc-urgencia ${row.urgencia || 'media'}">${(row.urgencia || 'media').toUpperCase()}</span>
+          <span class="bc-sector ${sectorClass}">${row.sector || 'Litio'}</span>
+          <span class="bc-urgencia ${row.urgencia || 'media'}">Urgencia ${row.urgencia || 'media'}</span>
         </div>
         <div class="bc-title">${row.titulo}</div>
         <div class="bc-region">📍 ${row.region || 'Antofagasta'}</div>
         <div class="bc-bar-label"><span>Demanda 2025–2027</span><span>${row.demanda_pct || 50}%</span></div>
-        <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:${row.demanda_pct || 50}%"></div></div>
+        <div class="bc-bar"><div class="bc-bar-fill ${fillClass}" style="width:${row.demanda_pct || 50}%"></div></div>
         <div class="bc-footer">
-          <div><div class="bc-num">${row.puestos_sin_cubrir || '—'}</div><div class="bc-num-label">puestos sin cubrir</div></div>
-          <button class="bc-btn" onclick="notificarBrecha('${row.titulo}')">Notificar →</button>
+          <div><div class="bc-num">${row.puestos_sin_cubrir || 100}</div><div class="bc-num-label">puestos sin cubrir</div></div>
+          <button class="bc-btn" onclick="showToast('Notificando sobre: ${row.titulo.replace(/'/g, "\\'")}')">Notificar →</button>
         </div>
       `;
       grid.appendChild(card);
@@ -956,70 +1052,60 @@ async function cargarBrechas() {
   }
 }
 
-// ==================== CARGAR SINERGIAS ====================
 async function cargarSinergias() {
-  console.log("🚀 Cargando Sinergias...");
   try {
-    const res = await fetch(SINERGIAS_CSV);
-    const csv = await res.text();
+    const response = await fetch(SINERGIAS_CSV);
+    const csv = await response.text();
     const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
 
-    const container = document.querySelector('#pg-institucional .page-inner');
-    if (!container) return;
-
-    let section = document.querySelector('.sinergias-container');
-    if (!section) {
-      section = document.createElement('div');
-      section.className = 'sinergias-container';
-      container.appendChild(section);
+    let container = document.querySelector('.sinergias-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'sinergias-container';
+      document.querySelector('#pg-institucional .page-inner').appendChild(container);
     }
 
-    section.innerHTML = `<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);">Sinergias detectadas automáticamente por IA</div>`;
+    container.innerHTML = '<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);display:flex;align-items:center;gap:8px;"><span style="width:20px;height:1px;background:var(--cobre);"></span>Sinergias detectadas automáticamente por IA</div>';
 
     data.forEach(row => {
-      if (!row.titulo) return;
+      if (!row.titulo || row.titulo.trim() === "") return;
+
+      const ministeriosHTML = row.ministerios ? 
+        row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : 
+        '';
+
       const box = document.createElement('div');
       box.className = 'sinergia-box';
       box.innerHTML = `
         <div class="sin-header">
           <div class="sin-title">${row.titulo}</div>
-          <span class="sin-badge">${row.tipo_sinergia || 'media'}</span>
+          <span class="sin-badge">${row.tipo_sinergia || 'Sinergia potencial'}</span>
         </div>
-        <div class="sin-ministerios">
-          ${row.ministerios ? row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : ''}
-        </div>
+        <div class="sin-ministerios">${ministeriosHTML}</div>
         <p class="sin-desc">${row.descripcion || ''}</p>
         <div class="sin-actions">
-          <button class="btn-notify" onclick="notificarSinergia('${row.titulo}')">${row.accion_recomendada || 'Notificar →'}</button>
+          <button class="btn-notify" onclick="showToast('Notificando: ${row.titulo.replace(/'/g, "\\'")}')">
+            ${row.accion_recomendada || 'Notificar →'}
+          </button>
+          <button class="btn-detail">Ver detalle completo</button>
         </div>
       `;
-      section.appendChild(box);
+      container.appendChild(box);
     });
   } catch (e) {
     console.error("Error cargando sinergias:", e);
   }
 }
 
-// ==================== NOTIFICACIONES ====================
-function notificarBrecha(titulo) {
-  showToast(`Notificando brecha: ${titulo}`);
-}
-
-function notificarSinergia(titulo) {
-  showToast(`Notificando sinergia: ${titulo}`);
-}
-
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("✅ Talento País cargado - Cargando datos reales...");
-
+  // Cargar datos iniciales
   setTimeout(() => {
     cargarBrechas();
     cargarSinergias();
-  }, 1000);
+  }, 500);
 });
 </script>
-
 <!-- CHATBOT FLOTANTE - Versión estable y simple -->
 <div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
   <button id="chat-toggle" 
@@ -1043,7 +1129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <script>
-// CHATBOT - Versión simplificada y robusta
+// ==================== CHATBOT ====================
 document.addEventListener('DOMContentLoaded', () => {
   const chatToggle = document.getElementById('chat-toggle');
   const chatWindow = document.getElementById('chat-window');
@@ -1067,40 +1153,59 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ message })
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        return data.error || "Lo siento, no pude conectar con la IA.";
+        const errorData = await res.json();
+        throw new Error(errorData.error || `Error ${res.status}`);
       }
 
-      return data.reply || "No recibí respuesta.";
+      const data = await res.json();
+      return data.reply || "No recibí respuesta válida.";
+      
     } catch (err) {
-      console.error(err);
-      return "Lo siento, no pude conectar con la IA en este momento.";
+      console.error('Error en chatbot:', err);
+      if (err.message.includes('429') || err.message.includes('Límite')) {
+        return "⏳ Límite de consultas alcanzado. Intenta en unos minutos.";
+      }
+      return "❌ No pude conectar con el asistente. Verifica tu conexión.";
     }
   }
 
   chatInput.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter' && chatInput.value.trim() !== '') {
       const msg = chatInput.value.trim();
-      chatMessages.innerHTML += `<div style="text-align:right;margin:8px 0;"><span style="background:#c8733a;color:white;padding:8px 14px;border-radius:18px;">${msg}</span></div>`;
+      
+      // Mostrar mensaje del usuario
+      chatMessages.innerHTML += `
+        <div style="text-align:right;margin:8px 0;">
+          <span style="background:#c8733a;color:white;padding:8px 14px;border-radius:18px;display:inline-block;max-width:80%;">
+            ${msg}
+          </span>
+        </div>`;
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
-      const tempMsg = msg;
       chatInput.value = '';
 
+      // Mostrar "escribiendo..."
       const loadingId = 'loading-' + Date.now();
-      chatMessages.innerHTML += `<div id="${loadingId}" style="color:#888;margin:10px 0;">Escribiendo...</div>`;
+      chatMessages.innerHTML += `<div id="${loadingId}" style="color:#888;margin:10px 0;">✍️ Escribiendo...</div>`;
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
-      const reply = await sendToGemini(tempMsg);
+      // Obtener respuesta
+      const reply = await sendToGemini(msg);
 
-      document.getElementById(loadingId).remove();
-      chatMessages.innerHTML += `<div style="margin:8px 0;"><span style="background:#2a2d32;padding:8px 14px;border-radius:18px;">${reply}</span></div>`;
+      // Remover "escribiendo..." y mostrar respuesta
+      document.getElementById(loadingId)?.remove();
+      chatMessages.innerHTML += `
+        <div style="margin:8px 0;">
+          <span style="background:#2a2d32;padding:8px 14px;border-radius:18px;display:inline-block;max-width:80%;">
+            ${reply}
+          </span>
+        </div>`;
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
   });
 });
 </script>
+
 </body>
 </html>
