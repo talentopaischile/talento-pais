@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Talento País · Chile</title>
@@ -914,18 +913,20 @@
   </div>
 </div>
 
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
 <script>
-// ==================== CONFIGURACIÓN ====================
+// ==================== TUS LINKS ====================
 const BRECHAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=0&single=true&output=csv";
 const SINERGIAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=1759317245&single=true&output=csv";
 
-// ==================== FUNCIONES DE CARGA ====================
-
-// Cargar Brechas
+// ==================== CARGAR BRECHAS ====================
 async function cargarBrechas() {
+  console.log("🚀 Cargando Brechas...");
   try {
-    const response = await fetch(BRECHAS_CSV);
-    const csv = await response.text();
+    const res = await fetch(BRECHAS_CSV);
+    const csv = await res.text();
     const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
 
     const grid = document.querySelector('.brechas-grid');
@@ -938,15 +939,15 @@ async function cargarBrechas() {
       card.className = `brecha-card ${row.urgencia === 'alta' ? 'urgente' : ''}`;
       card.innerHTML = `
         <div class="bc-header">
-          <span class="bc-sector ${row.sector.toLowerCase()}">${row.sector}</span>
-          <span class="bc-urgencia ${row.urgencia}">${row.urgencia.toUpperCase()}</span>
+          <span class="bc-sector ${row.sector ? row.sector.toLowerCase() : 'litio'}">${row.sector || 'Litio'}</span>
+          <span class="bc-urgencia ${row.urgencia || 'media'}">${(row.urgencia || 'media').toUpperCase()}</span>
         </div>
         <div class="bc-title">${row.titulo}</div>
-        <div class="bc-region">📍 ${row.region}</div>
-        <div class="bc-bar-label"><span>Demanda 2025–2027</span><span>${row.demanda_pct}%</span></div>
-        <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:${row.demanda_pct}%"></div></div>
+        <div class="bc-region">📍 ${row.region || 'Antofagasta'}</div>
+        <div class="bc-bar-label"><span>Demanda 2025–2027</span><span>${row.demanda_pct || 50}%</span></div>
+        <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:${row.demanda_pct || 50}%"></div></div>
         <div class="bc-footer">
-          <div><div class="bc-num">${row.puestos_sin_cubrir}</div><div class="bc-num-label">puestos sin cubrir</div></div>
+          <div><div class="bc-num">${row.puestos_sin_cubrir || '—'}</div><div class="bc-num-label">puestos sin cubrir</div></div>
           <button class="bc-btn" onclick="notificarBrecha('${row.titulo}')">Notificar →</button>
         </div>
       `;
@@ -957,31 +958,16 @@ async function cargarBrechas() {
   }
 }
 
-// Cargar Sinergias
+// ==================== CARGAR SINERGIAS ====================
 async function cargarSinergias() {
-  console.log("🚀 Intentando cargar sinergias...");
-
+  console.log("🚀 Cargando Sinergias...");
   try {
-    const response = await fetch(SINERGIAS_CSV);
-    const csvText = await response.text();
-    
-    console.log("CSV recibido, longitud:", csvText.length);
+    const res = await fetch(SINERGIAS_CSV);
+    const csv = await res.text();
+    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
 
-    const parsed = Papa.parse(csvText, { 
-      header: true, 
-      skipEmptyLines: true 
-    });
-
-    console.log("=== DATOS CRUDOS DE SINERGIAS ===");
-    console.log("Número de filas:", parsed.data.length);
-    console.table(parsed.data);
-
-    // Renderizado
     const container = document.querySelector('#pg-institucional .page-inner');
-    if (!container) {
-      console.error("No se encontró el contenedor de institucional");
-      return;
-    }
+    if (!container) return;
 
     let section = document.querySelector('.sinergias-container');
     if (!section) {
@@ -992,12 +978,8 @@ async function cargarSinergias() {
 
     section.innerHTML = `<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);">Sinergias detectadas automáticamente por IA</div>`;
 
-    parsed.data.forEach((row, i) => {
-      if (!row.titulo || row.titulo.trim() === "") {
-        console.log(`Fila ${i} ignorada (sin título)`);
-        return;
-      }
-
+    data.forEach(row => {
+      if (!row.titulo) return;
       const box = document.createElement('div');
       box.className = 'sinergia-box';
       box.innerHTML = `
@@ -1006,24 +988,21 @@ async function cargarSinergias() {
           <span class="sin-badge">${row.tipo_sinergia || 'media'}</span>
         </div>
         <div class="sin-ministerios">
-          ${row.ministerios ? row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : 'Sin ministerios'}
+          ${row.ministerios ? row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : ''}
         </div>
-        <p class="sin-desc">${row.descripcion || row.descripcion_corta || 'Sin descripción'}</p>
+        <p class="sin-desc">${row.descripcion || ''}</p>
         <div class="sin-actions">
           <button class="btn-notify" onclick="notificarSinergia('${row.titulo}')">${row.accion_recomendada || 'Notificar →'}</button>
         </div>
       `;
       section.appendChild(box);
     });
-
-    console.log("✅ Sinergias renderizadas correctamente");
-
   } catch (e) {
-    console.error("❌ Error cargando sinergias:", e);
+    console.error("Error cargando sinergias:", e);
   }
 }
 
-// Funciones de notificación (puedes mejorarlas después)
+// ==================== NOTIFICACIONES ====================
 function notificarBrecha(titulo) {
   showToast(`Notificando brecha: ${titulo}`);
 }
@@ -1034,21 +1013,13 @@ function notificarSinergia(titulo) {
 
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener('DOMContentLoaded', () => {
-  // Cargar datos cuando se visite la página correspondiente
-  const observer = new MutationObserver(() => {
-    if (document.getElementById('pg-brechas').classList.contains('active')) {
-      cargarBrechas();
-    }
-    if (document.getElementById('pg-institucional').classList.contains('active')) {
-      cargarSinergias();
-    }
-  });
+  console.log("✅ Talento País cargado - Cargando datos reales...");
 
-  observer.observe(document.body, { attributes: true, subtree: true });
+  setTimeout(() => {
+    cargarBrechas();
+    cargarSinergias();
+  }, 1000);
 });
-
-// Mantener las funciones que ya tenías (goPage, selectPais, etc.)
-// ... (pega aquí el resto de tu script original si lo deseas)
 </script>
 
 <!-- CHATBOT FLOTANTE - Versión estable y simple -->
