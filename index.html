@@ -1101,14 +1101,14 @@
   }, 200);
 </script>
 
-<!-- CHATBOT FLOTANTE - Versión estable marzo 2026 -->
+<!-- CHATBOT FLOTANTE - Versión estable y simple -->
 <div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
   <button id="chat-toggle" 
           style="width:60px;height:60px;border-radius:50%;background:#c8733a;color:white;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(200,115,58,0.5);font-size:26px;">
     🤖
   </button>
   
-  <div id="chat-window" style="display:none;position:absolute;bottom:75px;right:0;width:350px;height:480px;background:#1a1d22;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.6);border:1px solid #4a4f57;">
+  <div id="chat-window" style="display:none;position:absolute;bottom:80px;right:0;width:350px;height:480px;background:#1a1d22;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.6);border:1px solid #4a4f57;">
     <div style="background:#c8733a;padding:14px 16px;color:white;display:flex;align-items:center;justify-content:space-between;font-weight:600;">
       Asistente Talento País
       <span id="chat-close" style="cursor:pointer;font-size:22px;line-height:1;">×</span>
@@ -1124,30 +1124,64 @@
 </div>
 
 <script>
-// CHATBOT - Modelo estable 2026
-const GEMINI_API_KEY = "AIzaSyAC35tAdWhUUfw78YqOldAnhwOOmnhyD9M";   // ← Pega aquí tu clave actual
+// CHATBOT - Versión simplificada y robusta
+document.addEventListener('DOMContentLoaded', () => {
+  const chatToggle = document.getElementById('chat-toggle');
+  const chatWindow = document.getElementById('chat-window');
+  const chatClose = document.getElementById('chat-close');
+  const chatInput = document.getElementById('chat-input');
+  const chatMessages = document.getElementById('chat-messages');
 
-async function sendToGemini(message) {
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
-    });
+  chatToggle.addEventListener('click', () => {
+    chatWindow.style.display = chatWindow.style.display === 'none' ? 'block' : 'none';
+  });
 
-    const data = await response.json();
+  chatClose.addEventListener('click', () => {
+    chatWindow.style.display = 'none';
+  });
 
-    if (!response.ok) {
-      return data.error || "Lo siento, no pude conectar con la IA en este momento.";
+  async function sendToGemini(message) {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return data.error || "Lo siento, no pude conectar con la IA.";
+      }
+
+      return data.reply || "No recibí respuesta.";
+    } catch (err) {
+      console.error(err);
+      return "Lo siento, no pude conectar con la IA en este momento.";
     }
-
-    return data.reply;
-  } catch (err) {
-    console.error('Error llamando a /api/chat:', err);
-    return "Lo siento, no pude conectar con la IA. Inténtalo de nuevo.";
   }
-}
 
+  chatInput.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter' && chatInput.value.trim() !== '') {
+      const msg = chatInput.value.trim();
+      chatMessages.innerHTML += `<div style="text-align:right;margin:8px 0;"><span style="background:#c8733a;color:white;padding:8px 14px;border-radius:18px;">${msg}</span></div>`;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      const tempMsg = msg;
+      chatInput.value = '';
+
+      const loadingId = 'loading-' + Date.now();
+      chatMessages.innerHTML += `<div id="${loadingId}" style="color:#888;margin:10px 0;">Escribiendo...</div>`;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      const reply = await sendToGemini(tempMsg);
+
+      document.getElementById(loadingId).remove();
+      chatMessages.innerHTML += `<div style="margin:8px 0;"><span style="background:#2a2d32;padding:8px 14px;border-radius:18px;">${reply}</span></div>`;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  });
+});
 </script>
 </body>
 </html>
