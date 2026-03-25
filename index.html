@@ -1102,6 +1102,7 @@ espana: {
 </script>
 
 <!-- CHATBOT FLOTANTE TALENTO PAÍS -->
+
 <div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
   <button id="chat-toggle" 
           style="width:60px;height:60px;border-radius:50%;background:var(--cobre);color:white;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(200,115,58,0.4);font-size:24px;">
@@ -1114,7 +1115,6 @@ espana: {
       <span id="chat-close" style="cursor:pointer;font-size:20px;">×</span>
     </div>
     <div id="chat-messages" style="height:360px;padding:16px;overflow-y:auto;background:#0f1114;color:#ddd;font-size:14px;line-height:1.5;">
-      <!-- mensajes aquí -->
     </div>
     <div style="padding:12px;background:#1a1d22;border-top:1px solid var(--borde);">
       <input id="chat-input" type="text" placeholder="Pregúntame sobre brechas, títulos o coordinación..." 
@@ -1124,22 +1124,45 @@ espana: {
 </div>
 
 <script>
-// Configuración segura del chatbot
-const GEMINI_API_KEY = "{{GEMINI_API_KEY}}";   // Vercel la reemplazará automáticamente
+// === CHATBOT CORREGIDO PARA VERCEL ===
+const GEMINI_API_KEY = import.meta.env?.GEMINI_API_KEY || 
+                       window.GEMINI_API_KEY || 
+                       "AIzaSyBuo7rnbwovBgjrakzNOu5SBj71GPG1ckw";   // ← Cambia esto temporalmente por tu clave real para probar
 
 async function sendToGemini(message) {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: message }] }]
-    })
-  });
-  const data = await response.json();
-  return data.candidates[0].content.parts[0].text;
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === "AIzaSyBuo7rnbwovBgjrakzNOu5SBj71GPG1ckw") {
+    return "Error interno: La clave de Gemini no está configurada correctamente.";
+  }
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Eres un asistente útil, profesional y motivador de la plataforma Talento País Chile. 
+                     Responde siempre en español, de forma clara, concisa y útil. 
+                     Pregunta del usuario: ${message}`
+            }]
+          }]
+        })
+      }
+    );
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "No pude procesar la respuesta.";
+  } catch (err) {
+    console.error("Gemini error:", err);
+    return "Lo siento, en este momento no pude conectar con la IA. Inténtalo de nuevo en unos segundos.";
+  }
 }
 
-// Funciones del chatbot
+// Funciones de la interfaz del chat
 document.getElementById('chat-toggle').addEventListener('click', () => {
   const win = document.getElementById('chat-window');
   win.style.display = win.style.display === 'none' ? 'block' : 'none';
@@ -1155,29 +1178,22 @@ document.getElementById('chat-input').addEventListener('keypress', async (e) => 
     const msg = input.value.trim();
     if (!msg) return;
 
-    // Mostrar mensaje del usuario
     const messages = document.getElementById('chat-messages');
     messages.innerHTML += `<div style="margin-bottom:12px;text-align:right;"><span style="background:var(--cobre);color:white;padding:8px 14px;border-radius:18px;">${msg}</span></div>`;
     messages.scrollTop = messages.scrollHeight;
+
     input.value = '';
 
-    // Mostrar "escribiendo..."
-    const loading = `<div style="margin:10px 0;color:var(--gris-claro);">Escribiendo...</div>`;
-    messages.innerHTML += loading;
+    const loadingHTML = `<div style="margin:10px 0;color:var(--gris-claro);">Escribiendo...</div>`;
+    messages.innerHTML += loadingHTML;
     messages.scrollTop = messages.scrollHeight;
 
-    try {
-      const reply = await sendToGemini(`Eres un asistente útil de Talento País. Responde en español de forma clara y útil. Pregunta del usuario: ${msg}`);
-      messages.innerHTML = messages.innerHTML.replace(loading, '');
-      messages.innerHTML += `<div style="margin-bottom:12px;"><span style="background:#2a2d32;padding:8px 14px;border-radius:18px;">${reply}</span></div>`;
-      messages.scrollTop = messages.scrollHeight;
-    } catch (err) {
-      messages.innerHTML = messages.innerHTML.replace(loading, '');
-      messages.innerHTML += `<div style="color:#e8956a;">Error: No pude conectar con la IA en este momento.</div>`;
-    }
+    const reply = await sendToGemini(msg);
+    messages.innerHTML = messages.innerHTML.replace(loadingHTML, '');
+    messages.innerHTML += `<div style="margin-bottom:12px;"><span style="background:#2a2d32;padding:8px 14px;border-radius:18px;">${reply}</span></div>`;
+    messages.scrollTop = messages.scrollHeight;
   }
 });
 </script>
-
 </body>
 </html>
