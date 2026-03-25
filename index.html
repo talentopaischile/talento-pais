@@ -962,12 +962,19 @@ async function cargarSinergias() {
   try {
     const response = await fetch(SINERGIAS_CSV);
     const csv = await response.text();
-    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
+    const parsed = Papa.parse(csv, { 
+      header: true, 
+      skipEmptyLines: true 
+    });
 
+    console.log("=== DATOS CRUDOS DE SINERGIAS ===");
+    console.log("Filas recibidas:", parsed.data.length);
+    console.table(parsed.data);   // Esto muestra toda la tabla en consola
+
+    // Código normal de renderizado (mantengo el resto igual)
     const container = document.querySelector('#pg-institucional .page-inner');
     if (!container) return;
 
-    // Buscamos donde poner las sinergias (después del grid de instituciones)
     let sinergiaSection = document.querySelector('.sinergias-container');
     if (!sinergiaSection) {
       sinergiaSection = document.createElement('div');
@@ -975,26 +982,29 @@ async function cargarSinergias() {
       container.appendChild(sinergiaSection);
     }
 
-    sinergiaSection.innerHTML = `<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);">Sinergias detectadas automáticamente</div>`;
+    sinergiaSection.innerHTML = `<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);">Sinergias detectadas automáticamente por IA</div>`;
 
-    data.forEach(row => {
+    parsed.data.forEach(row => {
+      if (!row.titulo || row.titulo.trim() === "") return;
+
       const box = document.createElement('div');
       box.className = 'sinergia-box';
       box.innerHTML = `
         <div class="sin-header">
           <div class="sin-title">${row.titulo}</div>
-          <span class="sin-badge">${row.tipo_sinergia}</span>
+          <span class="sin-badge">${row.tipo_sinergia || 'media'}</span>
         </div>
         <div class="sin-ministerios">
-          ${row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>')}
+          ${row.ministerios ? row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : ''}
         </div>
-        <p class="sin-desc">${row.descripcion}</p>
+        <p class="sin-desc">${row.descripcion || ''}</p>
         <div class="sin-actions">
-          <button class="btn-notify" onclick="notificarSinergia('${row.titulo}')">${row.accion_recomendada} →</button>
+          <button class="btn-notify" onclick="notificarSinergia('${row.titulo}')">${row.accion_recomendada || 'Notificar →'}</button>
         </div>
       `;
       sinergiaSection.appendChild(box);
     });
+
   } catch (e) {
     console.error("Error cargando sinergias:", e);
   }
