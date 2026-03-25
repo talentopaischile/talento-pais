@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talento País · Chile</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --negro: #0a0c0f;
+    --blanco: #f5f2ec;
+    --cobre: #c8733a;
+    --cobre-claro: #e8956a;
+    --verde: #2d6a4f;
+    --verde-claro: #52b788;
+    --azul: #1b4f72;
+    --azul-claro: #3498db;
+    --gris: #2a2d32;
+    --gris-medio: #4a4f57;
+    --gris-claro: #8a9099;
+    --borde: rgba(245,242,236,0.08);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--negro);
+    color: var(--blanco);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px;
+    background: rgba(10,12,15,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--borde);
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 17px;
+    letter-spacing: -.3px;
+    color: var(--blanco);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo span {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--cobre); display: inline-block;
+  }
+  .nav-links { display: flex; gap: 6px; }
+  .nav-link {
+    font-size: 13px; color: var(--gris-claro);
+    padding: 7px 14px; border-radius: 20px;
+    border: none; background: transparent;
+    cursor: pointer; transition: all .2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .nav-link:hover { background: var(--gris); color: var(--blanco); }
+  .nav-link.active { background: var(--gris); color: var(--blanco); }
+  .nav-cta {
+    font-size: 13px; font-weight: 500;
+    padding: 8px 18px; border-radius: 20px;
+    background: var(--cobre); color: var(--blanco);
+    border: none; cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .nav-cta:hover { background: var(--cobre-claro); }
+
+  /* PÁGINAS */
+  .page { display: none; min-height: 100vh; padding-top: 70px; }
+  .page.active { display: block; }
+
+  /* ── PÁGINA 1: INICIO ── */
+  .hero {
+    min-height: calc(100vh - 70px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 60px;
+    padding: 60px 40px 40px;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .hero-eyebrow {
+    font-size: 11px; font-weight: 500; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--cobre);
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  }
+  .hero-eyebrow::before {
+    content: ''; width: 24px; height: 1px; background: var(--cobre);
+  }
+  .hero-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 4.5vw, 58px);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -1.5px; margin-bottom: 22px;
+  }
+  .hero-title em {
+    font-style: normal; color: var(--cobre);
+  }
+  .hero-desc {
+    font-size: 16px; color: var(--gris-claro);
+    line-height: 1.7; margin-bottom: 36px;
+    max-width: 480px;
+  }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn-primary {
+    padding: 13px 26px; border-radius: 8px;
+    background: var(--cobre); color: var(--blanco);
+    font-size: 14px; font-weight: 500;
+    border: none; cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-primary:hover { background: var(--cobre-claro); transform: translateY(-1px); }
+  .btn-ghost {
+    padding: 13px 26px; border-radius: 8px;
+    background: transparent; color: var(--blanco);
+    font-size: 14px; font-weight: 500;
+    border: 1px solid var(--borde); cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-ghost:hover { background: var(--gris); border-color: var(--gris-medio); }
+
+  .hero-visual {
+    position: relative;
+    background: var(--gris);
+    border-radius: 16px;
+    border: 1px solid var(--borde);
+    padding: 28px;
+    overflow: hidden;
+  }
+  .hero-visual::before {
+    content: ''; position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,115,58,.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .mini-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .mini-stat {
+    background: rgba(245,242,236,.04);
+    border: 1px solid var(--borde);
+    border-radius: 10px; padding: 16px;
+  }
+  .mini-stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 700;
+    color: var(--cobre); line-height: 1;
+    margin-bottom: 4px;
+  }
+  .mini-stat-label { font-size: 11px; color: var(--gris-claro); line-height: 1.4; }
+  .mini-match {
+    background: rgba(45,106,79,.12);
+    border: 1px solid rgba(82,183,136,.2);
+    border-radius: 10px; padding: 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .match-dot {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: rgba(82,183,136,.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .match-text { font-size: 12px; line-height: 1.5; }
+  .match-text strong { color: var(--verde-claro); font-weight: 500; display: block; margin-bottom: 2px; }
+  .match-text span { color: var(--gris-claro); }
+
+  .stats-strip {
+    border-top: 1px solid var(--borde);
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    margin-top: 60px;
+  }
+  .strip-item {
+    padding: 40px;
+    border-right: 1px solid var(--borde);
+  }
+  .strip-item:last-child { border-right: none; }
+  .strip-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 42px; font-weight: 800;
+    color: var(--blanco); line-height: 1;
+    margin-bottom: 6px;
+  }
+  .strip-num span { color: var(--cobre); }
+  .strip-label { font-size: 13px; color: var(--gris-claro); line-height: 1.5; }
+
+  /* ── PÁGINA 2: BRECHAS ── */
+  .page-inner { max-width: 1100px; margin: 0 auto; padding: 48px 40px; }
+  .page-header { margin-bottom: 40px; }
+  .page-eyebrow {
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--cobre); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .page-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--cobre); }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px; font-weight: 700;
+    letter-spacing: -.8px; margin-bottom: 8px;
+  }
+  .page-sub { font-size: 14px; color: var(--gris-claro); line-height: 1.6; }
+
+  .filter-row {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px;
+  }
+  .filter-chip {
+    font-size: 12px; padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--borde); background: transparent;
+    color: var(--gris-claro); cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .filter-chip.on {
+    background: var(--cobre); color: var(--blanco);
+    border-color: var(--cobre);
+  }
+  .filter-chip:hover:not(.on) { border-color: var(--gris-medio); color: var(--blanco); }
+
+  .brechas-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
+  .brecha-card {
+    background: var(--gris);
+    border: 1px solid var(--borde);
+    border-radius: 14px; padding: 24px;
+    transition: border-color .2s;
+    cursor: pointer;
+  }
+  .brecha-card:hover { border-color: var(--gris-medio); }
+  .brecha-card.urgente { border-color: rgba(200,115,58,.3); }
+  .bc-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+  .bc-sector {
+    font-size: 10px; font-weight: 500; letter-spacing: .1em;
+    text-transform: uppercase; padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .bc-sector.litio { background: rgba(200,115,58,.12); color: var(--cobre-claro); }
+  .bc-sector.solar { background: rgba(52,152,219,.12); color: #5dade2; }
+  .bc-sector.hidro { background: rgba(45,106,79,.2); color: var(--verde-claro); }
+  .bc-sector.eolica { background: rgba(127,140,141,.15); color: #aab7b8; }
+  .bc-urgencia {
+    font-size: 10px; padding: 4px 8px; border-radius: 4px;
+    font-weight: 500;
+  }
+  .bc-urgencia.alta { background: rgba(200,115,58,.15); color: var(--cobre-claro); }
+  .bc-urgencia.media { background: rgba(52,152,219,.1); color: #5dade2; }
+  .bc-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 6px; letter-spacing: -.3px; }
+  .bc-region { font-size: 12px; color: var(--gris-claro); margin-bottom: 14px; }
+  .bc-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--gris-claro); margin-bottom: 6px; }
+  .bc-bar { height: 6px; background: rgba(245,242,236,.08); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
+  .bc-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .fill-cobre { background: linear-gradient(90deg, var(--cobre), var(--cobre-claro)); }
+  .fill-azul { background: linear-gradient(90deg, var(--azul-claro), #85c1e9); }
+  .fill-verde { background: linear-gradient(90deg, var(--verde), var(--verde-claro)); }
+  .bc-footer { display: flex; align-items: center; justify-content: space-between; }
+  .bc-num { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: var(--cobre); }
+  .bc-num-label { font-size: 11px; color: var(--gris-claro); margin-top: 2px; }
+  .bc-btn {
+    font-size: 12px; padding: 7px 14px; border-radius: 6px;
+    border: 1px solid var(--borde); background: transparent;
+    color: var(--gris-claro); cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .bc-btn:hover { background: rgba(200,115,58,.1); border-color: var(--cobre); color: var(--cobre-claro); }
+
+  /* ── PÁGINA 3: MAPA INSTITUCIONAL ── */
+  .inst-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+  .inst-card {
+    background: var(--gris); border: 1px solid var(--borde);
+    border-radius: 14px; padding: 20px; cursor: pointer;
+    transition: all .2s; position: relative; overflow: hidden;
+  }
+  .inst-card:hover { transform: translateY(-2px); border-color: var(--gris-medio); }
+  .inst-card.selected { border-color: var(--cobre); }
+  .inst-card::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 3px;
+  }
+  .inst-card.energia::after { background: var(--cobre); }
+  .inst-card.educacion::after { background: var(--azul-claro); }
+  .inst-card.cancilleria::after { background: var(--verde-claro); }
+  .inst-card.corfo::after { background: #f39c12; }
+  .inst-card.agci::after { background: #9b59b6; }
+  .inst-card.mineria::after { background: #e74c3c; }
+  .inst-icon { font-size: 24px; margin-bottom: 10px; }
+  .inst-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .inst-rol { font-size: 11px; color: var(--gris-claro); line-height: 1.5; margin-bottom: 12px; }
+  .inst-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .inst-tag {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    background: rgba(245,242,236,.05); color: var(--gris-claro);
+    border: 1px solid var(--borde);
+  }
+
+  .sinergia-box {
+    background: rgba(45,106,79,.08);
+    border: 1px solid rgba(82,183,136,.2);
+    border-radius: 14px; padding: 24px; margin-bottom: 16px;
+  }
+  .sin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .sin-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+  .sin-badge {
+    font-size: 10px; padding: 4px 10px; border-radius: 20px;
+    background: rgba(82,183,136,.15); color: var(--verde-claro);
+    font-weight: 500; letter-spacing: .05em;
+  }
+  .sin-ministerios { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .sin-min {
+    background: rgba(245,242,236,.06); border: 1px solid var(--borde);
+    border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 500;
+  }
+  .sin-arrow { color: var(--verde-claro); font-size: 18px; }
+  .sin-desc { font-size: 13px; color: var(--gris-claro); line-height: 1.6; margin-bottom: 14px; }
+  .sin-actions { display: flex; gap: 10px; }
+  .btn-notify {
+    font-size: 13px; padding: 9px 18px; border-radius: 8px;
+    background: rgba(82,183,136,.15); color: var(--verde-claro);
+    border: 1px solid rgba(82,183,136,.3); cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif; font-weight: 500;
+  }
+  .btn-notify:hover { background: rgba(82,183,136,.25); }
+  .btn-detail {
+    font-size: 13px; padding: 9px 18px; border-radius: 8px;
+    background: transparent; color: var(--gris-claro);
+    border: 1px solid var(--borde); cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-detail:hover { background: var(--gris); color: var(--blanco); }
+
+  /* ── PÁGINA 4: REGISTRO ── */
+  .reg-layout {
+    display: grid; grid-template-columns: 1fr 420px; gap: 60px;
+    max-width: 1100px; margin: 0 auto; padding: 48px 40px;
+    align-items: start;
+  }
+  .reg-left h2 {
+    font-family: 'Syne', sans-serif; font-size: 30px;
+    font-weight: 800; letter-spacing: -.6px; margin-bottom: 14px;
+  }
+  .reg-left p { font-size: 14px; color: var(--gris-claro); line-height: 1.7; margin-bottom: 28px; }
+  .reg-benefit {
+    display: flex; gap: 14px; align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  .reg-icon {
+    width: 38px; height: 38px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+  .reg-icon.c1 { background: rgba(200,115,58,.12); }
+  .reg-icon.c2 { background: rgba(82,183,136,.12); }
+  .reg-icon.c3 { background: rgba(52,152,219,.12); }
+  .reg-benefit-text strong { font-size: 13px; font-weight: 500; display: block; margin-bottom: 3px; }
+  .reg-benefit-text span { font-size: 12px; color: var(--gris-claro); line-height: 1.5; }
+
+  .reg-form {
+    background: var(--gris); border: 1px solid var(--borde);
+    border-radius: 16px; padding: 30px;
+  }
+  .reg-steps { display: flex; gap: 6px; margin-bottom: 28px; }
+  .reg-step {
+    flex: 1; height: 3px; border-radius: 2px;
+    background: rgba(245,242,236,.1); transition: background .3s;
+  }
+  .reg-step.done { background: var(--cobre); }
+  .reg-step.active { background: rgba(200,115,58,.5); }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--blanco); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    background: rgba(245,242,236,.05); border: 1px solid var(--borde);
+    color: var(--blanco); font-size: 14px; margin-bottom: 14px;
+    transition: border-color .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .form-input:focus { outline: none; border-color: var(--cobre); }
+  .form-input::placeholder { color: var(--gris-claro); }
+  .form-select {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    background: rgba(245,242,236,.05); border: 1px solid var(--borde);
+    color: var(--blanco); font-size: 14px; margin-bottom: 14px;
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    appearance: none;
+  }
+  .form-select option { background: #1a1d22; color: var(--blanco); }
+  .tag-select { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+  .ts-tag {
+    font-size: 12px; padding: 6px 13px; border-radius: 20px;
+    border: 1px solid var(--borde); background: transparent;
+    color: var(--gris-claro); cursor: pointer; transition: all .2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .ts-tag.sel {
+    background: rgba(200,115,58,.12); color: var(--cobre-claro);
+    border-color: rgba(200,115,58,.3);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-btn {
+    width: 100%; padding: 12px; border-radius: 8px;
+    background: var(--cobre); color: var(--blanco);
+    font-size: 14px; font-weight: 500; border: none;
+    cursor: pointer; transition: all .2s;
+    font-family: 'DM Sans', sans-serif; margin-top: 4px;
+  }
+  .form-btn:hover { background: var(--cobre-claro); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 30px; right: 30px;
+    background: var(--gris); border: 1px solid rgba(82,183,136,.3);
+    border-radius: 12px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--blanco);
+    transform: translateY(80px); opacity: 0;
+    transition: all .4s cubic-bezier(.175,.885,.32,1.275);
+    z-index: 200; max-width: 320px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast-icon { font-size: 20px; flex-shrink: 0; }
+  .toast-text strong { display: block; margin-bottom: 2px; color: var(--verde-claro); }
+  .toast-text span { color: var(--gris-claro); font-size: 12px; }
+
+  /* ── GUÍA DE TÍTULOS ── */
+  .titulos-buscador { background: var(--gris); border: 1px solid var(--borde); border-radius: 16px; padding: 28px; margin-bottom: 28px; }
+  .tit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .tit-field {}
+  .tit-label { font-size: 12px; font-weight: 500; color: var(--gris-claro); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 12px; }
+  .tit-paises { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tit-pais { display: flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--borde); background: rgba(245,242,236,.03); cursor: pointer; font-size: 13px; transition: all .2s; }
+  .tit-pais:hover { border-color: var(--gris-medio); }
+  .tit-pais.sel { background: rgba(200,115,58,.12); border-color: rgba(200,115,58,.4); color: var(--cobre-claro); }
+  .tit-bandera { font-size: 16px; }
+  .tit-select { width: 100%; padding: 10px 14px; border-radius: 8px; background: rgba(245,242,236,.05); border: 1px solid var(--borde); color: var(--blanco); font-size: 14px; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+  .tit-select option { background: #1a1d22; }
+  .tit-resultado { background: var(--gris); border: 1px solid var(--borde); border-radius: 16px; padding: 28px; margin-bottom: 16px; }
+  .tit-res-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--borde); }
+  .tit-res-titulo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .tit-res-sub { font-size: 12px; color: var(--gris-claro); }
+  .tit-res-badge { font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .badge-posible { background: rgba(82,183,136,.12); color: var(--verde-claro); border: 1px solid rgba(82,183,136,.25); }
+  .badge-directo { background: rgba(52,152,219,.12); color: #5dade2; border: 1px solid rgba(52,152,219,.25); }
+  .badge-complejo { background: rgba(200,115,58,.12); color: var(--cobre-claro); border: 1px solid rgba(200,115,58,.25); }
+  .tit-pasos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .tit-paso { background: rgba(245,242,236,.03); border: 1px solid var(--borde); border-radius: 10px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .tit-paso-num { width: 26px; height: 26px; border-radius: 50%; background: rgba(200,115,58,.15); color: var(--cobre-claro); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .tit-paso-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .tit-paso-desc { font-size: 12px; color: var(--gris-claro); line-height: 1.6; }
+  .tit-alerta { background: rgba(52,152,219,.07); border: 1px solid rgba(52,152,219,.2); border-radius: 10px; padding: 16px; display: flex; gap: 12px; margin-bottom: 20px; }
+  .tit-alerta-icon { font-size: 20px; flex-shrink: 0; }
+  .tit-alerta-title { font-size: 13px; font-weight: 500; color: #5dade2; margin-bottom: 4px; }
+  .tit-alerta-desc { font-size: 12px; color: var(--gris-claro); line-height: 1.6; }
+  .tit-tiempo { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .tit-tiempo-item { background: rgba(245,242,236,.04); border: 1px solid var(--borde); border-radius: 10px; padding: 14px; text-align: center; }
+  .tit-tiempo-num { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--cobre); margin-bottom: 4px; }
+  .tit-tiempo-label { font-size: 11px; color: var(--gris-claro); }
+  .tit-disclaimer { font-size: 11px; color: var(--gris-claro); line-height: 1.7; padding: 14px; background: rgba(245,242,236,.03); border-radius: 8px; border: 1px solid var(--borde); }
+  @media (max-width: 768px) {
+    .tit-row, .tit-pasos-grid, .tit-tiempo { grid-template-columns: 1fr; }
+  }
+</style>
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-visual { display: none; }
+    .brechas-grid, .inst-grid { grid-template-columns: 1fr; }
+    .reg-layout { grid-template-columns: 1fr; }
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    .page-inner, .reg-layout { padding: 30px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span></span>Talento País</div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="goPage('inicio')">Inicio</button>
+    <button class="nav-link" onclick="goPage('brechas')">Brechas</button>
+    <button class="nav-link" onclick="goPage('institucional')">Mapa institucional</button>
+    <button class="nav-link" onclick="goPage('titulos')">Guía de títulos</button>
+    <button class="nav-link" onclick="goPage('registro')">Registro de talento</button>
+  </div>
+  <button class="nav-cta" onclick="goPage('registro')">Registrarme</button>
+</nav>
+
+<!-- ─────── PÁGINA 1: INICIO ─────── -->
+<div class="page active" id="pg-inicio">
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Plataforma de capital humano estratégico · Chile</div>
+      <h1 class="hero-title">
+        El talento estratégico<br>
+        de Chile, <em>visible</em><br>
+        y conectado.
+      </h1>
+      <p class="hero-desc">
+        Mapeamos las brechas de capital humano en los sectores donde Chile ya tiene ventaja —litio y energías renovables— y conectamos a quienes pueden actuar con la información que necesitan para hacerlo.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="goPage('brechas')">Ver brechas detectadas</button>
+        <button class="btn-ghost" onclick="goPage('registro')">Registra tu talento</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="mini-stat-grid">
+        <div class="mini-stat">
+          <div class="mini-stat-num">340+</div>
+          <div class="mini-stat-label">profesionales chilenos en energía trabajando fuera del país</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-num">12</div>
+          <div class="mini-stat-label">institutos técnicos forman perfiles que la industria necesita hoy</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-num">4</div>
+          <div class="mini-stat-label">ministerios con programas similares sin coordinarse</div>
+        </div>
+        <div class="mini-stat">
+          <div class="mini-stat-num">0</div>
+          <div class="mini-stat-label">plataformas que conectan estos datos hoy en Chile</div>
+        </div>
+      </div>
+      <div class="mini-match">
+        <div class="match-dot">⚡</div>
+        <div class="match-text">
+          <strong>Match detectado por IA</strong>
+          <span>INACAP Antofagasta forma exactamente el perfil que SQM necesita en Salar del Carmen — nadie los ha conectado aún</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="stats-strip">
+    <div class="strip-item">
+      <div class="strip-num">2.4<span>×</span></div>
+      <div class="strip-label">más caro traer talento del extranjero que formar y retener el que Chile ya tiene</div>
+    </div>
+    <div class="strip-item">
+      <div class="strip-num">48<span>h</span></div>
+      <div class="strip-label">es todo lo que tarda la IA en mapear brechas que los ministerios tardan años en detectar</div>
+    </div>
+    <div class="strip-item">
+      <div class="strip-num">1<span> app</span></div>
+      <div class="strip-label">que conecta lo que la educación forma, lo que la industria necesita y lo que el Estado ya tiene</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── PÁGINA 2: BRECHAS ─────── -->
+<div class="page" id="pg-brechas">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-eyebrow">Diagnóstico en tiempo real</div>
+      <h1 class="page-title">Brechas de talento por sector</h1>
+      <p class="page-sub">La IA cruza programas de estudio de universidades e institutos técnicos acreditados con ofertas laborales activas en litio y energías renovables. Sin que nadie suba datos manualmente.</p>
+    </div>
+    <div class="filter-row">
+      <button class="filter-chip on" onclick="toggleChip(this)">Todos los sectores</button>
+      <button class="filter-chip" onclick="toggleChip(this)">Litio</button>
+      <button class="filter-chip" onclick="toggleChip(this)">Solar</button>
+      <button class="filter-chip" onclick="toggleChip(this)">Eólica</button>
+      <button class="filter-chip" onclick="toggleChip(this)">Hidrógeno verde</button>
+      <button class="filter-chip" onclick="toggleChip(this)">Antofagasta</button>
+      <button class="filter-chip" onclick="toggleChip(this)">Atacama</button>
+    </div>
+    <div class="brechas-grid">
+      <div class="brecha-card urgente">
+        <div class="bc-header">
+          <span class="bc-sector litio">Litio</span>
+          <span class="bc-urgencia alta">Urgencia alta</span>
+        </div>
+        <div class="bc-title">Técnicos en electromovilidad e hidróxido de litio</div>
+        <div class="bc-region">📍 Antofagasta · Atacama</div>
+        <div class="bc-bar-label"><span>Demanda proyectada 2025–2027</span><span>78%</span></div>
+        <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:78%"></div></div>
+        <div class="bc-footer">
+          <div><div class="bc-num">420</div><div class="bc-num-label">puestos sin cubrir</div></div>
+          <button class="bc-btn" onclick="showToast('Notificando a CORFO sobre brecha en electromovilidad...')">Notificar a CORFO →</button>
+        </div>
+      </div>
+      <div class="brecha-card urgente">
+        <div class="bc-header">
+          <span class="bc-sector solar">Solar</span>
+          <span class="bc-urgencia alta">Urgencia alta</span>
+        </div>
+        <div class="bc-title">Ingenieros en sistemas de almacenamiento y baterías</div>
+        <div class="bc-region">📍 Atacama · Coquimbo</div>
+        <div class="bc-bar-label"><span>Demanda proyectada 2025–2027</span><span>65%</span></div>
+        <div class="bc-bar"><div class="bc-bar-fill fill-azul" style="width:65%"></div></div>
+        <div class="bc-footer">
+          <div><div class="bc-num">280</div><div class="bc-num-label">puestos sin cubrir</div></div>
+          <button class="bc-btn" onclick="showToast('Notificando a Min. Energía sobre brecha en almacenamiento...')">Notificar →</button>
+        </div>
+      </div>
+      <div class="brecha-card">
+        <div class="bc-header">
+          <span class="bc-sector hidro">Hidrógeno verde</span>
+          <span class="bc-urgencia media">Urgencia media</span>
+        </div>
+        <div class="bc-title">Químicos e ingenieros en electrólisis y celdas de combustible</div>
+        <div class="bc-region">📍 Magallanes · Biobío</div>
+        <div class="bc-bar-label"><span>Demanda proyectada 2026–2028</span><span>52%</span></div>
+        <div class="bc-bar"><div class="bc-bar-fill fill-verde" style="width:52%"></div></div>
+        <div class="bc-footer">
+          <div><div class="bc-num">160</div><div class="bc-num-label">puestos sin cubrir</div></div>
+          <button class="bc-btn" onclick="showToast('Notificando a Min. Ciencia sobre brecha en hidrógeno...')">Notificar →</button>
+        </div>
+      </div>
+      <div class="brecha-card">
+        <div class="bc-header">
+          <span class="bc-sector eolica">Eólica</span>
+          <span class="bc-urgencia media">Urgencia media</span>
+        </div>
+        <div class="bc-title">Técnicos en mantención de aerogeneradores y sistemas SCADA</div>
+        <div class="bc-region">📍 Coquimbo · Aysén</div>
+        <div class="bc-bar-label"><span>Demanda proyectada 2025–2027</span><span>44%</span></div>
+        <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:44%"></div></div>
+        <div class="bc-footer">
+          <div><div class="bc-num">95</div><div class="bc-num-label">puestos sin cubrir</div></div>
+          <button class="bc-btn" onclick="showToast('Notificando a CORFO sobre brecha en eólica...')">Notificar →</button>
+        </div>
+      </div>
+    </div>
+    <div class="sinergia-box" style="background:rgba(200,115,58,.06);border-color:rgba(200,115,58,.2);">
+      <div class="sin-header">
+        <div class="sin-title">🎯 Match detectado por IA</div>
+        <span class="sin-badge" style="background:rgba(200,115,58,.12);color:var(--cobre-claro);">Acción recomendada</span>
+      </div>
+      <div class="sin-ministerios">
+        <div class="sin-min">INACAP Antofagasta</div>
+        <div class="sin-arrow">⟷</div>
+        <div class="sin-min">SQM · Salar del Carmen</div>
+      </div>
+      <p class="sin-desc">El programa de Técnico en Procesos Químicos Industriales de INACAP Antofagasta forma exactamente las competencias que SQM requiere para sus plantas de hidróxido de litio. Hay 48 egresados anuales sin orientación sectorial específica. Ninguna institución los ha conectado hasta ahora.</p>
+      <div class="sin-actions">
+        <button class="btn-notify" style="background:rgba(200,115,58,.12);color:var(--cobre-claro);border-color:rgba(200,115,58,.3);" onclick="showToast('Correo enviado a CORFO Antofagasta con el match detectado ✓')">Notificar a CORFO →</button>
+        <button class="btn-detail">Ver detalle completo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── PÁGINA 3: MAPA INSTITUCIONAL ─────── -->
+<div class="page" id="pg-institucional">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-eyebrow">Análisis institucional</div>
+      <h1 class="page-title">Mapa de coordinación ministerial</h1>
+      <p class="page-sub">La IA lee memorias anuales, programas y licitaciones públicas de cada institución. Identifica qué hace cada una en materia de talento y dónde hay vacíos o duplicación de esfuerzos.</p>
+    </div>
+    <div class="inst-grid">
+      <div class="inst-card energia">
+        <div class="inst-icon">⚡</div>
+        <div class="inst-name">Min. Energía</div>
+        <div class="inst-rol">Proyectos de litio, renovables y eficiencia. Financia formación técnica en zonas de influencia.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">litio</span><span class="inst-tag">solar</span><span class="inst-tag">eólica</span><span class="inst-tag">H₂ verde</span>
+        </div>
+      </div>
+      <div class="inst-card educacion">
+        <div class="inst-icon">🎓</div>
+        <div class="inst-name">Min. Educación</div>
+        <div class="inst-rol">Acredita programas, administra becas de postgrado y supervisa institutos técnicos.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">acreditación</span><span class="inst-tag">becas</span><span class="inst-tag">CFT</span>
+        </div>
+      </div>
+      <div class="inst-card cancilleria">
+        <div class="inst-icon">🌐</div>
+        <div class="inst-name">Cancillería</div>
+        <div class="inst-rol">Negocia acuerdos de reconocimiento de títulos. Coordina diplomacia científica con Asia.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">títulos</span><span class="inst-tag">acuerdos</span><span class="inst-tag">Asia</span>
+        </div>
+      </div>
+      <div class="inst-card corfo">
+        <div class="inst-icon">🏗️</div>
+        <div class="inst-name">CORFO</div>
+        <div class="inst-rol">Fomenta inversión y emprendimiento. Financia proyectos de innovación con capital humano.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">inversión</span><span class="inst-tag">FONDEF</span><span class="inst-tag">startup</span>
+        </div>
+      </div>
+      <div class="inst-card agci">
+        <div class="inst-icon">✈️</div>
+        <div class="inst-name">AGCI</div>
+        <div class="inst-rol">Administra becas internacionales y cooperación técnica. Incluye programas con China y Corea.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">becas int'l</span><span class="inst-tag">China</span><span class="inst-tag">Corea</span>
+        </div>
+      </div>
+      <div class="inst-card mineria">
+        <div class="inst-icon">⛏️</div>
+        <div class="inst-name">Min. Minería</div>
+        <div class="inst-rol">Regula y planifica el sector minero. Coordina con ENAMI y Codelco en formación especializada.</div>
+        <div class="inst-tags">
+          <span class="inst-tag">litio</span><span class="inst-tag">cobre</span><span class="inst-tag">ENAMI</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);display:flex;align-items:center;gap:8px;">
+      <span style="width:20px;height:1px;background:var(--cobre);display:inline-block;"></span>
+      Sinergias detectadas automáticamente por IA
+    </div>
+
+    <div class="sinergia-box">
+      <div class="sin-header">
+        <div class="sin-title">Biomasa y energía distribuida</div>
+        <span class="sin-badge">Sinergia potencial alta</span>
+      </div>
+      <div class="sin-ministerios">
+        <div class="sin-min">Min. Energía</div>
+        <div class="sin-arrow">⟷</div>
+        <div class="sin-min">Min. Medioambiente</div>
+        <div class="sin-arrow">⟷</div>
+        <div class="sin-min">Min. Ciencia</div>
+      </div>
+      <p class="sin-desc">Los tres ministerios tienen iniciativas activas relacionadas con biomasa forestal en zonas aisladas. Energía necesita la metodología ambiental que Medioambiente ya desarrolló. Ciencia tiene financiamiento disponible para proyectos de este tipo. Colaborar reduciría duplicación de estudios de terreno estimada en 40% de los costos actuales.</p>
+      <div class="sin-actions">
+        <button class="btn-notify" onclick="showToast('Correo enviado a los 3 ministerios con análisis de sinergia ✓')">Notificar a los 3 ministerios →</button>
+        <button class="btn-detail">Ver análisis completo</button>
+      </div>
+    </div>
+
+    <div class="sinergia-box">
+      <div class="sin-header">
+        <div class="sin-title">Becas Asia · sin articulación con mercado laboral</div>
+        <span class="sin-badge" style="background:rgba(200,115,58,.12);color:var(--cobre-claro);">Vacío crítico</span>
+      </div>
+      <div class="sin-ministerios">
+        <div class="sin-min">AGCI (becas China/Corea)</div>
+        <div class="sin-arrow" style="color:var(--cobre-claro);">↛</div>
+        <div class="sin-min">Min. Energía (demanda)</div>
+      </div>
+      <p class="sin-desc" style="color:rgba(232,149,106,.7);">AGCI otorga becas para estudiar en China y Corea, pero no existe un mecanismo que conecte a esos egresados con los proyectos de litio y renovables que los necesitan. Los profesionales vuelven sin orientación sectorial. El Ministerio de Energía busca esos perfiles sin saber que existen.</p>
+      <div class="sin-actions">
+        <button class="btn-notify" style="background:rgba(200,115,58,.12);color:var(--cobre-claro);border-color:rgba(200,115,58,.3);" onclick="showToast('Notificando a AGCI y Min. Energía del vacío detectado ✓')">Notificar a AGCI y Min. Energía →</button>
+        <button class="btn-detail">Ver detalle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── PÁGINA 4: GUÍA DE TÍTULOS ─────── -->
+<div class="page" id="pg-titulos">
+  <div class="page-inner">
+    <div class="page-header">
+      <div class="page-eyebrow">Reconocimiento de títulos · Asia–Chile</div>
+      <h1 class="page-title">¿Tu título extranjero es válido en Chile?</h1>
+      <p class="page-sub">Selecciona el país donde estudiaste y tu área de formación. Te mostramos el estado actual del reconocimiento, los pasos concretos y la institución responsable.</p>
+    </div>
+    <div class="titulos-buscador">
+      <div class="tit-row">
+        <div class="tit-field">
+          <label class="tit-label">País donde obtuviste tu título</label>
+          <div class="tit-paises">
+            <div class="tit-pais sel" onclick="selectPais(this,'china')" data-pais="china"><span class="tit-bandera">🇨🇳</span><span>China</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'corea')" data-pais="corea"><span class="tit-bandera">🇰🇷</span><span>Corea del Sur</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'japon')" data-pais="japon"><span class="tit-bandera">🇯🇵</span><span>Japón</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'alemania')" data-pais="alemania"><span class="tit-bandera">🇩🇪</span><span>Alemania</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'australia')" data-pais="australia"><span class="tit-bandera">🇦🇺</span><span>Australia</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'eeuu')" data-pais="eeuu"><span class="tit-bandera">🇺🇸</span><span>EE.UU.</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'espana')" data-pais="espana"><span class="tit-bandera">🇪🇸</span><span>España</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'argentina')" data-pais="argentina"><span class="tit-bandera">🇦🇷</span><span>Argentina</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'reinounido')" data-pais="reinounido"><span class="tit-bandera">🇬🇧</span><span>Reino Unido</span></div>
+            <div class="tit-pais" onclick="selectPais(this,'brasil')" data-pais="brasil"><span class="tit-bandera">🇧🇷</span><span>Brasil</span></div>
+          </div>
+        </div>
+        <div class="tit-field">
+          <label class="tit-label">Área de formación</label>
+          <select class="tit-select" onchange="updateResult()" id="tit-area">
+            <option value="ingenieria">Ingeniería (eléctrica, química, civil)</option>
+            <option value="ciencias">Ciencias (física, química, biología)</option>
+            <option value="tecnico">Técnico / CFT especializado</option>
+            <option value="derecho">Derecho y ciencias jurídicas</option>
+            <option value="medicina">Medicina y ciencias de la salud</option>
+            <option value="negocios">Negocios, economía, administración</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="tit-resultado" class="tit-resultado">
+      <div class="tit-res-header">
+        <div>
+          <div id="tit-res-titulo" class="tit-res-titulo">Ingeniería · China</div>
+          <div class="tit-res-sub">Basado en acuerdos vigentes de Cancillería de Chile</div>
+        </div>
+        <div id="tit-res-badge" class="tit-res-badge badge-posible">Reconocimiento posible</div>
+      </div>
+      <div class="tit-pasos-grid">
+        <div class="tit-paso">
+          <div class="tit-paso-num">1</div>
+          <div><div class="tit-paso-title">Legalización del título</div><div class="tit-paso-desc" id="paso1-desc">Apostilla o legalización ante el Ministerio de RR.EE. del país de origen y luego en el Consulado chileno. Costo estimado: $50–80 USD · Tiempo: 2–4 semanas.</div></div>
+        </div>
+        <div class="tit-paso">
+          <div class="tit-paso-num">2</div>
+          <div><div class="tit-paso-title">Traducción oficial al español</div><div class="tit-paso-desc">Traductor oficial certificado por Cancillería de Chile. Lista disponible en cancilleria.gob.cl · Costo estimado: $80–150 USD según extensión del documento.</div></div>
+        </div>
+        <div class="tit-paso">
+          <div class="tit-paso-num">3</div>
+          <div><div class="tit-paso-title" id="paso3-title">Solicitud de reconocimiento</div><div class="tit-paso-desc" id="paso3-desc">Para ingeniería: el Colegio de Ingenieros de Chile puede emitir reconocimiento profesional. Tiempo estimado: 3–6 meses. Alternativa: convalidación universitaria en institución chilena acreditada.</div></div>
+        </div>
+        <div class="tit-paso">
+          <div class="tit-paso-num">4</div>
+          <div><div class="tit-paso-title">Instituciones responsables</div><div class="tit-paso-desc" id="paso4-desc">Cancillería (legalización) · Ministerio de Educación (convalidación académica) · Colegio profesional correspondiente (habilitación laboral). Primera consulta gratuita.</div></div>
+        </div>
+      </div>
+      <div class="tit-alerta" id="tit-alerta">
+        <div class="tit-alerta-icon">💡</div>
+        <div>
+          <div class="tit-alerta-title" id="alerta-title">Acuerdo bilateral vigente</div>
+          <div class="tit-alerta-desc" id="alerta-desc">Chile y China tienen un Memorando de Entendimiento en educación superior (2016) que facilita el reconocimiento mutuo de títulos universitarios. Cancillería puede orientarte directamente sobre su aplicación.</div>
+        </div>
+      </div>
+      <div class="tit-tiempo">
+        <div class="tit-tiempo-item"><div class="tit-tiempo-num" id="t-tiempo">4–8 meses</div><div class="tit-tiempo-label">Tiempo estimado total</div></div>
+        <div class="tit-tiempo-item"><div class="tit-tiempo-num" id="t-costo">$150–280 USD</div><div class="tit-tiempo-label">Costo estimado trámites</div></div>
+        <div class="tit-tiempo-item"><div class="tit-tiempo-num" id="t-acuerdo">Sí</div><div class="tit-tiempo-label">Acuerdo bilateral</div></div>
+      </div>
+    </div>
+    <div class="tit-disclaimer">Guía basada en acuerdos públicos de Cancillería y normativas del Ministerio de Educación vigentes a 2025. Para casos específicos consulta directamente con las instituciones indicadas. Esta plataforma no reemplaza asesoría jurídica.</div>
+  </div>
+</div>
+
+<!-- ─────── PÁGINA 5: REGISTRO ─────── -->
+<div class="page" id="pg-registro">
+  <div class="reg-layout">
+    <div class="reg-left">
+      <div class="page-eyebrow" style="margin-bottom:14px;">Registro voluntario de talento</div>
+      <h2>¿Tienes talento que Chile necesita?</h2>
+      <p>Registrarte toma 2 minutos. A cambio recibes un informe personalizado de oportunidades reales en tu área. Tu información aparece solo de forma agregada — nunca como perfil individual.</p>
+      <div class="reg-benefit">
+        <div class="reg-icon c1">📊</div>
+        <div class="reg-benefit-text">
+          <strong>Informe personalizado</strong>
+          <span>Al registrarte recibes por correo un análisis de qué oportunidades existen para tu perfil en litio y renovables en Chile.</span>
+        </div>
+      </div>
+      <div class="reg-benefit">
+        <div class="reg-icon c2">🔒</div>
+        <div class="reg-benefit-text">
+          <strong>Datos protegidos</strong>
+          <span>Nunca se muestra tu nombre ni correo públicamente. Solo apareces como parte de estadísticas agregadas. Puedes pedir eliminación en cualquier momento.</span>
+        </div>
+      </div>
+      <div class="reg-benefit">
+        <div class="reg-icon c3">🌐</div>
+        <div class="reg-benefit-text">
+          <strong>Impacto real en política pública</strong>
+          <span>Tu registro ayuda a demostrar al Estado que el talento existe y está disponible. Cada persona cuenta como evidencia.</span>
+        </div>
+      </div>
+    </div>
+    <div class="reg-form">
+      <div class="reg-steps">
+        <div class="reg-step done" id="rs0"></div>
+        <div class="reg-step active" id="rs1"></div>
+        <div class="reg-step" id="rs2"></div>
+      </div>
+      <div id="rf-step0">
+        <p style="font-size:13px;color:var(--gris-claro);margin-bottom:20px;">Paso 1 · Cuéntanos quién eres</p>
+        <div class="form-row">
+          <div><label class="form-label">Nombre</label><input class="form-input" placeholder="Como te llamas" type="text"></div>
+          <div><label class="form-label">Correo</label><input class="form-input" placeholder="tu@correo.com" type="email"></div>
+        </div>
+        <label class="form-label">¿Dónde estás hoy?</label>
+        <select class="form-select">
+          <option value="">País actual...</option>
+          <option>Chile</option><option>China</option><option>Corea del Sur</option>
+          <option>Alemania</option><option>Estados Unidos</option><option>Otro</option>
+        </select>
+        <button class="form-btn" onclick="nextStep()">Continuar →</button>
+      </div>
+      <div id="rf-step1" style="display:none">
+        <p style="font-size:13px;color:var(--gris-claro);margin-bottom:20px;">Paso 2 · Tu formación y experiencia</p>
+        <label class="form-label">¿En qué área te especializas?</label>
+        <div class="tag-select">
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Ingeniería eléctrica</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Química / procesos</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Geología / minería</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Energías renovables</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Ciencias de datos</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Relaciones internacionales</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Técnico especializado</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Otra área</span>
+        </div>
+        <label class="form-label">¿Dónde estudiaste?</label>
+        <input class="form-input" placeholder="Ej: USACH, Universidad de Pekín, INACAP..." type="text">
+        <button class="form-btn" onclick="nextStep()">Continuar →</button>
+      </div>
+      <div id="rf-step2" style="display:none">
+        <p style="font-size:13px;color:var(--gris-claro);margin-bottom:20px;">Paso 3 · ¿Cómo quieres contribuir?</p>
+        <label class="form-label">Me interesaría...</label>
+        <div class="tag-select">
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Trabajar en Chile</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Consultoría remota</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Investigación</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Mentoría</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Solo quiero ser contado</span>
+        </div>
+        <label class="form-label" style="margin-top:4px;">¿Algo más que agregar? <span style="font-weight:300;color:var(--gris-claro)">(opcional)</span></label>
+        <textarea class="form-input" rows="3" placeholder="Cuéntanos algo sobre tu experiencia o motivación..."></textarea>
+        <button class="form-btn" onclick="submitForm()" style="background:var(--verde);margin-top:4px;">Registrarme ✓</button>
+        <p style="font-size:10px;color:var(--gris-claro);margin-top:12px;line-height:1.6;">Datos protegidos bajo Ley 19.628. Proyecto académico sin fines de lucro. Puedes pedir eliminación en cualquier momento.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-icon">✅</div>
+  <div class="toast-text">
+    <strong id="toast-title">Notificación enviada</strong>
+    <span id="toast-msg">CORFO ha sido notificado del match detectado</span>
+  </div>
+</div>
+
+<script>
+  let currentStep = 0;
+
+  function goPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('pg-' + id).classList.add('active');
+    const map = {inicio:0,brechas:1,institucional:2,titulos:3,registro:4};
+    const links = document.querySelectorAll('.nav-link');
+    if (links[map[id]] !== undefined) links[map[id]].classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  let paisActual = 'china';
+
+  function selectPais(el, pais) {
+    document.querySelectorAll('.tit-pais').forEach(p => p.classList.remove('sel'));
+    el.classList.add('sel');
+    paisActual = pais;
+    updateResult();
+  }
+
+  const dataTitulos = {
+    china: {
+      ingenieria: { badge:'posible', tiempo:'4–8 meses', costo:'$150–280 USD', acuerdo:'Sí (2016)', alerta:'Chile y China tienen un Memorando de Entendimiento en educación superior (2016) que facilita el reconocimiento mutuo. Cancillería puede orientarte sobre su aplicación.', paso3:'Colegio de Ingenieros de Chile emite reconocimiento profesional. Tiempo: 3–6 meses. Alternativa: convalidación en universidad chilena acreditada.' },
+      ciencias: { badge:'posible', tiempo:'5–9 meses', costo:'$120–250 USD', acuerdo:'Sí (2016)', alerta:'El acuerdo bilateral Chile–China de 2016 aplica a títulos de ciencias de universidades acreditadas en ambos países.', paso3:'Convalidación a través del Ministerio de Educación o reconocimiento directo en universidad chilena con programa equivalente.' },
+      tecnico: { badge:'complejo', tiempo:'6–12 meses', costo:'$100–200 USD', acuerdo:'Parcial', alerta:'Los títulos técnicos tienen menor cobertura en el acuerdo bilateral. Se recomienda consultar directamente con SENCE o MINEDUC para orientación específica.', paso3:'SENCE puede certificar competencias laborales. MINEDUC evalúa convalidación caso a caso. Proceso más largo que títulos universitarios.' },
+      derecho: { badge:'complejo', tiempo:'8–14 meses', costo:'$200–400 USD', acuerdo:'No aplica', alerta:'El derecho es una disciplina de jurisdicción nacional. Los títulos extranjeros no habilitan directamente para ejercer en Chile. Se requiere proceso especial ante la Corte Suprema.', paso3:'Proceso especial ante la Corte Suprema de Chile. Requiere examen de habilitación. Tiempo estimado: 8–14 meses desde presentación completa.' },
+      medicina: { badge:'complejo', tiempo:'12–24 meses', costo:'$300–600 USD', acuerdo:'No aplica', alerta:'La habilitación médica en Chile es uno de los procesos más exigentes. Requiere EUNACOM (examen único) independiente del país de origen del título.', paso3:'Convalidación ante Universidad de Chile + EUNACOM obligatorio (examen nacional). Proceso regulado por el Ministerio de Salud.' },
+      negocios: { badge:'directo', tiempo:'3–5 meses', costo:'$100–180 USD', acuerdo:'Sí (2016)', alerta:'Títulos de administración y negocios de universidades chinas acreditadas tienen alta tasa de reconocimiento bajo el acuerdo bilateral vigente.', paso3:'Convalidación directa en universidad chilena equivalente o reconocimiento ante el Ministerio de Educación. Proceso más expedito.' }
+    },
+    corea: {
+      ingenieria: { badge:'posible', tiempo:'4–7 meses', costo:'$140–260 USD', acuerdo:'Sí (2020)', alerta:'Chile y Corea del Sur tienen un acuerdo de cooperación educativa activo desde 2020 que incluye reconocimiento de títulos universitarios en áreas STEM.', paso3:'Colegio de Ingenieros de Chile. Corea tiene alta reputación en ingeniería, lo que facilita el proceso. Tiempo estimado: 3–5 meses.' },
+      ciencias: { badge:'posible', tiempo:'4–7 meses', costo:'$120–220 USD', acuerdo:'Sí (2020)', alerta:'El acuerdo Chile–Corea 2020 tiene cobertura amplia en ciencias e investigación. Especialmente fluido para doctores y postdoctorados.', paso3:'Reconocimiento a través de CONICYT o Ministerio de Educación. Universidades chilenas con programas de intercambio con Corea facilitan el proceso.' },
+      tecnico: { badge:'posible', tiempo:'4–8 meses', costo:'$100–180 USD', acuerdo:'Parcial', alerta:'Corea del Sur tiene un sistema de certificación técnica (KRIVET) reconocido internacionalmente. SENCE Chile puede certificar competencias equivalentes.', paso3:'SENCE evalúa competencias técnicas. Los certificados del KRIVET coreano tienen buena recepción en el sector industrial chileno.' },
+      derecho: { badge:'complejo', tiempo:'8–14 meses', costo:'$200–400 USD', acuerdo:'No aplica', alerta:'Mismo proceso que para otros países: los títulos de derecho requieren habilitación especial ante la Corte Suprema de Chile.', paso3:'Proceso ante la Corte Suprema de Chile. Requiere examen de habilitación. Asesoría legal especializada recomendada.' },
+      medicina: { badge:'complejo', tiempo:'12–24 meses', costo:'$300–600 USD', acuerdo:'No aplica', alerta:'EUNACOM obligatorio para todos los médicos con título extranjero, independiente del país de origen.', paso3:'Convalidación ante Universidad de Chile + EUNACOM. El sistema médico coreano es reconocido pero el proceso chileno es estándar para todos.' },
+      negocios: { badge:'directo', tiempo:'3–5 meses', costo:'$100–180 USD', acuerdo:'Sí (2020)', alerta:'Los títulos en negocios y administración de universidades coreanas acreditadas tienen alta tasa de reconocimiento en Chile.', paso3:'Convalidación directa. Universidades coreanas del top 50 QS tienen reconocimiento expedito en Chile.' }
+    },
+    japon: {
+      ingenieria: { badge:'posible', tiempo:'4–8 meses', costo:'$150–280 USD', acuerdo:'Sí (bilateral)', alerta:'Chile y Japón mantienen relaciones educativas a través de la JICA y convenios universitarios. No hay tratado formal pero sí práctica establecida de reconocimiento.', paso3:'Colegio de Ingenieros de Chile. Los títulos japoneses en ingeniería tienen alta reputación y son bien recibidos. Tiempo estimado: 3–6 meses.' },
+      ciencias: { badge:'posible', tiempo:'4–7 meses', costo:'$120–220 USD', acuerdo:'Sí (JICA)', alerta:'La cooperación Chile–Japón via JICA tiene trayectoria en ciencias. Muchos investigadores chilenos han estudiado en Japón con reconocimiento fluido al retorno.', paso3:'Reconocimiento vía CONICYT o Ministerio de Educación. Alta reputación de universidades japonesas facilita el proceso.' },
+      tecnico: { badge:'posible', tiempo:'5–9 meses', costo:'$120–200 USD', acuerdo:'Parcial', alerta:'Japón tiene uno de los sistemas de formación técnica más respetados del mundo (monozukuri). SENCE tiene experiencia con estos certificados.', paso3:'SENCE evalúa competencias. Se recomienda acompañar con documentación de la institución japonesa que detalle competencias adquiridas.' },
+      derecho: { badge:'complejo', tiempo:'8–14 meses', costo:'$200–400 USD', acuerdo:'No aplica', alerta:'Proceso estándar ante la Corte Suprema de Chile para habilitación de abogados con título extranjero.', paso3:'Proceso ante la Corte Suprema. Requieren traducción especializada dado el sistema jurídico diferente (civil law japonés vs chileno).' },
+      medicina: { badge:'complejo', tiempo:'12–24 meses', costo:'$300–600 USD', acuerdo:'No aplica', alerta:'EUNACOM obligatorio. La formación médica japonesa es reconocida de alta calidad lo que puede facilitar la aprobación del examen.', paso3:'Convalidación ante U. de Chile + EUNACOM obligatorio.' },
+      negocios: { badge:'directo', tiempo:'3–5 meses', costo:'$100–180 USD', acuerdo:'Sí (bilateral)', alerta:'Los MBA y títulos de negocios de universidades japonesas tienen muy buena recepción en Chile, especialmente en empresas con operaciones en Asia.', paso3:'Convalidación directa o reconocimiento profesional. Proceso expedito para universidades japonesas acreditadas.' }
+    },
+    alemania: {
+      ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (Apostilla)', alerta:'Alemania firmó la Convención de la Apostilla, lo que simplifica enormemente la legalización. Chile reconoce ampliamente los títulos de ingeniería alemanes.', paso3:'Apostilla directa (sin consulado). Colegio de Ingenieros de Chile tiene proceso expedito para títulos alemanes. Alta reputación garantiza buena recepción.' },
+      ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (Apostilla)', alerta:'La Apostilla de La Haya aplica entre Chile y Alemania. Títulos científicos alemanes tienen reconocimiento casi automático en universidades chilenas.', paso3:'Apostilla + reconocimiento directo en universidad o CONICYT. Proceso de los más expeditos disponibles.' },
+      tecnico: { badge:'posible', tiempo:'3–6 meses', costo:'$80–140 USD', acuerdo:'Sí (Apostilla)', alerta:'Los títulos técnicos del sistema dual alemán (Ausbildung) son muy valorados en Chile. SENCE tiene experiencia creciente con estos certificados.', paso3:'SENCE evalúa competencias del sistema dual alemán. En sectores industriales, muchas empresas reconocen directamente la Ausbildung alemana.' },
+      derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Apostilla', alerta:'Apostilla simplifica la legalización pero el proceso de habilitación ante la Corte Suprema sigue siendo necesario para ejercer en Chile.', paso3:'Apostilla + proceso ante Corte Suprema de Chile. Más expedito gracias a la Apostilla pero igual requiere habilitación especial.' },
+      medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Apostilla', alerta:'La Apostilla simplifica la documentación. El EUNACOM sigue siendo obligatorio pero médicos alemanes tienen altas tasas de aprobación.', paso3:'Apostilla + convalidación U. de Chile + EUNACOM. Alta tasa de éxito para médicos formados en Alemania.' },
+      negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–130 USD', acuerdo:'Sí (Apostilla)', alerta:'Proceso más simple del sistema: Apostilla directa y reconocimiento expedito. Títulos de universidades alemanas de negocios tienen máxima aceptación en Chile.', paso3:'Apostilla + convalidación directa. El proceso más rápido disponible para títulos extranjeros en Chile.' }
+    },
+    australia: {
+      ingenieria: { badge:'posible', tiempo:'3–6 meses', costo:'$120–220 USD', acuerdo:'Sí (Apostilla)', alerta:'Australia también usa la Apostilla. Los títulos de ingeniería australianos son muy bien recibidos en Chile, especialmente en minería y energía.', paso3:'Apostilla + Colegio de Ingenieros. Alta reputación especialmente en ingeniería de minería y recursos naturales, muy relevante para el sector litio.' },
+      ciencias: { badge:'posible', tiempo:'3–6 meses', costo:'$100–200 USD', acuerdo:'Sí (Apostilla)', alerta:'Apostilla simplifica el proceso. Australia tiene programas de ciencias de primer nivel internacional con buena recepción en Chile.', paso3:'Apostilla + reconocimiento en CONICYT o universidad chilena equivalente.' },
+      tecnico: { badge:'posible', tiempo:'4–7 meses', costo:'$100–180 USD', acuerdo:'Sí (Apostilla)', alerta:'El sistema TAFE australiano es reconocido internacionalmente. SENCE puede evaluar competencias equivalentes.', paso3:'Apostilla + evaluación SENCE. Los certificados TAFE tienen buena recepción en sectores técnicos chilenos.' },
+      derecho: { badge:'complejo', tiempo:'7–12 meses', costo:'$180–350 USD', acuerdo:'Apostilla', alerta:'Apostilla simplifica legalización. El derecho australiano (common law) difiere del chileno (civil law), lo que el proceso de habilitación considera.', paso3:'Apostilla + proceso ante Corte Suprema. El jurado evaluará diferencias entre common law y civil law chileno.' },
+      medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Apostilla', alerta:'EUNACOM obligatorio. Médicos australianos tienen alta tasa de preparación para el examen.', paso3:'Apostilla + convalidación U. de Chile + EUNACOM.' },
+      negocios: { badge:'directo', tiempo:'2–4 meses', costo:'$80–160 USD', acuerdo:'Sí (Apostilla)', alerta:'Proceso muy expedito. MBA y títulos de negocios australianos tienen excelente recepción en el mercado chileno.', paso3:'Apostilla + convalidación directa. Uno de los procesos más simples para títulos extranjeros.' }
+    },
+    eeuu: {
+      ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$100–180 USD', acuerdo:'Sí (Apostilla)', alerta:'EE.UU. usa la Apostilla. Los títulos de ingeniería de universidades estadounidenses tienen reconocimiento casi inmediato en Chile.', paso3:'Apostilla + Colegio de Ingenieros de Chile. Proceso muy expedito. Alta reputación garantiza aceptación rápida.' },
+      ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–160 USD', acuerdo:'Sí (Apostilla)', alerta:'Apostilla simplifica el proceso. Títulos de universidades de EE.UU. son los de reconocimiento más expedito en el sistema chileno.', paso3:'Apostilla + reconocimiento directo. CONICYT tiene trayectoria larga con retornados de EE.UU.' },
+      tecnico: { badge:'posible', tiempo:'3–6 meses', costo:'$80–150 USD', acuerdo:'Sí (Apostilla)', alerta:'Los certificados técnicos estadounidenses son bien recibidos. SENCE tiene alta familiaridad con el sistema de certificación de EE.UU.', paso3:'Apostilla + evaluación SENCE. Proceso relativamente simple dado el volumen de chilenos que estudian en EE.UU.' },
+      derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$180–350 USD', acuerdo:'Apostilla', alerta:'El J.D. estadounidense (common law) requiere habilitación especial en Chile. Apostilla simplifica documentación pero no el proceso sustantivo.', paso3:'Apostilla + proceso ante Corte Suprema. Diferencias entre common law y civil law chileno son evaluadas.' },
+      medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Apostilla', alerta:'EUNACOM obligatorio. Médicos con formación en EE.UU. tienen muy alta tasa de aprobación del EUNACOM.', paso3:'Apostilla + convalidación U. de Chile + EUNACOM. Alta tasa de éxito para médicos con formación en EE.UU.' },
+      negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–140 USD', acuerdo:'Sí (Apostilla)', alerta:'El proceso más rápido del sistema. MBA y títulos de negocios de EE.UU. tienen reconocimiento casi automático en Chile.', paso3:'Apostilla + convalidación directa. Proceso más expedito disponible para cualquier título extranjero.' }
+    }
+espana: {
+    ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (MINEDUC 2017)', alerta:'Acuerdo bilateral España–Chile (2017). Muy expedito.', paso3:'Convalidación directa en MINEDUC + Colegio profesional.' },
+    ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (MINEDUC)', alerta:'Acuerdo bilateral vigente.', paso3:'MINEDUC.' },
+    tecnico: { badge:'posible', tiempo:'3–6 meses', costo:'$80–140 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'SENCE o MINEDUC.' },
+    derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Sí', alerta:'Habilitación ante Corte Suprema.', paso3:'Corte Suprema.' },
+    medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Sí', alerta:'EUNACOM obligatorio.', paso3:'U. de Chile + EUNACOM.' },
+    negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–130 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' }
+  },
+  argentina: {
+    ingenieria: { badge:'directo', tiempo:'2–5 meses', costo:'$80–160 USD', acuerdo:'Sí (MINEDUC 2012)', alerta:'Acuerdo bilateral Argentina–Chile (2012).', paso3:'MINEDUC + Colegio profesional.' },
+    // (copia el patrón de españa para ciencias, tecnico, etc. – son muy similares)
+    ciencias: { badge:'directo', tiempo:'2–5 meses', costo:'$80–150 USD', acuerdo:'Sí (MINEDUC)', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' },
+    tecnico: { badge:'posible', tiempo:'3–6 meses', costo:'$80–140 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'SENCE.' },
+    derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Sí', alerta:'Corte Suprema.', paso3:'Corte Suprema.' },
+    medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Sí', alerta:'EUNACOM.', paso3:'U. de Chile + EUNACOM.' },
+    negocios: { badge:'directo', tiempo:'2–4 meses', costo:'$70–140 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' }
+  },
+  reinounido: {
+    ingenieria: { badge:'posible', tiempo:'3–6 meses', costo:'$100–200 USD', acuerdo:'Sí (MINEDUC 2018)', alerta:'Acuerdo bilateral Reino Unido–Chile (2018).', paso3:'MINEDUC + Colegio.' },
+    // patrón similar al de argentina
+    ciencias: { badge:'posible', tiempo:'3–6 meses', costo:'$90–180 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' },
+    tecnico: { badge:'posible', tiempo:'4–7 meses', costo:'$90–160 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'SENCE.' },
+    derecho: { badge:'complejo', tiempo:'7–13 meses', costo:'$180–350 USD', acuerdo:'Sí', alerta:'Corte Suprema.', paso3:'Corte Suprema.' },
+    medicina: { badge:'complejo', tiempo:'11–20 meses', costo:'$280–550 USD', acuerdo:'Sí', alerta:'EUNACOM.', paso3:'U. de Chile + EUNACOM.' },
+    negocios: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' }
+  },
+  brasil: {
+    ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$80–140 USD', acuerdo:'Sí (MINREL)', alerta:'Convenio bilateral vigente.', paso3:'MINREL + Colegio profesional.' },
+    // repite patrón para las demás áreas (muy expedito por convenio)
+    ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–140 USD', acuerdo:'Sí (MINREL)', alerta:'Convenio bilateral.', paso3:'MINREL.' },
+    tecnico: { badge:'posible', tiempo:'3–5 meses', costo:'$70–130 USD', acuerdo:'Sí', alerta:'Convenio bilateral.', paso3:'SENCE.' },
+    derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Sí', alerta:'Corte Suprema.', paso3:'Corte Suprema.' },
+    medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Sí', alerta:'EUNACOM.', paso3:'U. de Chile + EUNACOM.' },
+    negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–130 USD', acuerdo:'Sí', alerta:'Convenio bilateral.', paso3:'MINREL.' }
+  },
+  
+  };
+
+  function updateResult() {
+    const area = document.getElementById('tit-area').value;
+    const data = dataTitulos[paisActual]?.[area];
+    if (!data) return;
+    const paisNombres = {china:'China',corea:'Corea del Sur',japon:'Japón',alemania:'Alemania',australia:'Australia',eeuu:'EE.UU.'};
+    const areaNombres = {ingenieria:'Ingeniería',ciencias:'Ciencias',tecnico:'Técnico/CFT',derecho:'Derecho',medicina:'Medicina',negocios:'Negocios'};
+    document.getElementById('tit-res-titulo').textContent = areaNombres[area] + ' · ' + paisNombres[paisActual];
+    const badge = document.getElementById('tit-res-badge');
+    badge.className = 'tit-res-badge badge-' + data.badge;
+    const labels = {posible:'Reconocimiento posible',directo:'Reconocimiento directo',complejo:'Proceso complejo'};
+    badge.textContent = labels[data.badge];
+    document.getElementById('t-tiempo').textContent = data.tiempo;
+    document.getElementById('t-costo').textContent = data.costo;
+    document.getElementById('t-acuerdo').textContent = data.acuerdo;
+    document.getElementById('alerta-title').textContent = data.badge === 'complejo' ? '⚠️ Consideración importante' : '💡 Acuerdo bilateral';
+    document.getElementById('alerta-desc').textContent = data.alerta;
+    document.getElementById('paso3-desc').textContent = data.paso3;
+    const alerta = document.getElementById('tit-alerta');
+    alerta.style.background = data.badge === 'complejo' ? 'rgba(200,115,58,.07)' : 'rgba(52,152,219,.07)';
+    alerta.style.borderColor = data.badge === 'complejo' ? 'rgba(200,115,58,.25)' : 'rgba(52,152,219,.2)';
+  }
+
+  function toggleChip(el) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
+    el.classList.add('on');
+  }
+
+  function nextStep() {
+    document.getElementById('rf-step' + currentStep).style.display = 'none';
+    currentStep++;
+    document.getElementById('rf-step' + currentStep).style.display = 'block';
+    for (let i = 0; i < 3; i++) {
+      const s = document.getElementById('rs' + i);
+      if (i < currentStep) { s.className = 'reg-step done'; }
+      else if (i === currentStep) { s.className = 'reg-step active'; }
+      else { s.className = 'reg-step'; }
+    }
+  }
+
+  function submitForm() {
+    document.querySelectorAll('.reg-step').forEach(s => s.className = 'reg-step done');
+    document.getElementById('rf-step2').innerHTML = `
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:48px;margin-bottom:16px;">🎉</div>
+        <p style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:10px;">¡Gracias por sumarte!</p>
+        <p style="font-size:13px;color:var(--gris-claro);line-height:1.7;margin-bottom:20px;">Tu informe personalizado llegará en las próximas 24 horas. Ya eres parte del mapa de talento estratégico de Chile.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;">
+          <div style="background:rgba(245,242,236,.05);border:1px solid var(--borde);border-radius:10px;padding:14px;">
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--cobre);">48</div>
+            <div style="font-size:11px;color:var(--gris-claro);">personas registradas</div>
+          </div>
+          <div style="background:rgba(245,242,236,.05);border:1px solid var(--borde);border-radius:10px;padding:14px;">
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--verde-claro);">12</div>
+            <div style="font-size:11px;color:var(--gris-claro);">países representados</div>
+          </div>
+          <div style="background:rgba(245,242,236,.05);border:1px solid var(--borde);border-radius:10px;padding:14px;">
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--azul-claro);">6</div>
+            <div style="font-size:11px;color:var(--gris-claro);">sectores cubiertos</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // Animar barras al cargar
+  setTimeout(() => {
+    document.querySelectorAll('.bc-bar-fill').forEach(b => {
+      const w = b.style.width; b.style.width = '0';
+      setTimeout(() => b.style.width = w, 100);
+    });
+  }, 200);
+</script>
+</body>
+</html>
