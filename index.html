@@ -560,64 +560,15 @@
       <button class="filter-chip" onclick="toggleChip(this)">Antofagasta</button>
       <button class="filter-chip" onclick="toggleChip(this)">Atacama</button>
     </div>
-    <div class="brechas-grid">
-      <div class="brecha-card urgente">
-        <div class="bc-header">
-          <span class="bc-sector litio">Litio</span>
-          <span class="bc-urgencia alta">Urgencia alta</span>
-        </div>
-        <div class="bc-title">Técnicos en electromovilidad e hidróxido de litio</div>
-        <div class="bc-region">📍 Antofagasta · Atacama</div>
-        <div class="bc-bar-label"><span>Demanda proyectada 2025–2027</span><span>78%</span></div>
-        <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:78%"></div></div>
-        <div class="bc-footer">
-          <div><div class="bc-num">420</div><div class="bc-num-label">puestos sin cubrir</div></div>
-          <button class="bc-btn" onclick="showToast('Notificando a CORFO sobre brecha en electromovilidad...')">Notificar a CORFO →</button>
-        </div>
-      </div>
-      <div class="brecha-card urgente">
-        <div class="bc-header">
-          <span class="bc-sector solar">Solar</span>
-          <span class="bc-urgencia alta">Urgencia alta</span>
-        </div>
-        <div class="bc-title">Ingenieros en sistemas de almacenamiento y baterías</div>
-        <div class="bc-region">📍 Atacama · Coquimbo</div>
-        <div class="bc-bar-label"><span>Demanda proyectada 2025–2027</span><span>65%</span></div>
-        <div class="bc-bar"><div class="bc-bar-fill fill-azul" style="width:65%"></div></div>
-        <div class="bc-footer">
-          <div><div class="bc-num">280</div><div class="bc-num-label">puestos sin cubrir</div></div>
-          <button class="bc-btn" onclick="showToast('Notificando a Min. Energía sobre brecha en almacenamiento...')">Notificar →</button>
-        </div>
-      </div>
-      <div class="brecha-card">
-        <div class="bc-header">
-          <span class="bc-sector hidro">Hidrógeno verde</span>
-          <span class="bc-urgencia media">Urgencia media</span>
-        </div>
-        <div class="bc-title">Químicos e ingenieros en electrólisis y celdas de combustible</div>
-        <div class="bc-region">📍 Magallanes · Biobío</div>
-        <div class="bc-bar-label"><span>Demanda proyectada 2026–2028</span><span>52%</span></div>
-        <div class="bc-bar"><div class="bc-bar-fill fill-verde" style="width:52%"></div></div>
-        <div class="bc-footer">
-          <div><div class="bc-num">160</div><div class="bc-num-label">puestos sin cubrir</div></div>
-          <button class="bc-btn" onclick="showToast('Notificando a Min. Ciencia sobre brecha en hidrógeno...')">Notificar →</button>
-        </div>
-      </div>
-      <div class="brecha-card">
-        <div class="bc-header">
-          <span class="bc-sector eolica">Eólica</span>
-          <span class="bc-urgencia media">Urgencia media</span>
-        </div>
-        <div class="bc-title">Técnicos en mantención de aerogeneradores y sistemas SCADA</div>
-        <div class="bc-region">📍 Coquimbo · Aysén</div>
-        <div class="bc-bar-label"><span>Demanda proyectada 2025–2027</span><span>44%</span></div>
-        <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:44%"></div></div>
-        <div class="bc-footer">
-          <div><div class="bc-num">95</div><div class="bc-num-label">puestos sin cubrir</div></div>
-          <button class="bc-btn" onclick="showToast('Notificando a CORFO sobre brecha en eólica...')">Notificar →</button>
-        </div>
-      </div>
-    </div>
+    
+    <!-- ✅ Grid vacío - se llenará con JavaScript -->
+    <div class="brechas-grid"></div>
+    
+    <!-- ✅ Match container - también se llenará con JS si existe en Sheets -->
+    <div id="match-container"></div>
+  </div>
+</div>
+
     <div class="sinergia-box" style="background:rgba(200,115,58,.06);border-color:rgba(200,115,58,.2);">
       <div class="sin-header">
         <div class="sin-title">🎯 Match detectado por IA</div>
@@ -701,41 +652,8 @@
       Sinergias detectadas automáticamente por IA
     </div>
 
-    <div class="sinergia-box">
-      <div class="sin-header">
-        <div class="sin-title">Biomasa y energía distribuida</div>
-        <span class="sin-badge">Sinergia potencial alta</span>
-      </div>
-      <div class="sin-ministerios">
-        <div class="sin-min">Min. Energía</div>
-        <div class="sin-arrow">⟷</div>
-        <div class="sin-min">Min. Medioambiente</div>
-        <div class="sin-arrow">⟷</div>
-        <div class="sin-min">Min. Ciencia</div>
-      </div>
-      <p class="sin-desc">Los tres ministerios tienen iniciativas activas relacionadas con biomasa forestal en zonas aisladas. Energía necesita la metodología ambiental que Medioambiente ya desarrolló. Ciencia tiene financiamiento disponible para proyectos de este tipo. Colaborar reduciría duplicación de estudios de terreno estimada en 40% de los costos actuales.</p>
-      <div class="sin-actions">
-        <button class="btn-notify" onclick="showToast('Correo enviado a los 3 ministerios con análisis de sinergia ✓')">Notificar a los 3 ministerios →</button>
-        <button class="btn-detail">Ver análisis completo</button>
-      </div>
-    </div>
-
-    <div class="sinergia-box">
-      <div class="sin-header">
-        <div class="sin-title">Becas Asia · sin articulación con mercado laboral</div>
-        <span class="sin-badge" style="background:rgba(200,115,58,.12);color:var(--cobre-claro);">Vacío crítico</span>
-      </div>
-      <div class="sin-ministerios">
-        <div class="sin-min">AGCI (becas China/Corea)</div>
-        <div class="sin-arrow" style="color:var(--cobre-claro);">↛</div>
-        <div class="sin-min">Min. Energía (demanda)</div>
-      </div>
-      <p class="sin-desc" style="color:rgba(232,149,106,.7);">AGCI otorga becas para estudiar en China y Corea, pero no existe un mecanismo que conecte a esos egresados con los proyectos de litio y renovables que los necesitan. Los profesionales vuelven sin orientación sectorial. El Ministerio de Energía busca esos perfiles sin saber que existen.</p>
-      <div class="sin-actions">
-        <button class="btn-notify" style="background:rgba(200,115,58,.12);color:var(--cobre-claro);border-color:rgba(200,115,58,.3);" onclick="showToast('Notificando a AGCI y Min. Energía del vacío detectado ✓')">Notificar a AGCI y Min. Energía →</button>
-        <button class="btn-detail">Ver detalle</button>
-      </div>
-    </div>
+  <div class="sinergias-container"></div>
+  </div>
   </div>
 </div>
 
@@ -1011,19 +929,32 @@ const BRECHAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BA
 const SINERGIAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=1759317245&single=true&output=csv";
 
 async function cargarBrechas() {
+  console.log("🔄 Cargando brechas desde Google Sheets...");
   try {
     const response = await fetch(BRECHAS_CSV);
     const csv = await response.text();
+    console.log("📄 CSV recibido:", csv.substring(0, 200));
+    
     const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
+    console.log("✅ Brechas parseadas:", data.length, "filas");
+    console.table(data);
 
     const grid = document.querySelector('.brechas-grid');
-    if (!grid || data.length === 0) return;
+    if (!grid) {
+      console.error("❌ No se encontró .brechas-grid");
+      return;
+    }
 
     grid.innerHTML = '';
 
+    let cardsCreadas = 0;
     data.forEach(row => {
-      if (!row.titulo) return;
+      if (!row.titulo || row.titulo.trim() === '') {
+        console.warn("⚠️ Fila sin título, saltando:", row);
+        return;
+      }
       
+      cardsCreadas++;
       const sectorClass = (row.sector || 'litio').toLowerCase().replace(/\s/g, '');
       const fillClass = sectorClass === 'solar' ? 'fill-azul' : 
                         sectorClass === 'hidrogenoverde' || sectorClass.includes('hidro') ? 'fill-verde' : 
@@ -1037,39 +968,56 @@ async function cargarBrechas() {
           <span class="bc-urgencia ${row.urgencia || 'media'}">Urgencia ${row.urgencia || 'media'}</span>
         </div>
         <div class="bc-title">${row.titulo}</div>
-        <div class="bc-region">📍 ${row.region || 'Antofagasta'}</div>
+        <div class="bc-region">📍 ${row.region || 'Antofagasta'}${row.empresa ? ' · ' + row.empresa : ''}</div>
+        ${row.match_universidad ? `<div style="font-size:11px;color:var(--verde-claro);margin:8px 0;">🎯 Match: ${row.match_universidad}</div>` : ''}
         <div class="bc-bar-label"><span>Demanda 2025–2027</span><span>${row.demanda_pct || 50}%</span></div>
         <div class="bc-bar"><div class="bc-bar-fill ${fillClass}" style="width:${row.demanda_pct || 50}%"></div></div>
         <div class="bc-footer">
-          <div><div class="bc-num">${row.puestos_sin_cubrir || 100}</div><div class="bc-num-label">puestos sin cubrir</div></div>
+          <div>
+            <div class="bc-num">${row.puestos_sin_cubrir || 100}</div>
+            <div class="bc-num-label">puestos sin cubrir</div>
+            ${row.salario_estimado ? `<div style="font-size:11px;color:var(--gris-claro);margin-top:4px;">💰 ${row.salario_estimado}</div>` : ''}
+          </div>
           <button class="bc-btn" onclick="showToast('Notificando sobre: ${row.titulo.replace(/'/g, "\\'")}')">Notificar →</button>
         </div>
       `;
       grid.appendChild(card);
     });
+    
+    console.log(`✅ ${cardsCreadas} cards de brechas creadas`);
+    
   } catch (e) {
-    console.error("Error cargando brechas:", e);
+    console.error("❌ Error cargando brechas:", e);
   }
 }
 
 async function cargarSinergias() {
+  console.log("🔄 Cargando sinergias desde Google Sheets...");
   try {
     const response = await fetch(SINERGIAS_CSV);
     const csv = await response.text();
+    console.log("📄 CSV recibido:", csv.substring(0, 200));
+    
     const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
+    console.log("✅ Sinergias parseadas:", data.length, "filas");
+    console.table(data);
 
     let container = document.querySelector('.sinergias-container');
     if (!container) {
-      container = document.createElement('div');
-      container.className = 'sinergias-container';
-      document.querySelector('#pg-institucional .page-inner').appendChild(container);
+      console.error("❌ No se encontró .sinergias-container");
+      return;
     }
 
     container.innerHTML = '<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);display:flex;align-items:center;gap:8px;"><span style="width:20px;height:1px;background:var(--cobre);"></span>Sinergias detectadas automáticamente por IA</div>';
 
+    let sinergiasCreadasCount = 0;
     data.forEach(row => {
-      if (!row.titulo || row.titulo.trim() === "") return;
+      if (!row.titulo || row.titulo.trim() === "") {
+        console.warn("⚠️ Sinergia sin título, saltando:", row);
+        return;
+      }
 
+      sinergiasCreadasCount++;
       const ministeriosHTML = row.ministerios ? 
         row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : 
         '';
@@ -1092,11 +1040,13 @@ async function cargarSinergias() {
       `;
       container.appendChild(box);
     });
+    
+    console.log(`✅ ${sinergiasCreadasCount} sinergias creadas`);
+    
   } catch (e) {
-    console.error("Error cargando sinergias:", e);
+    console.error("❌ Error cargando sinergias:", e);
   }
 }
-
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener('DOMContentLoaded', () => {
   // Cargar datos iniciales
