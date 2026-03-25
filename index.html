@@ -959,33 +959,44 @@ async function cargarBrechas() {
 
 // Cargar Sinergias
 async function cargarSinergias() {
+  console.log("🚀 Intentando cargar sinergias...");
+
   try {
     const response = await fetch(SINERGIAS_CSV);
-    const csv = await response.text();
-    const parsed = Papa.parse(csv, { 
+    const csvText = await response.text();
+    
+    console.log("CSV recibido, longitud:", csvText.length);
+
+    const parsed = Papa.parse(csvText, { 
       header: true, 
       skipEmptyLines: true 
     });
 
     console.log("=== DATOS CRUDOS DE SINERGIAS ===");
-    console.log("Filas recibidas:", parsed.data.length);
-    console.table(parsed.data);   // Esto muestra toda la tabla en consola
+    console.log("Número de filas:", parsed.data.length);
+    console.table(parsed.data);
 
-    // Código normal de renderizado (mantengo el resto igual)
+    // Renderizado
     const container = document.querySelector('#pg-institucional .page-inner');
-    if (!container) return;
-
-    let sinergiaSection = document.querySelector('.sinergias-container');
-    if (!sinergiaSection) {
-      sinergiaSection = document.createElement('div');
-      sinergiaSection.className = 'sinergias-container';
-      container.appendChild(sinergiaSection);
+    if (!container) {
+      console.error("No se encontró el contenedor de institucional");
+      return;
     }
 
-    sinergiaSection.innerHTML = `<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);">Sinergias detectadas automáticamente por IA</div>`;
+    let section = document.querySelector('.sinergias-container');
+    if (!section) {
+      section = document.createElement('div');
+      section.className = 'sinergias-container';
+      container.appendChild(section);
+    }
 
-    parsed.data.forEach(row => {
-      if (!row.titulo || row.titulo.trim() === "") return;
+    section.innerHTML = `<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);">Sinergias detectadas automáticamente por IA</div>`;
+
+    parsed.data.forEach((row, i) => {
+      if (!row.titulo || row.titulo.trim() === "") {
+        console.log(`Fila ${i} ignorada (sin título)`);
+        return;
+      }
 
       const box = document.createElement('div');
       box.className = 'sinergia-box';
@@ -995,18 +1006,20 @@ async function cargarSinergias() {
           <span class="sin-badge">${row.tipo_sinergia || 'media'}</span>
         </div>
         <div class="sin-ministerios">
-          ${row.ministerios ? row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : ''}
+          ${row.ministerios ? row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : 'Sin ministerios'}
         </div>
-        <p class="sin-desc">${row.descripcion || ''}</p>
+        <p class="sin-desc">${row.descripcion || row.descripcion_corta || 'Sin descripción'}</p>
         <div class="sin-actions">
           <button class="btn-notify" onclick="notificarSinergia('${row.titulo}')">${row.accion_recomendada || 'Notificar →'}</button>
         </div>
       `;
-      sinergiaSection.appendChild(box);
+      section.appendChild(box);
     });
 
+    console.log("✅ Sinergias renderizadas correctamente");
+
   } catch (e) {
-    console.error("Error cargando sinergias:", e);
+    console.error("❌ Error cargando sinergias:", e);
   }
 }
 
