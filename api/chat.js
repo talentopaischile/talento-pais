@@ -1,63 +1,60 @@
-// api/chat.js - Versión ultra simple y con logs claros
+// api/chat.js - Versión final con modelo estable
 export default async function handler(req, res) {
-  console.log("📥 Recibida petición al /api/chat");
+  console.log("📥 Petición recibida en /api/chat");
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Solo se permite POST' });
+    return res.status(405).json({ error: 'Método no permitido' });
   }
 
   const { message } = req.body;
   if (!message) {
-    return res.status(400).json({ error: 'Se requiere un mensaje' });
+    return res.status(400).json({ error: 'Mensaje requerido' });
   }
 
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
   if (!GEMINI_API_KEY) {
-    console.error("❌ ERROR: GEMINI_API_KEY no está configurada en Vercel");
+    console.error("❌ GEMINI_API_KEY no configurada");
     return res.status(500).json({ error: "Clave de Gemini no configurada en Vercel" });
   }
 
-  if (GEMINI_API_KEY.length < 30) {
-    console.error("❌ ERROR: La clave parece demasiado corta");
-    return res.status(500).json({ error: "Clave de Gemini inválida" });
-  }
-
   try {
-    console.log("🔑 Usando Gemini con clave de longitud:", GEMINI_API_KEY.length);
+    // Modelo estable actual (marzo 2026)
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ 
-            parts: [{ 
-              text: `Responde en español de forma clara y útil. Pregunta: ${message}` 
-            }] 
+    console.log("🔗 Llamando a:", geminiUrl.substring(0, 80) + "...");
+
+    const response = await fetch(geminiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `Eres un asistente útil y profesional de Talento País Chile. Responde siempre en español, claro, conciso y útil. Pregunta del usuario: ${message}`
           }]
-        })
-      }
-    );
+        }]
+      })
+    });
 
-    console.log("📡 Gemini respondió con status:", geminiResponse.status);
+    console.log("📡 Gemini status:", response.status);
 
-    if (!geminiResponse.ok) {
-      const errorText = await geminiResponse.text();
-      console.error("❌ Gemini error body:", errorText);
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("❌ Gemini error body:", errorBody);
       return res.status(500).json({ 
-        error: geminiResponse.status === 429 ? "Límite de Gemini alcanzado" : `Gemini error ${geminiResponse.status}` 
+        error: response.status === 404 ? "Modelo no encontrado" : 
+               response.status === 429 ? "Límite de consultas alcanzado" : 
+               `Gemini error ${response.status}`
       });
     }
 
-    const data = await geminiResponse.json();
+    const data = await response.json();
     const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No pude generar una respuesta.";
 
     return res.status(200).json({ reply });
 
   } catch (error) {
-    console.error("💥 Error completo en /api/chat:", error.message);
+    console.error("💥 Error en /api/chat:", error.message);
     return res.status(500).json({ error: "Error interno al conectar con Gemini" });
   }
 }
