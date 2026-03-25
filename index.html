@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Talento País · Chile</title>
@@ -914,191 +915,117 @@
 </div>
 
 <script>
-  let currentStep = 0;
+// ==================== CONFIGURACIÓN ====================
+const BRECHAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=0&single=true&output=csv";
+const SINERGIAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=1759317245&single=true&output=csv";
 
-  function goPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-    document.getElementById('pg-' + id).classList.add('active');
-    const map = {inicio:0,brechas:1,institucional:2,titulos:3,registro:4};
-    const links = document.querySelectorAll('.nav-link');
-    if (links[map[id]] !== undefined) links[map[id]].classList.add('active');
-    window.scrollTo(0,0);
-  }
+// ==================== FUNCIONES DE CARGA ====================
 
-  let paisActual = 'china';
+// Cargar Brechas
+async function cargarBrechas() {
+  try {
+    const response = await fetch(BRECHAS_CSV);
+    const csv = await response.text();
+    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
 
-  function selectPais(el, pais) {
-    document.querySelectorAll('.tit-pais').forEach(p => p.classList.remove('sel'));
-    el.classList.add('sel');
-    paisActual = pais;
-    updateResult();
-  }
+    const grid = document.querySelector('.brechas-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
 
-  const dataTitulos = {
-    china: {
-      ingenieria: { badge:'posible', tiempo:'4–8 meses', costo:'$150–280 USD', acuerdo:'Sí (2016)', alerta:'Chile y China tienen un Memorando de Entendimiento en educación superior (2016) que facilita el reconocimiento mutuo. Cancillería puede orientarte sobre su aplicación.', paso3:'Colegio de Ingenieros de Chile emite reconocimiento profesional. Tiempo: 3–6 meses. Alternativa: convalidación en universidad chilena acreditada.' },
-      ciencias: { badge:'posible', tiempo:'5–9 meses', costo:'$120–250 USD', acuerdo:'Sí (2016)', alerta:'El acuerdo bilateral Chile–China de 2016 aplica a títulos de ciencias de universidades acreditadas en ambos países.', paso3:'Convalidación a través del Ministerio de Educación o reconocimiento directo en universidad chilena con programa equivalente.' },
-      tecnico: { badge:'complejo', tiempo:'6–12 meses', costo:'$100–200 USD', acuerdo:'Parcial', alerta:'Los títulos técnicos tienen menor cobertura en el acuerdo bilateral. Se recomienda consultar directamente con SENCE o MINEDUC para orientación específica.', paso3:'SENCE puede certificar competencias laborales. MINEDUC evalúa convalidación caso a caso. Proceso más largo que títulos universitarios.' },
-      derecho: { badge:'complejo', tiempo:'8–14 meses', costo:'$200–400 USD', acuerdo:'No aplica', alerta:'El derecho es una disciplina de jurisdicción nacional. Los títulos extranjeros no habilitan directamente para ejercer en Chile. Se requiere proceso especial ante la Corte Suprema.', paso3:'Proceso especial ante la Corte Suprema de Chile. Requiere examen de habilitación. Tiempo estimado: 8–14 meses desde presentación completa.' },
-      medicina: { badge:'complejo', tiempo:'12–24 meses', costo:'$300–600 USD', acuerdo:'No aplica', alerta:'La habilitación médica en Chile es uno de los procesos más exigentes. Requiere EUNACOM (examen único) independiente del país de origen del título.', paso3:'Convalidación ante Universidad de Chile + EUNACOM obligatorio (examen nacional). Proceso regulado por el Ministerio de Salud.' },
-      negocios: { badge:'directo', tiempo:'3–5 meses', costo:'$100–180 USD', acuerdo:'Sí (2016)', alerta:'Títulos de administración y negocios de universidades chinas acreditadas tienen alta tasa de reconocimiento bajo el acuerdo bilateral vigente.', paso3:'Convalidación directa en universidad chilena equivalente o reconocimiento ante el Ministerio de Educación. Proceso más expedito.' }
-    },
-    corea: {
-      ingenieria: { badge:'posible', tiempo:'4–7 meses', costo:'$140–260 USD', acuerdo:'Sí (2020)', alerta:'Chile y Corea del Sur tienen un acuerdo de cooperación educativa activo desde 2020 que incluye reconocimiento de títulos universitarios en áreas STEM.', paso3:'Colegio de Ingenieros de Chile. Corea tiene alta reputación en ingeniería, lo que facilita el proceso. Tiempo estimado: 3–5 meses.' },
-      ciencias: { badge:'posible', tiempo:'4–7 meses', costo:'$120–220 USD', acuerdo:'Sí (2020)', alerta:'El acuerdo Chile–Corea 2020 tiene cobertura amplia en ciencias e investigación. Especialmente fluido para doctores y postdoctorados.', paso3:'Reconocimiento a través de CONICYT o Ministerio de Educación. Universidades chilenas con programas de intercambio con Corea facilitan el proceso.' },
-      tecnico: { badge:'posible', tiempo:'4–8 meses', costo:'$100–180 USD', acuerdo:'Parcial', alerta:'Corea del Sur tiene un sistema de certificación técnica (KRIVET) reconocido internacionalmente. SENCE Chile puede certificar competencias equivalentes.', paso3:'SENCE evalúa competencias técnicas. Los certificados del KRIVET coreano tienen buena recepción en el sector industrial chileno.' },
-      derecho: { badge:'complejo', tiempo:'8–14 meses', costo:'$200–400 USD', acuerdo:'No aplica', alerta:'Mismo proceso que para otros países: los títulos de derecho requieren habilitación especial ante la Corte Suprema de Chile.', paso3:'Proceso ante la Corte Suprema de Chile. Requiere examen de habilitación. Asesoría legal especializada recomendada.' },
-      medicina: { badge:'complejo', tiempo:'12–24 meses', costo:'$300–600 USD', acuerdo:'No aplica', alerta:'EUNACOM obligatorio para todos los médicos con título extranjero, independiente del país de origen.', paso3:'Convalidación ante Universidad de Chile + EUNACOM. El sistema médico coreano es reconocido pero el proceso chileno es estándar para todos.' },
-      negocios: { badge:'directo', tiempo:'3–5 meses', costo:'$100–180 USD', acuerdo:'Sí (2020)', alerta:'Los títulos en negocios y administración de universidades coreanas acreditadas tienen alta tasa de reconocimiento en Chile.', paso3:'Convalidación directa. Universidades coreanas del top 50 QS tienen reconocimiento expedito en Chile.' }
-    },
-    japon: {
-      ingenieria: { badge:'posible', tiempo:'4–8 meses', costo:'$150–280 USD', acuerdo:'Sí (bilateral)', alerta:'Chile y Japón mantienen relaciones educativas a través de la JICA y convenios universitarios. No hay tratado formal pero sí práctica establecida de reconocimiento.', paso3:'Colegio de Ingenieros de Chile. Los títulos japoneses en ingeniería tienen alta reputación y son bien recibidos. Tiempo estimado: 3–6 meses.' },
-      ciencias: { badge:'posible', tiempo:'4–7 meses', costo:'$120–220 USD', acuerdo:'Sí (JICA)', alerta:'La cooperación Chile–Japón via JICA tiene trayectoria en ciencias. Muchos investigadores chilenos han estudiado en Japón con reconocimiento fluido al retorno.', paso3:'Reconocimiento vía CONICYT o Ministerio de Educación. Alta reputación de universidades japonesas facilita el proceso.' },
-      tecnico: { badge:'posible', tiempo:'5–9 meses', costo:'$120–200 USD', acuerdo:'Parcial', alerta:'Japón tiene uno de los sistemas de formación técnica más respetados del mundo (monozukuri). SENCE tiene experiencia con estos certificados.', paso3:'SENCE evalúa competencias. Se recomienda acompañar con documentación de la institución japonesa que detalle competencias adquiridas.' },
-      derecho: { badge:'complejo', tiempo:'8–14 meses', costo:'$200–400 USD', acuerdo:'No aplica', alerta:'Proceso estándar ante la Corte Suprema de Chile para habilitación de abogados con título extranjero.', paso3:'Proceso ante la Corte Suprema. Requieren traducción especializada dado el sistema jurídico diferente (civil law japonés vs chileno).' },
-      medicina: { badge:'complejo', tiempo:'12–24 meses', costo:'$300–600 USD', acuerdo:'No aplica', alerta:'EUNACOM obligatorio. La formación médica japonesa es reconocida de alta calidad lo que puede facilitar la aprobación del examen.', paso3:'Convalidación ante U. de Chile + EUNACOM obligatorio.' },
-      negocios: { badge:'directo', tiempo:'3–5 meses', costo:'$100–180 USD', acuerdo:'Sí (bilateral)', alerta:'Los MBA y títulos de negocios de universidades japonesas tienen muy buena recepción en Chile, especialmente en empresas con operaciones en Asia.', paso3:'Convalidación directa o reconocimiento profesional. Proceso expedito para universidades japonesas acreditadas.' }
-    },
-    alemania: {
-      ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (Apostilla)', alerta:'Alemania firmó la Convención de la Apostilla, lo que simplifica enormemente la legalización. Chile reconoce ampliamente los títulos de ingeniería alemanes.', paso3:'Apostilla directa (sin consulado). Colegio de Ingenieros de Chile tiene proceso expedito para títulos alemanes. Alta reputación garantiza buena recepción.' },
-      ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (Apostilla)', alerta:'La Apostilla de La Haya aplica entre Chile y Alemania. Títulos científicos alemanes tienen reconocimiento casi automático en universidades chilenas.', paso3:'Apostilla + reconocimiento directo en universidad o CONICYT. Proceso de los más expeditos disponibles.' },
-      tecnico: { badge:'posible', tiempo:'3–6 meses', costo:'$80–140 USD', acuerdo:'Sí (Apostilla)', alerta:'Los títulos técnicos del sistema dual alemán (Ausbildung) son muy valorados en Chile. SENCE tiene experiencia creciente con estos certificados.', paso3:'SENCE evalúa competencias del sistema dual alemán. En sectores industriales, muchas empresas reconocen directamente la Ausbildung alemana.' },
-      derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Apostilla', alerta:'Apostilla simplifica la legalización pero el proceso de habilitación ante la Corte Suprema sigue siendo necesario para ejercer en Chile.', paso3:'Apostilla + proceso ante Corte Suprema de Chile. Más expedito gracias a la Apostilla pero igual requiere habilitación especial.' },
-      medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Apostilla', alerta:'La Apostilla simplifica la documentación. El EUNACOM sigue siendo obligatorio pero médicos alemanes tienen altas tasas de aprobación.', paso3:'Apostilla + convalidación U. de Chile + EUNACOM. Alta tasa de éxito para médicos formados en Alemania.' },
-      negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–130 USD', acuerdo:'Sí (Apostilla)', alerta:'Proceso más simple del sistema: Apostilla directa y reconocimiento expedito. Títulos de universidades alemanas de negocios tienen máxima aceptación en Chile.', paso3:'Apostilla + convalidación directa. El proceso más rápido disponible para títulos extranjeros en Chile.' }
-    },
-    australia: {
-      ingenieria: { badge:'posible', tiempo:'3–6 meses', costo:'$120–220 USD', acuerdo:'Sí (Apostilla)', alerta:'Australia también usa la Apostilla. Los títulos de ingeniería australianos son muy bien recibidos en Chile, especialmente en minería y energía.', paso3:'Apostilla + Colegio de Ingenieros. Alta reputación especialmente en ingeniería de minería y recursos naturales, muy relevante para el sector litio.' },
-      ciencias: { badge:'posible', tiempo:'3–6 meses', costo:'$100–200 USD', acuerdo:'Sí (Apostilla)', alerta:'Apostilla simplifica el proceso. Australia tiene programas de ciencias de primer nivel internacional con buena recepción en Chile.', paso3:'Apostilla + reconocimiento en CONICYT o universidad chilena equivalente.' },
-      tecnico: { badge:'posible', tiempo:'4–7 meses', costo:'$100–180 USD', acuerdo:'Sí (Apostilla)', alerta:'El sistema TAFE australiano es reconocido internacionalmente. SENCE puede evaluar competencias equivalentes.', paso3:'Apostilla + evaluación SENCE. Los certificados TAFE tienen buena recepción en sectores técnicos chilenos.' },
-      derecho: { badge:'complejo', tiempo:'7–12 meses', costo:'$180–350 USD', acuerdo:'Apostilla', alerta:'Apostilla simplifica legalización. El derecho australiano (common law) difiere del chileno (civil law), lo que el proceso de habilitación considera.', paso3:'Apostilla + proceso ante Corte Suprema. El jurado evaluará diferencias entre common law y civil law chileno.' },
-      medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Apostilla', alerta:'EUNACOM obligatorio. Médicos australianos tienen alta tasa de preparación para el examen.', paso3:'Apostilla + convalidación U. de Chile + EUNACOM.' },
-      negocios: { badge:'directo', tiempo:'2–4 meses', costo:'$80–160 USD', acuerdo:'Sí (Apostilla)', alerta:'Proceso muy expedito. MBA y títulos de negocios australianos tienen excelente recepción en el mercado chileno.', paso3:'Apostilla + convalidación directa. Uno de los procesos más simples para títulos extranjeros.' }
-    },
-    eeuu: {
-      ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$100–180 USD', acuerdo:'Sí (Apostilla)', alerta:'EE.UU. usa la Apostilla. Los títulos de ingeniería de universidades estadounidenses tienen reconocimiento casi inmediato en Chile.', paso3:'Apostilla + Colegio de Ingenieros de Chile. Proceso muy expedito. Alta reputación garantiza aceptación rápida.' },
-      ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–160 USD', acuerdo:'Sí (Apostilla)', alerta:'Apostilla simplifica el proceso. Títulos de universidades de EE.UU. son los de reconocimiento más expedito en el sistema chileno.', paso3:'Apostilla + reconocimiento directo. CONICYT tiene trayectoria larga con retornados de EE.UU.' },
-      tecnico: { badge:'posible', tiempo:'3–6 meses', costo:'$80–150 USD', acuerdo:'Sí (Apostilla)', alerta:'Los certificados técnicos estadounidenses son bien recibidos. SENCE tiene alta familiaridad con el sistema de certificación de EE.UU.', paso3:'Apostilla + evaluación SENCE. Proceso relativamente simple dado el volumen de chilenos que estudian en EE.UU.' },
-      derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$180–350 USD', acuerdo:'Apostilla', alerta:'El J.D. estadounidense (common law) requiere habilitación especial en Chile. Apostilla simplifica documentación pero no el proceso sustantivo.', paso3:'Apostilla + proceso ante Corte Suprema. Diferencias entre common law y civil law chileno son evaluadas.' },
-      medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Apostilla', alerta:'EUNACOM obligatorio. Médicos con formación en EE.UU. tienen muy alta tasa de aprobación del EUNACOM.', paso3:'Apostilla + convalidación U. de Chile + EUNACOM. Alta tasa de éxito para médicos con formación en EE.UU.' },
-      negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–140 USD', acuerdo:'Sí (Apostilla)', alerta:'El proceso más rápido del sistema. MBA y títulos de negocios de EE.UU. tienen reconocimiento casi automático en Chile.', paso3:'Apostilla + convalidación directa. Proceso más expedito disponible para cualquier título extranjero.' }
-    },
-    espana: {
-        ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (MINEDUC 2017)', alerta:'Acuerdo bilateral España–Chile (2017). Muy expedito.', paso3:'Convalidación directa en MINEDUC + Colegio profesional.' },
-        ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí (MINEDUC)', alerta:'Acuerdo bilateral vigente.', paso3:'MINEDUC.' },
-        tecnico: { badge:'posible', tiempo:'3–6 meses', costo:'$80–140 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'SENCE o MINEDUC.' },
-        derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Sí', alerta:'Habilitación ante Corte Suprema.', paso3:'Corte Suprema.' },
-        medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Sí', alerta:'EUNACOM obligatorio.', paso3:'U. de Chile + EUNACOM.' },
-        negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–130 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' }
-      },
-      argentina: {
-        ingenieria: { badge:'directo', tiempo:'2–5 meses', costo:'$80–160 USD', acuerdo:'Sí (MINEDUC 2012)', alerta:'Acuerdo bilateral Argentina–Chile (2012).', paso3:'MINEDUC + Colegio profesional.' },
-        // (copia el patrón de españa para ciencias, tecnico, etc. – son muy similares)
-        ciencias: { badge:'directo', tiempo:'2–5 meses', costo:'$80–150 USD', acuerdo:'Sí (MINEDUC)', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' },
-        tecnico: { badge:'posible', tiempo:'3–6 meses', costo:'$80–140 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'SENCE.' },
-        derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Sí', alerta:'Corte Suprema.', paso3:'Corte Suprema.' },
-        medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Sí', alerta:'EUNACOM.', paso3:'U. de Chile + EUNACOM.' },
-        negocios: { badge:'directo', tiempo:'2–4 meses', costo:'$70–140 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' }
-      },
-      reinounido: {
-        ingenieria: { badge:'posible', tiempo:'3–6 meses', costo:'$100–200 USD', acuerdo:'Sí (MINEDUC 2018)', alerta:'Acuerdo bilateral Reino Unido–Chile (2018).', paso3:'MINEDUC + Colegio.' },
-        // patrón similar al de argentina
-        ciencias: { badge:'posible', tiempo:'3–6 meses', costo:'$90–180 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' },
-        tecnico: { badge:'posible', tiempo:'4–7 meses', costo:'$90–160 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'SENCE.' },
-        derecho: { badge:'complejo', tiempo:'7–13 meses', costo:'$180–350 USD', acuerdo:'Sí', alerta:'Corte Suprema.', paso3:'Corte Suprema.' },
-        medicina: { badge:'complejo', tiempo:'11–20 meses', costo:'$280–550 USD', acuerdo:'Sí', alerta:'EUNACOM.', paso3:'U. de Chile + EUNACOM.' },
-        negocios: { badge:'directo', tiempo:'2–4 meses', costo:'$80–150 USD', acuerdo:'Sí', alerta:'Acuerdo bilateral.', paso3:'MINEDUC.' }
-      },
-      brasil: {
-        ingenieria: { badge:'directo', tiempo:'2–4 meses', costo:'$80–140 USD', acuerdo:'Sí (MINREL)', alerta:'Convenio bilateral vigente.', paso3:'MINREL + Colegio profesional.' },
-        // repite patrón para las demás áreas (muy expedito por convenio)
-        ciencias: { badge:'directo', tiempo:'2–4 meses', costo:'$80–140 USD', acuerdo:'Sí (MINREL)', alerta:'Convenio bilateral.', paso3:'MINREL.' },
-        tecnico: { badge:'posible', tiempo:'3–5 meses', costo:'$70–130 USD', acuerdo:'Sí', alerta:'Convenio bilateral.', paso3:'SENCE.' },
-        derecho: { badge:'complejo', tiempo:'6–12 meses', costo:'$150–300 USD', acuerdo:'Sí', alerta:'Corte Suprema.', paso3:'Corte Suprema.' },
-        medicina: { badge:'complejo', tiempo:'10–18 meses', costo:'$250–500 USD', acuerdo:'Sí', alerta:'EUNACOM.', paso3:'U. de Chile + EUNACOM.' },
-        negocios: { badge:'directo', tiempo:'2–3 meses', costo:'$70–130 USD', acuerdo:'Sí', alerta:'Convenio bilateral.', paso3:'MINREL.' }
-      }
-  
-  };
-
-  function updateResult() {
-    const area = document.getElementById('tit-area').value;
-    const data = dataTitulos[paisActual]?.[area];
-    if (!data) return;
-    const paisNombres = {china:'China',corea:'Corea del Sur',japon:'Japón',alemania:'Alemania',australia:'Australia',eeuu:'EE.UU.'};
-    const areaNombres = {ingenieria:'Ingeniería',ciencias:'Ciencias',tecnico:'Técnico/CFT',derecho:'Derecho',medicina:'Medicina',negocios:'Negocios'};
-    document.getElementById('tit-res-titulo').textContent = areaNombres[area] + ' · ' + paisNombres[paisActual];
-    const badge = document.getElementById('tit-res-badge');
-    badge.className = 'tit-res-badge badge-' + data.badge;
-    const labels = {posible:'Reconocimiento posible',directo:'Reconocimiento directo',complejo:'Proceso complejo'};
-    badge.textContent = labels[data.badge];
-    document.getElementById('t-tiempo').textContent = data.tiempo;
-    document.getElementById('t-costo').textContent = data.costo;
-    document.getElementById('t-acuerdo').textContent = data.acuerdo;
-    document.getElementById('alerta-title').textContent = data.badge === 'complejo' ? '⚠️ Consideración importante' : '💡 Acuerdo bilateral';
-    document.getElementById('alerta-desc').textContent = data.alerta;
-    document.getElementById('paso3-desc').textContent = data.paso3;
-    const alerta = document.getElementById('tit-alerta');
-    alerta.style.background = data.badge === 'complejo' ? 'rgba(200,115,58,.07)' : 'rgba(52,152,219,.07)';
-    alerta.style.borderColor = data.badge === 'complejo' ? 'rgba(200,115,58,.25)' : 'rgba(52,152,219,.2)';
-  }
-
-  function toggleChip(el) {
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
-    el.classList.add('on');
-  }
-
-  function nextStep() {
-    document.getElementById('rf-step' + currentStep).style.display = 'none';
-    currentStep++;
-    document.getElementById('rf-step' + currentStep).style.display = 'block';
-    for (let i = 0; i < 3; i++) {
-      const s = document.getElementById('rs' + i);
-      if (i < currentStep) { s.className = 'reg-step done'; }
-      else if (i === currentStep) { s.className = 'reg-step active'; }
-      else { s.className = 'reg-step'; }
-    }
-  }
-
-  function submitForm() {
-    document.querySelectorAll('.reg-step').forEach(s => s.className = 'reg-step done');
-    document.getElementById('rf-step2').innerHTML = `
-      <div style="text-align:center;padding:20px 0;">
-        <div style="font-size:48px;margin-bottom:16px;">🎉</div>
-        <p style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:10px;">¡Gracias por sumarte!</p>
-        <p style="font-size:13px;color:var(--gris-claro);line-height:1.7;margin-bottom:20px;">Tu informe personalizado llegará en las próximas 24 horas. Ya eres parte del mapa de talento estratégico de Chile.</p>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;">
-          <div style="background:rgba(245,242,236,.05);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--cobre);">48</div>
-            <div style="font-size:11px;color:var(--gris-claro);">personas registradas</div>
-          </div>
-          <div style="background:rgba(245,242,236,.05);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--verde-claro);">12</div>
-            <div style="font-size:11px;color:var(--gris-claro);">países representados</div>
-          </div>
-          <div style="background:rgba(245,242,236,.05);border:1px solid var(--borde);border-radius:10px;padding:14px;">
-            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--azul-claro);">6</div>
-            <div style="font-size:11px;color:var(--gris-claro);">sectores cubiertos</div>
-          </div>
+    data.forEach(row => {
+      if (!row.titulo) return;
+      const card = document.createElement('div');
+      card.className = `brecha-card ${row.urgencia === 'alta' ? 'urgente' : ''}`;
+      card.innerHTML = `
+        <div class="bc-header">
+          <span class="bc-sector ${row.sector.toLowerCase()}">${row.sector}</span>
+          <span class="bc-urgencia ${row.urgencia}">${row.urgencia.toUpperCase()}</span>
         </div>
-      </div>`;
-  }
-
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    document.getElementById('toast-msg').textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3500);
-  }
-
-  // Animar barras al cargar
-  setTimeout(() => {
-    document.querySelectorAll('.bc-bar-fill').forEach(b => {
-      const w = b.style.width; b.style.width = '0';
-      setTimeout(() => b.style.width = w, 100);
+        <div class="bc-title">${row.titulo}</div>
+        <div class="bc-region">📍 ${row.region}</div>
+        <div class="bc-bar-label"><span>Demanda 2025–2027</span><span>${row.demanda_pct}%</span></div>
+        <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:${row.demanda_pct}%"></div></div>
+        <div class="bc-footer">
+          <div><div class="bc-num">${row.puestos_sin_cubrir}</div><div class="bc-num-label">puestos sin cubrir</div></div>
+          <button class="bc-btn" onclick="notificarBrecha('${row.titulo}')">Notificar →</button>
+        </div>
+      `;
+      grid.appendChild(card);
     });
-  }, 200);
+  } catch (e) {
+    console.error("Error cargando brechas:", e);
+  }
+}
+
+// Cargar Sinergias
+async function cargarSinergias() {
+  try {
+    const response = await fetch(SINERGIAS_CSV);
+    const csv = await response.text();
+    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
+
+    const container = document.querySelector('#pg-institucional .page-inner');
+    if (!container) return;
+
+    // Buscamos donde poner las sinergias (después del grid de instituciones)
+    let sinergiaSection = document.querySelector('.sinergias-container');
+    if (!sinergiaSection) {
+      sinergiaSection = document.createElement('div');
+      sinergiaSection.className = 'sinergias-container';
+      container.appendChild(sinergiaSection);
+    }
+
+    sinergiaSection.innerHTML = `<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);">Sinergias detectadas automáticamente</div>`;
+
+    data.forEach(row => {
+      const box = document.createElement('div');
+      box.className = 'sinergia-box';
+      box.innerHTML = `
+        <div class="sin-header">
+          <div class="sin-title">${row.titulo}</div>
+          <span class="sin-badge">${row.tipo_sinergia}</span>
+        </div>
+        <div class="sin-ministerios">
+          ${row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>')}
+        </div>
+        <p class="sin-desc">${row.descripcion}</p>
+        <div class="sin-actions">
+          <button class="btn-notify" onclick="notificarSinergia('${row.titulo}')">${row.accion_recomendada} →</button>
+        </div>
+      `;
+      sinergiaSection.appendChild(box);
+    });
+  } catch (e) {
+    console.error("Error cargando sinergias:", e);
+  }
+}
+
+// Funciones de notificación (puedes mejorarlas después)
+function notificarBrecha(titulo) {
+  showToast(`Notificando brecha: ${titulo}`);
+}
+
+function notificarSinergia(titulo) {
+  showToast(`Notificando sinergia: ${titulo}`);
+}
+
+// ==================== INICIALIZACIÓN ====================
+document.addEventListener('DOMContentLoaded', () => {
+  // Cargar datos cuando se visite la página correspondiente
+  const observer = new MutationObserver(() => {
+    if (document.getElementById('pg-brechas').classList.contains('active')) {
+      cargarBrechas();
+    }
+    if (document.getElementById('pg-institucional').classList.contains('active')) {
+      cargarSinergias();
+    }
+  });
+
+  observer.observe(document.body, { attributes: true, subtree: true });
+});
+
+// Mantener las funciones que ya tenías (goPage, selectPais, etc.)
+// ... (pega aquí el resto de tu script original si lo deseas)
 </script>
 
 <!-- CHATBOT FLOTANTE - Versión estable y simple -->
