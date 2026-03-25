@@ -561,7 +561,9 @@
       <button class="filter-chip" onclick="toggleChip(this)">Atacama</button>
     </div>
     <div class="brechas-grid">
-     </div>
+      <div class="brecha-card urgente">
+    
+        </div>
         <div class="bc-title">Técnicos en electromovilidad e hidróxido de litio</div>
         <div class="bc-region">📍 Antofagasta · Atacama</div>
         <div class="bc-bar-label"><span>Demanda proyectada 2025–2027</span><span>78%</span></div>
@@ -1017,50 +1019,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 1000);
 });
 </script>
-<script>
-// Forzar carga de brechas y sinergias
-async function cargarTodo() {
-  console.log("Forzando carga de datos...");
-
-  // Cargar Brechas
-  try {
-    const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=0&single=true&output=csv");
-    const csv = await res.text();
-    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
-
-    const grid = document.querySelector('.brechas-grid');
-    if (grid) {
-      grid.innerHTML = '';
-      data.forEach(row => {
-        if (!row.titulo) return;
-        const card = document.createElement('div');
-        card.className = `brecha-card ${row.urgencia === 'alta' ? 'urgente' : ''}`;
-        card.innerHTML = `
-          <div class="bc-header">
-            <span class="bc-sector ${row.sector ? row.sector.toLowerCase() : 'litio'}">${row.sector}</span>
-            <span class="bc-urgencia ${row.urgencia}">${row.urgencia.toUpperCase()}</span>
-          </div>
-          <div class="bc-title">${row.titulo}</div>
-          <div class="bc-region">📍 ${row.region}</div>
-          <div class="bc-bar-label"><span>Demanda 2025–2027</span><span>${row.demanda_pct}%</span></div>
-          <div class="bc-bar"><div class="bc-bar-fill fill-cobre" style="width:${row.demanda_pct}%"></div></div>
-          <div class="bc-footer">
-            <div><div class="bc-num">${row.puestos_sin_cubrir}</div><div class="bc-num-label">puestos sin cubrir</div></div>
-            <button class="bc-btn" onclick="notificarBrecha('${row.titulo}')">Notificar →</button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-  } catch (e) {
-    console.error("Error brechas:", e);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(cargarTodo, 1000);
-});
-</script>
 
 <!-- CHATBOT FLOTANTE - Versión estable y simple -->
 <div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
@@ -1085,7 +1043,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 
 <script>
-  
 // CHATBOT - Versión simplificada y robusta
 document.addEventListener('DOMContentLoaded', () => {
   const chatToggle = document.getElementById('chat-toggle');
