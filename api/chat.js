@@ -1,4 +1,4 @@
-// api/chat.js - Versión final con modelo estable
+// api/chat.js - Usando gemini-2.0-flash (recomendado marzo 2026)
 export default async function handler(req, res) {
   console.log("📥 Petición recibida en /api/chat");
 
@@ -14,15 +14,14 @@ export default async function handler(req, res) {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
   if (!GEMINI_API_KEY) {
-    console.error("❌ GEMINI_API_KEY no configurada");
-    return res.status(500).json({ error: "Clave de Gemini no configurada en Vercel" });
+    console.error("❌ GEMINI_API_KEY no configurada en Vercel");
+    return res.status(500).json({ error: "Clave de Gemini no configurada" });
   }
 
   try {
-    // Modelo estable actual (marzo 2026)
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-    console.log("🔗 Llamando a:", geminiUrl.substring(0, 80) + "...");
+    console.log("🔗 Llamando a Gemini 2.0 Flash");
 
     const response = await fetch(geminiUrl, {
       method: "POST",
@@ -30,7 +29,9 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Eres un asistente útil y profesional de Talento País Chile. Responde siempre en español, claro, conciso y útil. Pregunta del usuario: ${message}`
+            text: `Eres un asistente útil y profesional de la plataforma Talento País Chile. 
+                   Responde siempre en español, de forma clara, concisa y útil. 
+                   Pregunta del usuario: ${message}`
           }]
         }]
       })
@@ -40,11 +41,9 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error("❌ Gemini error body:", errorBody);
+      console.error("❌ Gemini error:", errorBody);
       return res.status(500).json({ 
-        error: response.status === 404 ? "Modelo no encontrado" : 
-               response.status === 429 ? "Límite de consultas alcanzado" : 
-               `Gemini error ${response.status}`
+        error: response.status === 429 ? "Límite de consultas alcanzado. Espera unos minutos." : `Gemini error ${response.status}`
       });
     }
 
