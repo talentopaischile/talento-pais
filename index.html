@@ -1101,8 +1101,7 @@
   }, 200);
 </script>
 
-<!-- CHATBOT FLOTANTE TALENTO PAÍS -->
-
+<!-- CHATBOT FLOTANTE - Versión estable marzo 2026 -->
 <div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
   <button id="chat-toggle" 
           style="width:60px;height:60px;border-radius:50%;background:#c8733a;color:white;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(200,115,58,0.5);font-size:26px;">
@@ -1125,13 +1124,13 @@
 </div>
 
 <script>
-// CHATBOT CORREGIDO - Modelo actualizado 2026 + fix syntax
-const GEMINI_API_KEY = "AIzaSyBuo7rnbwovBgjrakzNOu5SBj71GPG1ckw";   // ← Tu clave actual (puedes cambiarla)
+// CHATBOT - Modelo estable 2026
+const GEMINI_API_KEY = "AIzaSyBuo7rnbwovBgjrakzNOu5SBj71GPG1ckw";   // ← Pega aquí tu clave actual
 
 async function sendToGemini(message) {
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1148,8 +1147,10 @@ async function sendToGemini(message) {
     );
 
     if (!response.ok) {
-      console.error("Gemini HTTP error:", response.status);
-      return "Lo siento, no pude conectar con la IA en este momento. Inténtalo de nuevo.";
+      console.error("Gemini error status:", response.status);
+      if (response.status === 404) return "Error: Modelo no encontrado. Contacta al administrador.";
+      if (response.status === 429) return "He alcanzado el límite de consultas. Inténtalo de nuevo en un par de minutos.";
+      return "Lo siento, no pude conectar con la IA en este momento.";
     }
 
     const data = await response.json();
