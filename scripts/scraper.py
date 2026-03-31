@@ -826,7 +826,7 @@ def main():
 
     # Siempre analizar educación cuando se corre todo
     if args.fuente == "todas" and not datos_educacion:
-        datos_educacion = analizar_pdf_mineduc()
+        datos_educacion = analizar_csv_mineduc()
 
     # Consolidar
     if resultados_fuentes:
