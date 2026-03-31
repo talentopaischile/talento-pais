@@ -33,6 +33,12 @@ jobs:
         env:
           Mercado_Publico_API_KEY: ${{ secrets.MERCADO_PUBLICO_API_KEY }}
 
+      - name: Etapa 1.5 — Detector de Sinergias IA
+        continue-on-error: true
+        run: python scripts/detector_sinergias.py
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
       - name: Etapa 2 — Processor
         continue-on-error: true
         run: python scripts/processor.py

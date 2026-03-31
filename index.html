@@ -1484,54 +1484,67 @@ async function cargarBrechas() {
   }
 }
 
+// Columnas Sinergias IA: fecha, sector_label, actor_a, actor_b, actor_c,
+//                        tipo_sinergia, descripcion, fuente, estado
+
 async function cargarSinergias() {
   try {
     const response = await fetch(SINERGIAS_CSV);
     const csv = await response.text();
     const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
-                     .filter(r => r.titulo && r.titulo.trim() !== '' && r.titulo !== 'titulo');
+                     .filter(r => r.actor_a && r.actor_a.trim() !== '' && r.actor_a !== 'actor_a');
     const container = document.querySelector('.sinergias-container');
-    if (!container || !data.length) return;
+    if (!container) return;
 
-    container.innerHTML = '<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--azul-cielo);display:flex;align-items:center;gap:8px;"><span style="width:20px;height:1px;background:var(--azul-electrico);"></span>Oportunidades detectadas automáticamente</div>';
+    if (!data.length) {
+      container.innerHTML = '<p style="color:var(--gris-azul);margin-top:40px;">El pipeline aún no ha detectado oportunidades de colaboración. Vuelve el próximo lunes.</p>';
+      return;
+    }
 
+    // Agrupar por sector para mostrar encabezados
+    const porSector = {};
     data.forEach(row => {
-      const tipoLabel = row.tipo === 'licitacion'         ? 'Licitación MP' :
-                        row.tipo === 'oferta_laboral'      ? 'Oferta laboral' :
-                        row.tipo === 'programa_convocatoria'? 'Programa/Convocatoria' :
-                        row.tipo || 'Oportunidad';
+      const sec = row.sector_label || 'General';
+      if (!porSector[sec]) porSector[sec] = [];
+      porSector[sec].push(row);
+    });
 
-      const orgParts = [row.fuente, row.organizacion].filter(Boolean);
-      const ministeriosHTML = orgParts.length
-        ? orgParts.map(p => `<div class="sin-min">${p}</div>`).join('<div class="sin-arrow">·</div>')
-        : '';
+    container.innerHTML = '';
 
-      const extras = [
-        row.region && row.region !== 'No especificada' ? `📍 ${row.region}` : '',
-        row.monto_fmt ? `💰 ${row.monto_fmt}` : '',
-        row.fecha_cierre ? `📅 Cierre: ${row.fecha_cierre}` : '',
-        row.es_asia_pacifico === 'Sí' ? '🌏 Asia-Pacífico' : '',
-      ].filter(Boolean).join('  ·  ');
+    Object.entries(porSector).forEach(([sector, filas]) => {
+      // Encabezado de sector
+      const secHeader = document.createElement('div');
+      secHeader.style.cssText = 'margin:36px 0 16px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--azul-cielo);display:flex;align-items:center;gap:10px;';
+      secHeader.innerHTML = `<span style="width:24px;height:1px;background:var(--azul-electrico);display:inline-block;"></span>${sector}`;
+      container.appendChild(secHeader);
 
-      const score = parseFloat(row.relevancia_score) || 0;
-      const scoreColor = score >= 0.7 ? 'var(--verde-claro)' : score >= 0.4 ? 'var(--dorado-claro)' : 'var(--gris-azul)';
+      filas.forEach(row => {
+        // Actores: actor_a → actor_b → actor_c (opcional)
+        const actores = [row.actor_a, row.actor_b, row.actor_c].filter(a => a && a.trim());
+        const actoresHTML = actores
+          .map(a => `<div class="sin-min">${a}</div>`)
+          .join('<div class="sin-arrow">→</div>');
 
-      const box = document.createElement('div');
-      box.className = 'sinergia-box';
-      box.innerHTML = `
-        <div class="sin-header">
-          <div class="sin-title">${row.titulo}</div>
-          <span class="sin-badge">${tipoLabel}</span>
-        </div>
-        <div class="sin-ministerios">${ministeriosHTML}</div>
-        ${extras ? `<div style="font-size:11px;color:var(--gris-azul);margin:6px 0;">${extras}</div>` : ''}
-        <p class="sin-desc">${row.descripcion || ''}</p>
-        <div class="sin-actions">
-          ${row.url ? `<a href="${row.url}" target="_blank" rel="noopener" class="btn-notify" style="text-decoration:none;display:inline-block;">Ver oportunidad →</a>` : `<button class="btn-notify" onclick="showToast('${(row.titulo||'').replace(/'/g,"\\'")}', 'Alerta enviada')">Notificar →</button>`}
-          <span style="font-size:11px;color:${scoreColor};padding:6px 10px;">Relevancia: ${Math.round(score*100)}%</span>
-        </div>
-      `;
-      container.appendChild(box);
+        const tipoLabel = row.tipo_sinergia || 'Colaboración';
+        const fecha = row.fecha ? `📅 ${row.fecha}` : '';
+        const fuente = row.fuente && row.fuente.startsWith('http')
+          ? `<a href="${row.fuente}" target="_blank" rel="noopener" class="btn-notify" style="text-decoration:none;display:inline-block;">Ver fuente →</a>`
+          : `<span style="font-size:12px;color:var(--gris-azul);padding:6px 0;">${row.fuente || ''}</span>`;
+
+        const box = document.createElement('div');
+        box.className = 'sinergia-box';
+        box.innerHTML = `
+          <div class="sin-header">
+            <div class="sin-title">${tipoLabel}</div>
+            <span class="sin-badge">IA detectada</span>
+          </div>
+          <div class="sin-ministerios">${actoresHTML}</div>
+          ${fecha ? `<div style="font-size:11px;color:var(--gris-azul);margin:6px 0;">${fecha}</div>` : ''}
+          <p class="sin-desc">${row.descripcion || ''}</p>
+          <div class="sin-actions">${fuente}</div>
+        `;
+        container.appendChild(box);
+      });
     });
   } catch (e) {
     console.error("Error cargando sinergias:", e);

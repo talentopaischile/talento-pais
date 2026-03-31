@@ -57,19 +57,15 @@ COLUMNAS_BRECHAS = [
 ]
 
 COLUMNAS_SINERGIAS = [
-    "titulo",
-    "fuente",
-    "tipo",
+    "fecha",
     "sector_label",
-    "organizacion",
-    "region",
-    "fecha_cierre",
-    "monto_fmt",
-    "es_asia_pacifico",
-    "relevancia_score",
-    "url",
+    "actor_a",
+    "actor_b",
+    "actor_c",
+    "tipo_sinergia",
     "descripcion",
-    "fecha_scraping",
+    "fuente",
+    "estado",
 ]
 
 
@@ -240,14 +236,14 @@ def main():
 
     # ── Hoja Sinergias ────────────────────────────────────────────────────────
     if "sinergias" in hojas_a_subir:
-        log.info("\n[3/3] Subiendo Sinergias...")
-        datos = cargar_procesado("oportunidades")
+        log.info("\n[3/3] Subiendo Sinergias (oportunidades de colaboración IA)...")
+        datos = cargar_procesado("sinergias_ia")
         if datos:
-            # Filtrar por relevancia mínima
-            relevantes = [o for o in datos if o.get("relevancia_score", 0) >= 0.1]
-            log.info(f"  Filtrando: {len(datos)} → {len(relevantes)} oportunidades (score ≥ 0.1)")
-            filas = a_filas(relevantes, COLUMNAS_SINERGIAS)
+            log.info(f"  Sinergias IA a subir: {len(datos)}")
+            filas = a_filas(datos, COLUMNAS_SINERGIAS)
             subir_hoja(client, HOJAS["sinergias"], filas)
+        else:
+            log.warning("  sinergias_ia.json no encontrado — hoja Sinergias no se actualiza")
 
     log.info("\nPipeline ETAPA 3 completado.")
     log.info(f"Ver resultado: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit")
