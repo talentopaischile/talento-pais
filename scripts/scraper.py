@@ -152,7 +152,8 @@ def scrapear_corfo() -> list[dict]:
 
     urls = [
         "https://www.corfo.cl/sites/cpp/homecorfo",
-        "https://www.corfo.cl/sites/cpp/convocatorias",
+        "https://www.corfo.cl/sites/cpp/convocatoriasempresa",
+        "https://www.corfo.cl/sites/cpp/programas",
     ]
 
     for url in urls:
@@ -212,7 +213,8 @@ def scrapear_minciencia() -> list[dict]:
 
     urls = [
         "https://www.minciencia.gob.cl/noticias/",
-        "https://www.minciencia.gob.cl/convocatorias/",
+        "https://www.minciencia.gob.cl/categoria/convocatorias/",
+        "https://www.minciencia.gob.cl/",
     ]
 
     for url in urls:
@@ -464,7 +466,6 @@ def scrapear_bumeran() -> list[dict]:
 
 def obtener_licitaciones_mercadopublico(
     termino: str,
-    estado: str = "activa",
     dias_atras: int = 30,
 ) -> list[dict]:
     """Consulta la API de Mercado Público para un término dado."""
@@ -472,13 +473,14 @@ def obtener_licitaciones_mercadopublico(
         log.error("API key de Mercado Público no configurada. Agrégala en Vercel como 'Mercado_Publico_API_KEY'.")
         return []
 
-    fecha_inicio = (datetime.now() - timedelta(days=dias_atras)).strftime("%d%m%Y")
+    # Formato fecha: DD-MM-YYYY (requerido por la API)
+    fecha_inicio = (datetime.now() - timedelta(days=dias_atras)).strftime("%d-%m-%Y")
     url = "https://api.mercadopublico.cl/servicios/v1/publico/licitaciones.json"
     params = {
-        "ticket":       MERCADOPUBLICO_API_KEY,
-        "busqueda":     termino,
-        "estado":       estado,
-        "fechaInicio":  fecha_inicio,
+        "ticket":      MERCADOPUBLICO_API_KEY,
+        "busqueda":    termino,
+        "estado":      "Todos",
+        "fechaInicio": fecha_inicio,
     }
 
     try:
@@ -527,7 +529,7 @@ def scrapear_mercadopublico() -> list[dict]:
 
     for termino in terminos:
         log.info(f"  Buscando: {termino}")
-        lics = obtener_licitaciones_mercadopublico(termino)
+        lics = obtener_licitaciones_mercadopublico(termino, dias_atras=60)
         for l in lics:
             codigo = l.get("codigo", "")
             if codigo and codigo not in vistos:
