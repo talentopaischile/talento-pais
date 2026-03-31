@@ -464,78 +464,66 @@ def scrapear_bumeran() -> list[dict]:
 # FUENTE 6 — MERCADO PÚBLICO API
 # ════════════════════════════════════════════════════════════════════════════
 
-def obtener_licitaciones_mercadopublico(
-    termino: str,
-    dias_atras: int = 30,
-) -> list[dict]:
-    """Consulta la API de Mercado Público para un término dado."""
+def scrapear_mercadopublico() -> list[dict]:
+    """
+    Obtiene TODAS las licitaciones activas de Mercado Público
+    y filtra localmente las relevantes para sectores estratégicos.
+    Una sola llamada a la API — más estable y sin problemas de encoding.
+    """
+    log.info("=== Mercado Público ===")
+
     if MERCADOPUBLICO_API_KEY == "PEGA_AQUI_TU_API_KEY_DE_MERCADOPUBLICO":
-        log.error("API key de Mercado Público no configurada. Agrégala en Vercel como 'Mercado_Publico_API_KEY'.")
+        log.error("  API key no configurada (Mercado_Publico_API_KEY).")
         return []
 
-    # Formato fecha: DD-MM-YYYY (requerido por la API)
-    fecha_inicio = (datetime.now() - timedelta(days=dias_atras)).strftime("%d-%m-%Y")
     url = "https://api.mercadopublico.cl/servicios/v1/publico/licitaciones.json"
     params = {
-        "ticket":      MERCADOPUBLICO_API_KEY,
-        "busqueda":    termino,
-        "estado":      "Todos",
-        "fechaInicio": fecha_inicio,
+        "ticket": MERCADOPUBLICO_API_KEY,
+        "estado": "activas",
     }
 
     try:
-        r = requests.get(url, params=params, timeout=20)
+        log.info("  Descargando licitaciones activas...")
+        r = requests.get(url, params=params, timeout=30)
         r.raise_for_status()
         data = r.json()
     except Exception as e:
-        log.error(f"  MP error ({termino}): {e}")
+        log.error(f"  MP error: {e}")
         return []
 
     licitaciones = data.get("Listado", [])
-    resultados   = []
+    log.info(f"  Total licitaciones activas: {len(licitaciones)}")
+
+    todos  = []
+    vistos = set()
+
     for lit in licitaciones:
+        nombre = lit.get("Nombre", "")
+        desc   = lit.get("Descripcion", "")
+        codigo = lit.get("CodigoExterno", "")
+
+        # Filtrar por sectores estratégicos
+        sectores = detectar_sectores(f"{nombre} {desc}")
+        if not sectores:
+            continue
+        if codigo in vistos:
+            continue
+        vistos.add(codigo)
+
         monto = lit.get("MontoEstimado")
-        resultados.append({
-            "fuente":          "MercadoPublico",
-            "tipo":            "licitacion",
-            "titulo":          lit.get("Nombre", ""),
-            "organizacion":    lit.get("NombreOrganismo", ""),
-            "region":          lit.get("Region", ""),
-            "fecha_cierre":    lit.get("FechaCierre", ""),
-            "monto_estimado":  float(monto) if monto else None,
-            "codigo":          lit.get("CodigoExterno", ""),
-            "descripcion":     lit.get("Descripcion", ""),
-            "sectores":        detectar_sectores(f"{lit.get('Nombre','')} {lit.get('Descripcion','')}"),
-            "termino_busq":    termino,
-            "fecha_scraping":  datetime.now().isoformat(),
+        todos.append({
+            "fuente":         "MercadoPublico",
+            "tipo":           "licitacion",
+            "titulo":         nombre,
+            "organizacion":   lit.get("NombreOrganismo", ""),
+            "region":         lit.get("Region", ""),
+            "fecha_cierre":   lit.get("FechaCierre", ""),
+            "monto_estimado": float(monto) if monto else None,
+            "codigo":         codigo,
+            "descripcion":    desc,
+            "sectores":       sectores,
+            "fecha_scraping": datetime.now().isoformat(),
         })
-    return resultados
-
-
-def scrapear_mercadopublico() -> list[dict]:
-    """Busca licitaciones para todos los sectores estratégicos."""
-    log.info("=== Mercado Público ===")
-
-    terminos = [
-        "litio", "energía renovable", "hidrógeno verde",
-        "inteligencia artificial", "machine learning",
-        "oceanografía", "astronomía", "geotermia",
-        "electromovilidad", "almacenamiento energético",
-        "minerales críticos", "transición energética",
-    ]
-
-    todos    = []
-    vistos   = set()
-
-    for termino in terminos:
-        log.info(f"  Buscando: {termino}")
-        lics = obtener_licitaciones_mercadopublico(termino, dias_atras=60)
-        for l in lics:
-            codigo = l.get("codigo", "")
-            if codigo and codigo not in vistos:
-                vistos.add(codigo)
-                todos.append(l)
-        time.sleep(1)
 
     log.info(f"  Mercado Público: {len(todos)} licitaciones únicas")
     guardar_raw("mercadopublico", todos)
