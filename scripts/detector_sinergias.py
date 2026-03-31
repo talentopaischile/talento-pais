@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-1.5-flash:generateContent?key={key}"
+    "gemini-2.0-flash:generateContent?key={key}"
 )
 
 BASE_DIR = Path(__file__).parent.parent
@@ -102,39 +102,46 @@ SECTORES = {
 # ─── Páginas de ministerios y organizaciones ──────────────────────────────────
 FUENTES_MINISTERIOS = [
     {
-        "nombre": "CORFO Convocatorias",
-        "url": "https://www.corfo.cl/sites/cpp/convocatorias",
+        "nombre": "CORFO Inicio",
+        "url": "https://www.corfo.cl/sites/cpp/homecorfo",
         "sectores": ["litio", "energias_renovables", "ia_tecnologia"],
+        "verify_ssl": True,
     },
     {
-        "nombre": "AGCI Cooperación Internacional",
-        "url": "https://www.agci.cl/cooperacion-sur-sur/",
+        "nombre": "AGCI Chile",
+        "url": "https://www.agci.cl/",
         "sectores": ["asia_pacifico"],
+        "verify_ssl": True,
     },
     {
-        "nombre": "Ministerio de Energía",
+        "nombre": "Ministerio de Energía Noticias",
         "url": "https://energia.gob.cl/noticias",
         "sectores": ["energias_renovables"],
+        "verify_ssl": True,
     },
     {
-        "nombre": "ANID Concursos",
-        "url": "https://www.anid.cl/concursos/",
+        "nombre": "ANID Inicio",
+        "url": "https://www.anid.cl/",
         "sectores": ["astronomia", "oceanografia", "ia_tecnologia", "litio"],
+        "verify_ssl": True,
     },
     {
         "nombre": "CENIA Investigación IA",
         "url": "https://cenia.cl/investigacion/",
         "sectores": ["ia_tecnologia"],
+        "verify_ssl": True,
     },
     {
-        "nombre": "Ministerio de Ciencia Programas",
-        "url": "https://www.minciencia.gob.cl/programas/",
+        "nombre": "Ministerio de Ciencia Noticias",
+        "url": "https://www.minciencia.gob.cl/noticias/",
         "sectores": ["astronomia", "oceanografia", "ia_tecnologia"],
+        "verify_ssl": True,
     },
     {
         "nombre": "Ministerio de Minería",
-        "url": "https://www.minmineria.gob.cl/noticias/",
+        "url": "https://www.minmineria.gob.cl/",
         "sectores": ["litio"],
+        "verify_ssl": False,   # SSL problemático, se omite verificación
     },
 ]
 
@@ -205,7 +212,8 @@ def fetch_rss(query: str, max_items: int = 6) -> list[str]:
 def scrape_pagina(info: dict) -> str:
     """Scrapea texto relevante de la página de un ministerio u organismo."""
     try:
-        r = requests.get(info["url"], headers=HEADERS, timeout=20)
+        verify = info.get("verify_ssl", True)
+        r = requests.get(info["url"], headers=HEADERS, timeout=20, verify=verify)
         r.raise_for_status()
         soup = BeautifulSoup(r.text, "lxml")
 
