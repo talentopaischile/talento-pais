@@ -243,9 +243,9 @@ def main():
         log.info("\n[3/3] Subiendo Sinergias...")
         datos = cargar_procesado("oportunidades")
         if datos:
-            # Filtrar solo las más relevantes (score > 0.3) para no sobrecargar Sheets
-            relevantes = [o for o in datos if o.get("relevancia_score", 0) >= 0.3]
-            log.info(f"  Filtrando: {len(datos)} → {len(relevantes)} oportunidades (score ≥ 0.3)")
+            # Filtrar por relevancia mínima
+            relevantes = [o for o in datos if o.get("relevancia_score", 0) >= 0.1]
+            log.info(f"  Filtrando: {len(datos)} → {len(relevantes)} oportunidades (score ≥ 0.1)")
             filas = a_filas(relevantes, COLUMNAS_SINERGIAS)
             subir_hoja(client, HOJAS["sinergias"], filas)
 
