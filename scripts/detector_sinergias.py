@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_URL = (
     "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.0-flash:generateContent?key={key}"
+    "gemini-2.0-flash-lite:generateContent?key={key}"
 )
 
 BASE_DIR = Path(__file__).parent.parent
@@ -262,7 +262,15 @@ def llamar_gemini(sector_key: str, sector_label: str, textos: list[str]) -> list
 
     try:
         url = GEMINI_URL.format(key=GEMINI_API_KEY)
-        r = requests.post(url, json=payload, timeout=30)
+        # Reintento automático ante 429 (rate limit)
+        for intento in range(3):
+            r = requests.post(url, json=payload, timeout=30)
+            if r.status_code == 429:
+                espera = 30 * (intento + 1)   # 30s → 60s → 90s
+                log.warning(f"  429 rate limit — esperando {espera}s (intento {intento+1}/3)...")
+                time.sleep(espera)
+                continue
+            break
         r.raise_for_status()
         resp = r.json()
 
@@ -362,8 +370,8 @@ def main():
         sinergias = llamar_gemini(sector_key, label, textos_sector)
         todas_sinergias.extend(sinergias)
 
-        # Rate limiting: Gemini free = 15 RPM → esperar ≥4 segundos
-        time.sleep(5)
+        # Rate limiting: esperar 15s entre sectores para no saturar la API gratuita
+        time.sleep(15)
 
     # ── 3. Deduplicar ─────────────────────────────────────────────────────
     vistas: set[str] = set()
