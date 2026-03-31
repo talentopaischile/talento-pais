@@ -7,70 +7,100 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
   :root {
-    --negro: #0a0c0f;
-    --blanco: #f5f2ec;
-    --cobre: #c8733a;
-    --cobre-claro: #e8956a;
-    --verde: #2d6a4f;
-    --verde-claro: #52b788;
-    --azul: #1b4f72;
-    --azul-claro: #3498db;
-    --gris: #2a2d32;
-    --gris-medio: #4a4f57;
-    --gris-claro: #8a9099;
-    --borde: rgba(245,242,236,0.08);
+    /* Paleta institucional moderna con IA */
+    --azul-noche: #0b1220;
+    --azul-profundo: #111c30;
+    --azul-medio: #1a2e4a;
+    --azul-card: #1e3558;
+    --azul-electrico: #2563eb;
+    --azul-electrico-claro: #3b82f6;
+    --azul-cielo: #60a5fa;
+    --dorado: #c9a050;
+    --dorado-claro: #e0b96a;
+    --verde: #059669;
+    --verde-claro: #34d399;
+    --rojo-alerta: #dc2626;
+    --blanco: #e8eef6;
+    --blanco-puro: #f0f4ff;
+    --gris-azul: #8ba3c1;
+    --gris-oscuro: #3d5070;
+    --borde: rgba(96, 165, 250, 0.1);
+    --borde-sutil: rgba(255,255,255,0.06);
+    --sombra: 0 4px 24px rgba(0,0,0,0.4);
+    --sombra-glow: 0 0 40px rgba(37, 99, 235, 0.15);
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
     font-family: 'DM Sans', sans-serif;
-    background: var(--negro);
+    background: var(--azul-noche);
     color: var(--blanco);
     min-height: 100vh;
     overflow-x: hidden;
   }
 
-  /* NAV */
+  /* ── GRADIENTES DE FONDO ── */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 10%, rgba(37,99,235,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 10% 80%, rgba(201,160,80,0.05) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── NAV ── */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 40px;
-    background: rgba(10,12,15,0.85);
-    backdrop-filter: blur(16px);
+    padding: 16px 40px;
+    background: rgba(11,18,32,0.92);
+    backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--borde);
   }
   .nav-logo {
     font-family: 'Syne', sans-serif;
     font-weight: 800; font-size: 17px;
     letter-spacing: -.3px;
-    color: var(--blanco);
+    color: var(--blanco-puro);
     display: flex; align-items: center; gap: 10px;
   }
-  .nav-logo span {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--cobre); display: inline-block;
+  .nav-logo-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--azul-electrico), var(--azul-cielo));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: white;
+    flex-shrink: 0;
   }
-  .nav-links { display: flex; gap: 6px; }
+  .nav-badge {
+    font-size: 10px; padding: 2px 7px; border-radius: 4px;
+    background: rgba(37,99,235,0.2); color: var(--azul-cielo);
+    border: 1px solid rgba(37,99,235,0.3); font-weight: 500;
+    letter-spacing: .05em;
+  }
+  .nav-links { display: flex; gap: 4px; }
   .nav-link {
-    font-size: 13px; color: var(--gris-claro);
+    font-size: 13px; color: var(--gris-azul);
     padding: 7px 14px; border-radius: 20px;
     border: none; background: transparent;
     cursor: pointer; transition: all .2s;
     font-family: 'DM Sans', sans-serif;
   }
-  .nav-link:hover { background: var(--gris); color: var(--blanco); }
-  .nav-link.active { background: var(--gris); color: var(--blanco); }
+  .nav-link:hover { background: rgba(255,255,255,0.06); color: var(--blanco); }
+  .nav-link.active { background: rgba(37,99,235,0.15); color: var(--azul-cielo); }
   .nav-cta {
     font-size: 13px; font-weight: 500;
     padding: 8px 18px; border-radius: 20px;
-    background: var(--cobre); color: var(--blanco);
+    background: var(--azul-electrico); color: white;
     border: none; cursor: pointer;
     transition: all .2s; font-family: 'DM Sans', sans-serif;
+    box-shadow: 0 2px 12px rgba(37,99,235,0.4);
   }
-  .nav-cta:hover { background: var(--cobre-claro); }
+  .nav-cta:hover { background: var(--azul-electrico-claro); transform: translateY(-1px); }
 
-  /* PÁGINAS */
-  .page { display: none; min-height: 100vh; padding-top: 70px; }
+  /* ── PÁGINAS ── */
+  .page { display: none; min-height: 100vh; padding-top: 70px; position: relative; z-index: 1; }
   .page.active { display: block; }
 
   /* ── PÁGINA 1: INICIO ── */
@@ -85,11 +115,11 @@
   }
   .hero-eyebrow {
     font-size: 11px; font-weight: 500; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--cobre);
+    text-transform: uppercase; color: var(--azul-cielo);
     margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
   }
   .hero-eyebrow::before {
-    content: ''; width: 24px; height: 1px; background: var(--cobre);
+    content: ''; width: 24px; height: 1px; background: var(--azul-electrico);
   }
   .hero-title {
     font-family: 'Syne', sans-serif;
@@ -97,23 +127,23 @@
     font-weight: 800; line-height: 1.05;
     letter-spacing: -1.5px; margin-bottom: 22px;
   }
-  .hero-title em {
-    font-style: normal; color: var(--cobre);
-  }
+  .hero-title em { font-style: normal; color: var(--azul-cielo); }
+  .hero-title strong { color: var(--dorado); font-weight: 800; }
   .hero-desc {
-    font-size: 16px; color: var(--gris-claro);
+    font-size: 16px; color: var(--gris-azul);
     line-height: 1.7; margin-bottom: 36px;
     max-width: 480px;
   }
   .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
   .btn-primary {
     padding: 13px 26px; border-radius: 8px;
-    background: var(--cobre); color: var(--blanco);
+    background: var(--azul-electrico); color: white;
     font-size: 14px; font-weight: 500;
     border: none; cursor: pointer;
     transition: all .2s; font-family: 'DM Sans', sans-serif;
+    box-shadow: 0 4px 16px rgba(37,99,235,0.35);
   }
-  .btn-primary:hover { background: var(--cobre-claro); transform: translateY(-1px); }
+  .btn-primary:hover { background: var(--azul-electrico-claro); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.5); }
   .btn-ghost {
     padding: 13px 26px; border-radius: 8px;
     background: transparent; color: var(--blanco);
@@ -121,61 +151,70 @@
     border: 1px solid var(--borde); cursor: pointer;
     transition: all .2s; font-family: 'DM Sans', sans-serif;
   }
-  .btn-ghost:hover { background: var(--gris); border-color: var(--gris-medio); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.06); border-color: var(--gris-oscuro); }
+  .btn-dorado {
+    padding: 13px 26px; border-radius: 8px;
+    background: var(--dorado); color: #0b1220;
+    font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-dorado:hover { background: var(--dorado-claro); transform: translateY(-1px); }
 
   .hero-visual {
     position: relative;
-    background: var(--gris);
-    border-radius: 16px;
+    background: linear-gradient(135deg, var(--azul-medio), var(--azul-card));
+    border-radius: 20px;
     border: 1px solid var(--borde);
     padding: 28px;
     overflow: hidden;
+    box-shadow: var(--sombra), var(--sombra-glow);
   }
   .hero-visual::before {
     content: ''; position: absolute;
     top: -60px; right: -60px;
     width: 200px; height: 200px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(200,115,58,.15) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(37,99,235,.2) 0%, transparent 70%);
     pointer-events: none;
   }
   .mini-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
   .mini-stat {
-    background: rgba(245,242,236,.04);
+    background: rgba(37,99,235,0.07);
     border: 1px solid var(--borde);
-    border-radius: 10px; padding: 16px;
+    border-radius: 12px; padding: 16px;
   }
   .mini-stat-num {
     font-family: 'Syne', sans-serif;
     font-size: 28px; font-weight: 700;
-    color: var(--cobre); line-height: 1;
+    color: var(--azul-cielo); line-height: 1;
     margin-bottom: 4px;
   }
-  .mini-stat-label { font-size: 11px; color: var(--gris-claro); line-height: 1.4; }
+  .mini-stat-label { font-size: 11px; color: var(--gris-azul); line-height: 1.4; }
   .mini-match {
-    background: rgba(45,106,79,.12);
-    border: 1px solid rgba(82,183,136,.2);
-    border-radius: 10px; padding: 14px;
+    background: rgba(5,150,105,.1);
+    border: 1px solid rgba(52,211,153,.2);
+    border-radius: 12px; padding: 14px;
     display: flex; align-items: center; gap: 12px;
   }
   .match-dot {
     width: 36px; height: 36px; border-radius: 8px;
-    background: rgba(82,183,136,.15);
+    background: rgba(52,211,153,.15);
     display: flex; align-items: center; justify-content: center;
     font-size: 16px; flex-shrink: 0;
   }
   .match-text { font-size: 12px; line-height: 1.5; }
   .match-text strong { color: var(--verde-claro); font-weight: 500; display: block; margin-bottom: 2px; }
-  .match-text span { color: var(--gris-claro); }
+  .match-text span { color: var(--gris-azul); }
 
   .stats-strip {
-    border-top: 1px solid var(--borde);
+    border-top: 1px solid var(--borde-sutil);
     display: grid; grid-template-columns: repeat(3, 1fr);
     margin-top: 60px;
   }
   .strip-item {
     padding: 40px;
-    border-right: 1px solid var(--borde);
+    border-right: 1px solid var(--borde-sutil);
   }
   .strip-item:last-child { border-right: none; }
   .strip-num {
@@ -184,150 +223,220 @@
     color: var(--blanco); line-height: 1;
     margin-bottom: 6px;
   }
-  .strip-num span { color: var(--cobre); }
-  .strip-label { font-size: 13px; color: var(--gris-claro); line-height: 1.5; }
+  .strip-num span { color: var(--azul-electrico); }
+  .strip-label { font-size: 13px; color: var(--gris-azul); line-height: 1.5; }
 
-  /* ── PÁGINA 2: BRECHAS ── */
+  /* ── INNER PAGES ── */
   .page-inner { max-width: 1100px; margin: 0 auto; padding: 48px 40px; }
   .page-header { margin-bottom: 40px; }
   .page-eyebrow {
     font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--cobre); margin-bottom: 10px;
+    color: var(--azul-cielo); margin-bottom: 10px;
     display: flex; align-items: center; gap: 8px;
   }
-  .page-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--cobre); }
+  .page-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--azul-electrico); }
   .page-title {
     font-family: 'Syne', sans-serif;
     font-size: 32px; font-weight: 700;
     letter-spacing: -.8px; margin-bottom: 8px;
   }
-  .page-sub { font-size: 14px; color: var(--gris-claro); line-height: 1.6; }
+  .page-sub { font-size: 14px; color: var(--gris-azul); line-height: 1.6; max-width: 680px; }
 
-  .filter-row {
-    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px;
-  }
+  /* ── PÁGINA 2: BRECHAS ── */
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
   .filter-chip {
     font-size: 12px; padding: 6px 14px; border-radius: 20px;
     border: 1px solid var(--borde); background: transparent;
-    color: var(--gris-claro); cursor: pointer;
+    color: var(--gris-azul); cursor: pointer;
     transition: all .2s; font-family: 'DM Sans', sans-serif;
   }
-  .filter-chip.on {
-    background: var(--cobre); color: var(--blanco);
-    border-color: var(--cobre);
-  }
-  .filter-chip:hover:not(.on) { border-color: var(--gris-medio); color: var(--blanco); }
+  .filter-chip.on { background: var(--azul-electrico); color: white; border-color: var(--azul-electrico); }
+  .filter-chip:hover:not(.on) { border-color: var(--gris-oscuro); color: var(--blanco); }
 
   .brechas-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
   .brecha-card {
-    background: var(--gris);
+    background: linear-gradient(135deg, var(--azul-medio), var(--azul-card));
     border: 1px solid var(--borde);
-    border-radius: 14px; padding: 24px;
-    transition: border-color .2s;
-    cursor: pointer;
+    border-radius: 16px; padding: 24px;
+    transition: all .2s; cursor: pointer;
+    box-shadow: var(--sombra);
   }
-  .brecha-card:hover { border-color: var(--gris-medio); }
-  .brecha-card.urgente { border-color: rgba(200,115,58,.3); }
+  .brecha-card:hover { border-color: rgba(37,99,235,0.4); transform: translateY(-2px); box-shadow: var(--sombra), 0 0 20px rgba(37,99,235,0.1); }
+  .brecha-card.urgente { border-color: rgba(201,160,80,.35); }
   .bc-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
   .bc-sector {
     font-size: 10px; font-weight: 500; letter-spacing: .1em;
-    text-transform: uppercase; padding: 4px 10px;
-    border-radius: 20px;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
   }
-  .bc-sector.litio { background: rgba(200,115,58,.12); color: var(--cobre-claro); }
-  .bc-sector.solar { background: rgba(52,152,219,.12); color: #5dade2; }
-  .bc-sector.hidro { background: rgba(45,106,79,.2); color: var(--verde-claro); }
-  .bc-sector.eolica { background: rgba(127,140,141,.15); color: #aab7b8; }
+  .bc-sector.litio { background: rgba(201,160,80,.15); color: var(--dorado-claro); }
+  .bc-sector.solar { background: rgba(37,99,235,.15); color: var(--azul-cielo); }
+  .bc-sector.hidro { background: rgba(5,150,105,.15); color: var(--verde-claro); }
+  .bc-sector.eolica { background: rgba(139,163,193,.12); color: #a8c0db; }
   .bc-urgencia {
-    font-size: 10px; padding: 4px 8px; border-radius: 4px;
-    font-weight: 500;
+    font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: 500;
   }
-  .bc-urgencia.alta { background: rgba(200,115,58,.15); color: var(--cobre-claro); }
-  .bc-urgencia.media { background: rgba(52,152,219,.1); color: #5dade2; }
+  .bc-urgencia.alta { background: rgba(201,160,80,.15); color: var(--dorado-claro); }
+  .bc-urgencia.media { background: rgba(37,99,235,.12); color: var(--azul-cielo); }
   .bc-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 6px; letter-spacing: -.3px; }
-  .bc-region { font-size: 12px; color: var(--gris-claro); margin-bottom: 14px; }
-  .bc-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--gris-claro); margin-bottom: 6px; }
-  .bc-bar { height: 6px; background: rgba(245,242,236,.08); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
+  .bc-region { font-size: 12px; color: var(--gris-azul); margin-bottom: 14px; }
+  .bc-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--gris-azul); margin-bottom: 6px; }
+  .bc-bar { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
   .bc-bar-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
-  .fill-cobre { background: linear-gradient(90deg, var(--cobre), var(--cobre-claro)); }
-  .fill-azul { background: linear-gradient(90deg, var(--azul-claro), #85c1e9); }
+  .fill-dorado { background: linear-gradient(90deg, var(--dorado), var(--dorado-claro)); }
+  .fill-azul { background: linear-gradient(90deg, var(--azul-electrico), var(--azul-cielo)); }
   .fill-verde { background: linear-gradient(90deg, var(--verde), var(--verde-claro)); }
   .bc-footer { display: flex; align-items: center; justify-content: space-between; }
-  .bc-num { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: var(--cobre); }
-  .bc-num-label { font-size: 11px; color: var(--gris-claro); margin-top: 2px; }
+  .bc-num { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: var(--dorado); }
+  .bc-num-label { font-size: 11px; color: var(--gris-azul); margin-top: 2px; }
   .bc-btn {
     font-size: 12px; padding: 7px 14px; border-radius: 6px;
     border: 1px solid var(--borde); background: transparent;
-    color: var(--gris-claro); cursor: pointer;
+    color: var(--gris-azul); cursor: pointer;
     transition: all .2s; font-family: 'DM Sans', sans-serif;
   }
-  .bc-btn:hover { background: rgba(200,115,58,.1); border-color: var(--cobre); color: var(--cobre-claro); }
+  .bc-btn:hover { background: rgba(37,99,235,.12); border-color: var(--azul-electrico); color: var(--azul-cielo); }
 
   /* ── PÁGINA 3: MAPA INSTITUCIONAL ── */
   .inst-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
   .inst-card {
-    background: var(--gris); border: 1px solid var(--borde);
-    border-radius: 14px; padding: 20px; cursor: pointer;
+    background: linear-gradient(135deg, var(--azul-medio), var(--azul-card));
+    border: 1px solid var(--borde);
+    border-radius: 16px; padding: 20px; cursor: pointer;
     transition: all .2s; position: relative; overflow: hidden;
+    box-shadow: var(--sombra);
   }
-  .inst-card:hover { transform: translateY(-2px); border-color: var(--gris-medio); }
-  .inst-card.selected { border-color: var(--cobre); }
+  .inst-card:hover { transform: translateY(-2px); border-color: rgba(37,99,235,0.3); box-shadow: var(--sombra), 0 0 20px rgba(37,99,235,0.1); }
+  .inst-card.selected { border-color: var(--azul-electrico); }
   .inst-card::after {
     content: ''; position: absolute;
     bottom: 0; left: 0; right: 0; height: 3px;
   }
-  .inst-card.energia::after { background: var(--cobre); }
-  .inst-card.educacion::after { background: var(--azul-claro); }
+  .inst-card.energia::after { background: var(--dorado); }
+  .inst-card.educacion::after { background: var(--azul-electrico); }
   .inst-card.cancilleria::after { background: var(--verde-claro); }
-  .inst-card.corfo::after { background: #f39c12; }
-  .inst-card.agci::after { background: #9b59b6; }
-  .inst-card.mineria::after { background: #e74c3c; }
+  .inst-card.corfo::after { background: #f59e0b; }
+  .inst-card.agci::after { background: #a78bfa; }
+  .inst-card.mineria::after { background: #f87171; }
   .inst-icon { font-size: 24px; margin-bottom: 10px; }
   .inst-name { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-  .inst-rol { font-size: 11px; color: var(--gris-claro); line-height: 1.5; margin-bottom: 12px; }
+  .inst-rol { font-size: 11px; color: var(--gris-azul); line-height: 1.5; margin-bottom: 12px; }
   .inst-tags { display: flex; flex-wrap: wrap; gap: 4px; }
   .inst-tag {
     font-size: 10px; padding: 2px 8px; border-radius: 10px;
-    background: rgba(245,242,236,.05); color: var(--gris-claro);
+    background: rgba(37,99,235,0.08); color: var(--gris-azul);
     border: 1px solid var(--borde);
   }
 
   .sinergia-box {
-    background: rgba(45,106,79,.08);
-    border: 1px solid rgba(82,183,136,.2);
-    border-radius: 14px; padding: 24px; margin-bottom: 16px;
+    background: rgba(5,150,105,.07);
+    border: 1px solid rgba(52,211,153,.15);
+    border-radius: 16px; padding: 24px; margin-bottom: 16px;
   }
   .sin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
   .sin-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
   .sin-badge {
     font-size: 10px; padding: 4px 10px; border-radius: 20px;
-    background: rgba(82,183,136,.15); color: var(--verde-claro);
+    background: rgba(52,211,153,.12); color: var(--verde-claro);
     font-weight: 500; letter-spacing: .05em;
   }
-  .sin-ministerios { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .sin-ministerios { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
   .sin-min {
-    background: rgba(245,242,236,.06); border: 1px solid var(--borde);
+    background: rgba(255,255,255,0.05); border: 1px solid var(--borde);
     border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 500;
   }
   .sin-arrow { color: var(--verde-claro); font-size: 18px; }
-  .sin-desc { font-size: 13px; color: var(--gris-claro); line-height: 1.6; margin-bottom: 14px; }
+  .sin-desc { font-size: 13px; color: var(--gris-azul); line-height: 1.6; margin-bottom: 14px; }
   .sin-actions { display: flex; gap: 10px; }
   .btn-notify {
     font-size: 13px; padding: 9px 18px; border-radius: 8px;
-    background: rgba(82,183,136,.15); color: var(--verde-claro);
-    border: 1px solid rgba(82,183,136,.3); cursor: pointer;
+    background: rgba(52,211,153,.12); color: var(--verde-claro);
+    border: 1px solid rgba(52,211,153,.25); cursor: pointer;
     transition: all .2s; font-family: 'DM Sans', sans-serif; font-weight: 500;
   }
-  .btn-notify:hover { background: rgba(82,183,136,.25); }
+  .btn-notify:hover { background: rgba(52,211,153,.22); }
   .btn-detail {
     font-size: 13px; padding: 9px 18px; border-radius: 8px;
-    background: transparent; color: var(--gris-claro);
+    background: transparent; color: var(--gris-azul);
     border: 1px solid var(--borde); cursor: pointer;
     transition: all .2s; font-family: 'DM Sans', sans-serif;
   }
-  .btn-detail:hover { background: var(--gris); color: var(--blanco); }
+  .btn-detail:hover { background: rgba(255,255,255,0.05); color: var(--blanco); }
 
-  /* ── PÁGINA 4: REGISTRO ── */
+  /* ── PÁGINA 4: GUÍA DE TÍTULOS ── */
+  .titulos-buscador {
+    background: linear-gradient(135deg, var(--azul-medio), var(--azul-card));
+    border: 1px solid var(--borde); border-radius: 18px; padding: 28px; margin-bottom: 28px;
+    box-shadow: var(--sombra);
+  }
+  .tit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .tit-label {
+    font-size: 12px; font-weight: 500; color: var(--gris-azul);
+    text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 12px;
+  }
+  .tit-paises { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tit-pais {
+    display: flex; align-items: center; gap: 7px; padding: 8px 14px;
+    border-radius: 8px; border: 1px solid var(--borde);
+    background: rgba(255,255,255,0.03); cursor: pointer; font-size: 13px; transition: all .2s;
+  }
+  .tit-pais:hover { border-color: var(--gris-oscuro); }
+  .tit-pais.sel { background: rgba(37,99,235,.12); border-color: rgba(37,99,235,.4); color: var(--azul-cielo); }
+  .tit-bandera { font-size: 16px; }
+  .tit-select {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--borde);
+    color: var(--blanco); font-size: 14px; font-family: 'DM Sans', sans-serif; cursor: pointer;
+  }
+  .tit-select option { background: #1a2e4a; }
+  .tit-resultado {
+    background: linear-gradient(135deg, var(--azul-medio), var(--azul-card));
+    border: 1px solid var(--borde); border-radius: 18px; padding: 28px; margin-bottom: 16px;
+    box-shadow: var(--sombra);
+  }
+  .tit-res-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--borde);
+  }
+  .tit-res-titulo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .tit-res-sub { font-size: 12px; color: var(--gris-azul); }
+  .tit-res-badge { font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+  .badge-posible { background: rgba(52,211,153,.1); color: var(--verde-claro); border: 1px solid rgba(52,211,153,.2); }
+  .badge-directo { background: rgba(37,99,235,.12); color: var(--azul-cielo); border: 1px solid rgba(37,99,235,.25); }
+  .badge-complejo { background: rgba(201,160,80,.12); color: var(--dorado-claro); border: 1px solid rgba(201,160,80,.25); }
+  .tit-pasos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .tit-paso {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--borde);
+    border-radius: 10px; padding: 16px; display: flex; gap: 12px; align-items: flex-start;
+  }
+  .tit-paso-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(37,99,235,.15); color: var(--azul-cielo);
+    font-size: 12px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .tit-paso-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .tit-paso-desc { font-size: 12px; color: var(--gris-azul); line-height: 1.6; }
+  .tit-alerta {
+    background: rgba(37,99,235,.07); border: 1px solid rgba(37,99,235,.2);
+    border-radius: 10px; padding: 16px; display: flex; gap: 12px; margin-bottom: 20px;
+  }
+  .tit-alerta-icon { font-size: 20px; flex-shrink: 0; }
+  .tit-alerta-title { font-size: 13px; font-weight: 500; color: var(--azul-cielo); margin-bottom: 4px; }
+  .tit-alerta-desc { font-size: 12px; color: var(--gris-azul); line-height: 1.6; }
+  .tit-tiempo { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .tit-tiempo-item {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--borde);
+    border-radius: 10px; padding: 14px; text-align: center;
+  }
+  .tit-tiempo-num { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--azul-cielo); margin-bottom: 4px; }
+  .tit-tiempo-label { font-size: 11px; color: var(--gris-azul); }
+  .tit-disclaimer {
+    font-size: 11px; color: var(--gris-azul); line-height: 1.7;
+    padding: 14px; background: rgba(255,255,255,0.03);
+    border-radius: 8px; border: 1px solid var(--borde);
+  }
+
+  /* ── PÁGINA 5: REGISTRO ── */
   .reg-layout {
     display: grid; grid-template-columns: 1fr 420px; gap: 60px;
     max-width: 1100px; margin: 0 auto; padding: 48px 40px;
@@ -337,148 +446,211 @@
     font-family: 'Syne', sans-serif; font-size: 30px;
     font-weight: 800; letter-spacing: -.6px; margin-bottom: 14px;
   }
-  .reg-left p { font-size: 14px; color: var(--gris-claro); line-height: 1.7; margin-bottom: 28px; }
-  .reg-benefit {
-    display: flex; gap: 14px; align-items: flex-start;
-    margin-bottom: 20px;
-  }
+  .reg-left p { font-size: 14px; color: var(--gris-azul); line-height: 1.7; margin-bottom: 28px; }
+  .reg-benefit { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
   .reg-icon {
     width: 38px; height: 38px; border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
     font-size: 17px; flex-shrink: 0;
   }
-  .reg-icon.c1 { background: rgba(200,115,58,.12); }
-  .reg-icon.c2 { background: rgba(82,183,136,.12); }
-  .reg-icon.c3 { background: rgba(52,152,219,.12); }
+  .reg-icon.c1 { background: rgba(37,99,235,.12); }
+  .reg-icon.c2 { background: rgba(52,211,153,.12); }
+  .reg-icon.c3 { background: rgba(201,160,80,.12); }
   .reg-benefit-text strong { font-size: 13px; font-weight: 500; display: block; margin-bottom: 3px; }
-  .reg-benefit-text span { font-size: 12px; color: var(--gris-claro); line-height: 1.5; }
-
+  .reg-benefit-text span { font-size: 12px; color: var(--gris-azul); line-height: 1.5; }
   .reg-form {
-    background: var(--gris); border: 1px solid var(--borde);
-    border-radius: 16px; padding: 30px;
+    background: linear-gradient(135deg, var(--azul-medio), var(--azul-card));
+    border: 1px solid var(--borde); border-radius: 18px; padding: 30px;
+    box-shadow: var(--sombra);
   }
   .reg-steps { display: flex; gap: 6px; margin-bottom: 28px; }
-  .reg-step {
-    flex: 1; height: 3px; border-radius: 2px;
-    background: rgba(245,242,236,.1); transition: background .3s;
-  }
-  .reg-step.done { background: var(--cobre); }
-  .reg-step.active { background: rgba(200,115,58,.5); }
+  .reg-step { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.08); transition: background .3s; }
+  .reg-step.done { background: var(--azul-electrico); }
+  .reg-step.active { background: rgba(37,99,235,.5); }
   .form-label { font-size: 12px; font-weight: 500; color: var(--blanco); margin-bottom: 6px; display: block; }
   .form-input {
     width: 100%; padding: 10px 14px; border-radius: 8px;
-    background: rgba(245,242,236,.05); border: 1px solid var(--borde);
+    background: rgba(255,255,255,0.05); border: 1px solid var(--borde);
     color: var(--blanco); font-size: 14px; margin-bottom: 14px;
     transition: border-color .2s; font-family: 'DM Sans', sans-serif;
   }
-  .form-input:focus { outline: none; border-color: var(--cobre); }
-  .form-input::placeholder { color: var(--gris-claro); }
+  .form-input:focus { outline: none; border-color: var(--azul-electrico); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+  .form-input::placeholder { color: var(--gris-azul); }
   .form-select {
     width: 100%; padding: 10px 14px; border-radius: 8px;
-    background: rgba(245,242,236,.05); border: 1px solid var(--borde);
+    background: rgba(255,255,255,0.05); border: 1px solid var(--borde);
     color: var(--blanco); font-size: 14px; margin-bottom: 14px;
-    font-family: 'DM Sans', sans-serif; cursor: pointer;
-    appearance: none;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; appearance: none;
   }
-  .form-select option { background: #1a1d22; color: var(--blanco); }
+  .form-select option { background: #1a2e4a; color: var(--blanco); }
   .tag-select { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
   .ts-tag {
     font-size: 12px; padding: 6px 13px; border-radius: 20px;
     border: 1px solid var(--borde); background: transparent;
-    color: var(--gris-claro); cursor: pointer; transition: all .2s;
-    font-family: 'DM Sans', sans-serif;
+    color: var(--gris-azul); cursor: pointer; transition: all .2s; font-family: 'DM Sans', sans-serif;
   }
-  .ts-tag.sel {
-    background: rgba(200,115,58,.12); color: var(--cobre-claro);
-    border-color: rgba(200,115,58,.3);
-  }
+  .ts-tag.sel { background: rgba(37,99,235,.12); color: var(--azul-cielo); border-color: rgba(37,99,235,.35); }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .form-btn {
     width: 100%; padding: 12px; border-radius: 8px;
-    background: var(--cobre); color: var(--blanco);
+    background: var(--azul-electrico); color: white;
     font-size: 14px; font-weight: 500; border: none;
     cursor: pointer; transition: all .2s;
     font-family: 'DM Sans', sans-serif; margin-top: 4px;
+    box-shadow: 0 4px 14px rgba(37,99,235,.35);
   }
-  .form-btn:hover { background: var(--cobre-claro); }
+  .form-btn:hover { background: var(--azul-electrico-claro); }
 
-  /* TOAST */
+  /* ── PÁGINA 6: ASIA-PACÍFICO ── */
+  .asia-hero {
+    background: linear-gradient(135deg, rgba(37,99,235,.08), rgba(201,160,80,.06));
+    border: 1px solid var(--borde); border-radius: 20px; padding: 36px;
+    margin-bottom: 36px; position: relative; overflow: hidden;
+    box-shadow: var(--sombra);
+  }
+  .asia-hero::before {
+    content: ''; position: absolute; top: -80px; right: -80px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,160,80,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .asia-hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(201,160,80,.15); border: 1px solid rgba(201,160,80,.3);
+    color: var(--dorado-claro); font-size: 11px; font-weight: 500;
+    padding: 5px 12px; border-radius: 20px; margin-bottom: 16px; letter-spacing: .05em;
+  }
+  .asia-hero h2 {
+    font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800;
+    letter-spacing: -.6px; margin-bottom: 10px;
+  }
+  .asia-hero p { font-size: 14px; color: var(--gris-azul); line-height: 1.7; max-width: 640px; }
+  .asia-hero-flags { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .asia-flag-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--borde);
+    border-radius: 8px; padding: 6px 12px; font-size: 13px;
+  }
+
+  .oportunidades-tabs {
+    display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: wrap;
+  }
+  .op-tab {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; padding: 8px 16px; border-radius: 10px;
+    border: 1px solid var(--borde); background: transparent;
+    color: var(--gris-azul); cursor: pointer; transition: all .2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .op-tab.active { background: rgba(37,99,235,.15); color: var(--azul-cielo); border-color: rgba(37,99,235,.35); }
+  .op-tab:hover:not(.active) { background: rgba(255,255,255,0.05); color: var(--blanco); }
+  .op-tab-icon { font-size: 15px; }
+
+  .op-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .op-card {
+    background: linear-gradient(135deg, var(--azul-medio), var(--azul-card));
+    border: 1px solid var(--borde); border-radius: 16px; padding: 22px;
+    transition: all .2s; cursor: pointer;
+    box-shadow: var(--sombra);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .op-card:hover { border-color: rgba(37,99,235,0.3); transform: translateY(-2px); box-shadow: var(--sombra), 0 0 20px rgba(37,99,235,0.1); }
+  .op-card-top { display: flex; align-items: flex-start; justify-content: space-between; }
+  .op-tipo {
+    font-size: 10px; font-weight: 500; letter-spacing: .1em;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 20px;
+  }
+  .op-tipo.beca { background: rgba(37,99,235,.15); color: var(--azul-cielo); }
+  .op-tipo.practica { background: rgba(201,160,80,.15); color: var(--dorado-claro); }
+  .op-tipo.empleo { background: rgba(52,211,153,.15); color: var(--verde-claro); }
+  .op-tipo.investigacion { background: rgba(167,139,250,.15); color: #c4b5fd; }
+  .op-tipo.curso { background: rgba(251,146,60,.15); color: #fbbf24; }
+  .op-tipo.fondo { background: rgba(248,113,113,.15); color: #fca5a5; }
+  .op-tipo.traduccion { background: rgba(34,211,238,.15); color: #67e8f9; }
+  .op-pais-flag { font-size: 20px; }
+  .op-titulo { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; line-height: 1.3; }
+  .op-inst { font-size: 12px; color: var(--gris-azul); margin-top: 2px; }
+  .op-desc { font-size: 12px; color: var(--gris-azul); line-height: 1.6; }
+  .op-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+  .op-plazo {
+    font-size: 11px; color: var(--gris-azul);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .op-plazo-badge {
+    font-size: 10px; padding: 3px 8px; border-radius: 4px;
+    background: rgba(248,113,113,.12); color: #fca5a5;
+    font-weight: 500;
+  }
+  .op-plazo-badge.abierto { background: rgba(52,211,153,.12); color: var(--verde-claro); }
+  .op-link {
+    font-size: 12px; padding: 6px 12px; border-radius: 6px;
+    border: 1px solid var(--borde); background: transparent;
+    color: var(--azul-cielo); cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .op-link:hover { background: rgba(37,99,235,.12); border-color: var(--azul-electrico); }
+
+  .asia-cta-box {
+    background: linear-gradient(135deg, rgba(37,99,235,.1), rgba(201,160,80,.07));
+    border: 1px solid rgba(37,99,235,.2); border-radius: 16px; padding: 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; margin-top: 32px;
+  }
+  .asia-cta-text h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .asia-cta-text p { font-size: 13px; color: var(--gris-azul); line-height: 1.6; }
+
+  /* ── TOAST ── */
   .toast {
     position: fixed; bottom: 30px; right: 30px;
-    background: var(--gris); border: 1px solid rgba(82,183,136,.3);
-    border-radius: 12px; padding: 16px 20px;
+    background: var(--azul-card); border: 1px solid rgba(52,211,153,.25);
+    border-radius: 14px; padding: 16px 20px;
     display: flex; align-items: center; gap: 12px;
     font-size: 13px; color: var(--blanco);
     transform: translateY(80px); opacity: 0;
     transition: all .4s cubic-bezier(.175,.885,.32,1.275);
     z-index: 200; max-width: 320px;
+    box-shadow: var(--sombra), 0 0 20px rgba(52,211,153,.1);
   }
   .toast.show { transform: translateY(0); opacity: 1; }
   .toast-icon { font-size: 20px; flex-shrink: 0; }
   .toast-text strong { display: block; margin-bottom: 2px; color: var(--verde-claro); }
-  .toast-text span { color: var(--gris-claro); font-size: 12px; }
+  .toast-text span { color: var(--gris-azul); font-size: 12px; }
 
-  /* ── GUÍA DE TÍTULOS ── */
-  .titulos-buscador { background: var(--gris); border: 1px solid var(--borde); border-radius: 16px; padding: 28px; margin-bottom: 28px; }
-  .tit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-  .tit-field {}
-  .tit-label { font-size: 12px; font-weight: 500; color: var(--gris-claro); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: 12px; }
-  .tit-paises { display: flex; flex-wrap: wrap; gap: 8px; }
-  .tit-pais { display: flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--borde); background: rgba(245,242,236,.03); cursor: pointer; font-size: 13px; transition: all .2s; }
-  .tit-pais:hover { border-color: var(--gris-medio); }
-  .tit-pais.sel { background: rgba(200,115,58,.12); border-color: rgba(200,115,58,.4); color: var(--cobre-claro); }
-  .tit-bandera { font-size: 16px; }
-  .tit-select { width: 100%; padding: 10px 14px; border-radius: 8px; background: rgba(245,242,236,.05); border: 1px solid var(--borde); color: var(--blanco); font-size: 14px; font-family: 'DM Sans', sans-serif; cursor: pointer; }
-  .tit-select option { background: #1a1d22; }
-  .tit-resultado { background: var(--gris); border: 1px solid var(--borde); border-radius: 16px; padding: 28px; margin-bottom: 16px; }
-  .tit-res-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--borde); }
-  .tit-res-titulo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  .tit-res-sub { font-size: 12px; color: var(--gris-claro); }
-  .tit-res-badge { font-size: 11px; font-weight: 500; padding: 5px 12px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
-  .badge-posible { background: rgba(82,183,136,.12); color: var(--verde-claro); border: 1px solid rgba(82,183,136,.25); }
-  .badge-directo { background: rgba(52,152,219,.12); color: #5dade2; border: 1px solid rgba(52,152,219,.25); }
-  .badge-complejo { background: rgba(200,115,58,.12); color: var(--cobre-claro); border: 1px solid rgba(200,115,58,.25); }
-  .tit-pasos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-  .tit-paso { background: rgba(245,242,236,.03); border: 1px solid var(--borde); border-radius: 10px; padding: 16px; display: flex; gap: 12px; align-items: flex-start; }
-  .tit-paso-num { width: 26px; height: 26px; border-radius: 50%; background: rgba(200,115,58,.15); color: var(--cobre-claro); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-  .tit-paso-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-  .tit-paso-desc { font-size: 12px; color: var(--gris-claro); line-height: 1.6; }
-  .tit-alerta { background: rgba(52,152,219,.07); border: 1px solid rgba(52,152,219,.2); border-radius: 10px; padding: 16px; display: flex; gap: 12px; margin-bottom: 20px; }
-  .tit-alerta-icon { font-size: 20px; flex-shrink: 0; }
-  .tit-alerta-title { font-size: 13px; font-weight: 500; color: #5dade2; margin-bottom: 4px; }
-  .tit-alerta-desc { font-size: 12px; color: var(--gris-claro); line-height: 1.6; }
-  .tit-tiempo { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
-  .tit-tiempo-item { background: rgba(245,242,236,.04); border: 1px solid var(--borde); border-radius: 10px; padding: 14px; text-align: center; }
-  .tit-tiempo-num { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--cobre); margin-bottom: 4px; }
-  .tit-tiempo-label { font-size: 11px; color: var(--gris-claro); }
-  .tit-disclaimer { font-size: 11px; color: var(--gris-claro); line-height: 1.7; padding: 14px; background: rgba(245,242,236,.03); border-radius: 8px; border: 1px solid var(--borde); }
-  @media (max-width: 768px) {
-    .tit-row, .tit-pasos-grid, .tit-tiempo { grid-template-columns: 1fr; }
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .op-grid { grid-template-columns: 1fr 1fr; }
   }
-</style>
   @media (max-width: 768px) {
     .hero { grid-template-columns: 1fr; }
     .hero-visual { display: none; }
     .brechas-grid, .inst-grid { grid-template-columns: 1fr; }
     .reg-layout { grid-template-columns: 1fr; }
+    .op-grid { grid-template-columns: 1fr; }
     nav { padding: 14px 20px; }
     .nav-links { display: none; }
     .page-inner, .reg-layout { padding: 30px 20px; }
+    .tit-row, .tit-pasos-grid, .tit-tiempo { grid-template-columns: 1fr; }
+    .asia-cta-box { flex-direction: column; }
   }
 </style>
 </head>
 <body>
 
 <nav>
-  <div class="nav-logo"><span></span>Talento País</div>
-  <div class="nav-links">
-    <button class="nav-link active" onclick="goPage('inicio')">Inicio</button>
-    <button class="nav-link" onclick="goPage('brechas')">Brechas</button>
-    <button class="nav-link" onclick="goPage('institucional')">Mapa institucional</button>
-    <button class="nav-link" onclick="goPage('titulos')">Guía de títulos</button>
-    <button class="nav-link" onclick="goPage('registro')">Registro de talento</button>
+  <div class="nav-logo">
+    <div class="nav-logo-icon">TP</div>
+    Talento País
+    <span class="nav-badge">Beta IA</span>
   </div>
-  <button class="nav-cta" onclick="goPage('registro')">Registrarme</button>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="goPage('inicio', this)">Inicio</button>
+    <button class="nav-link" onclick="goPage('brechas', this)">Brechas</button>
+    <button class="nav-link" onclick="goPage('institucional', this)">Mapa institucional</button>
+    <button class="nav-link" onclick="goPage('titulos', this)">Guía de títulos</button>
+    <button class="nav-link" onclick="goPage('asia', this)">Asia-Pacífico</button>
+    <button class="nav-link" onclick="goPage('registro', this)">Registro</button>
+  </div>
+  <button class="nav-cta" onclick="goPage('registro', null)">Registrarme</button>
 </nav>
 
 <!-- ─────── PÁGINA 1: INICIO ─────── -->
@@ -487,16 +659,17 @@
     <div class="hero-content">
       <div class="hero-eyebrow">Plataforma de capital humano estratégico · Chile</div>
       <h1 class="hero-title">
-        El talento estratégico<br>
-        de Chile, <em>visible</em><br>
-        y conectado.
+        El talento que Chile<br>
+        necesita, <em>visible</em><br>
+        y <strong>conectado</strong>.
       </h1>
       <p class="hero-desc">
-        Mapeamos las brechas de capital humano en los sectores donde Chile ya tiene ventaja —litio y energías renovables— y conectamos a quienes pueden actuar con la información que necesitan para hacerlo.
+        Mapeamos brechas de capital humano en los sectores donde Chile ya tiene ventaja —litio, energías renovables e IA— y conectamos a quienes pueden actuar con la información que necesitan. Con inteligencia artificial y mirada Asia-Pacífico.
       </p>
       <div class="hero-actions">
-        <button class="btn-primary" onclick="goPage('brechas')">Ver brechas detectadas</button>
-        <button class="btn-ghost" onclick="goPage('registro')">Registra tu talento</button>
+        <button class="btn-primary" onclick="goPage('brechas', null)">Ver brechas detectadas</button>
+        <button class="btn-dorado" onclick="goPage('asia', null)">Oportunidades Asia →</button>
+        <button class="btn-ghost" onclick="goPage('registro', null)">Registra tu talento</button>
       </div>
     </div>
     <div class="hero-visual">
@@ -511,11 +684,11 @@
         </div>
         <div class="mini-stat">
           <div class="mini-stat-num">4</div>
-          <div class="mini-stat-label">ministerios con programas similares sin coordinarse</div>
+          <div class="mini-stat-label">ministerios con programas similares sin coordinarse entre sí</div>
         </div>
         <div class="mini-stat">
-          <div class="mini-stat-num">0</div>
-          <div class="mini-stat-label">plataformas que conectan estos datos hoy en Chile</div>
+          <div class="mini-stat-num">#1</div>
+          <div class="mini-stat-label">Chile lidera IA en LATAM según Índice ILIA 2024, pero fuga talento</div>
         </div>
       </div>
       <div class="mini-match">
@@ -547,9 +720,9 @@
 <div class="page" id="pg-brechas">
   <div class="page-inner">
     <div class="page-header">
-      <div class="page-eyebrow">Diagnóstico en tiempo real</div>
+      <div class="page-eyebrow">Diagnóstico en tiempo real · IA</div>
       <h1 class="page-title">Brechas de talento por sector</h1>
-      <p class="page-sub">La IA cruza programas de estudio de universidades e institutos técnicos acreditados con ofertas laborales activas en litio y energías renovables. Sin que nadie suba datos manualmente.</p>
+      <p class="page-sub">La IA cruza programas de estudio de universidades e institutos técnicos acreditados con ofertas laborales activas en litio, renovables e inteligencia artificial. Sin que nadie suba datos manualmente.</p>
     </div>
     <div class="filter-row">
       <button class="filter-chip on" onclick="toggleChip(this)">Todos los sectores</button>
@@ -557,18 +730,12 @@
       <button class="filter-chip" onclick="toggleChip(this)">Solar</button>
       <button class="filter-chip" onclick="toggleChip(this)">Eólica</button>
       <button class="filter-chip" onclick="toggleChip(this)">Hidrógeno verde</button>
+      <button class="filter-chip" onclick="toggleChip(this)">Inteligencia Artificial</button>
       <button class="filter-chip" onclick="toggleChip(this)">Antofagasta</button>
       <button class="filter-chip" onclick="toggleChip(this)">Atacama</button>
     </div>
-    
-    <!-- ✅ Grid vacío - se llenará con JavaScript -->
     <div class="brechas-grid"></div>
-    
-    <!-- ✅ Match container - también se llenará con JS si existe en Sheets -->
     <div id="match-container"></div>
-  </div>
-</div>
-
   </div>
 </div>
 
@@ -576,9 +743,9 @@
 <div class="page" id="pg-institucional">
   <div class="page-inner">
     <div class="page-header">
-      <div class="page-eyebrow">Análisis institucional</div>
+      <div class="page-eyebrow">Análisis institucional · IA</div>
       <h1 class="page-title">Mapa de coordinación ministerial</h1>
-      <p class="page-sub">La IA lee memorias anuales, programas y licitaciones públicas de cada institución. Identifica qué hace cada una en materia de talento y dónde hay vacíos o duplicación de esfuerzos.</p>
+      <p class="page-sub">La IA lee memorias anuales, programas y licitaciones públicas de cada institución. Identifica qué hace cada una en materia de talento y dónde hay vacíos o duplicación de esfuerzos — habilitado por la Ley 21.180 de Transformación Digital del Estado.</p>
     </div>
     <div class="inst-grid">
       <div class="inst-card energia">
@@ -592,7 +759,7 @@
       <div class="inst-card educacion">
         <div class="inst-icon">🎓</div>
         <div class="inst-name">Min. Educación</div>
-        <div class="inst-rol">Acredita programas, administra becas de postgrado y supervisa institutos técnicos.</div>
+        <div class="inst-rol">Acredita programas, administra becas de postgrado y supervisa institutos técnicos y CFT.</div>
         <div class="inst-tags">
           <span class="inst-tag">acreditación</span><span class="inst-tag">becas</span><span class="inst-tag">CFT</span>
         </div>
@@ -600,7 +767,7 @@
       <div class="inst-card cancilleria">
         <div class="inst-icon">🌐</div>
         <div class="inst-name">Cancillería</div>
-        <div class="inst-rol">Negocia acuerdos de reconocimiento de títulos. Coordina diplomacia científica con Asia.</div>
+        <div class="inst-rol">Negocia acuerdos de reconocimiento de títulos. Coordina diplomacia científica con Asia-Pacífico.</div>
         <div class="inst-tags">
           <span class="inst-tag">títulos</span><span class="inst-tag">acuerdos</span><span class="inst-tag">Asia</span>
         </div>
@@ -608,7 +775,7 @@
       <div class="inst-card corfo">
         <div class="inst-icon">🏗️</div>
         <div class="inst-name">CORFO</div>
-        <div class="inst-rol">Fomenta inversión y emprendimiento. Financia proyectos de innovación con capital humano.</div>
+        <div class="inst-rol">Fomenta inversión y emprendimiento. Financia proyectos de innovación con capital humano especializado.</div>
         <div class="inst-tags">
           <span class="inst-tag">inversión</span><span class="inst-tag">FONDEF</span><span class="inst-tag">startup</span>
         </div>
@@ -616,7 +783,7 @@
       <div class="inst-card agci">
         <div class="inst-icon">✈️</div>
         <div class="inst-name">AGCI</div>
-        <div class="inst-rol">Administra becas internacionales y cooperación técnica. Incluye programas con China y Corea.</div>
+        <div class="inst-rol">Administra becas internacionales y cooperación técnica. Incluye programas con China, Corea y Japón.</div>
         <div class="inst-tags">
           <span class="inst-tag">becas int'l</span><span class="inst-tag">China</span><span class="inst-tag">Corea</span>
         </div>
@@ -624,17 +791,13 @@
       <div class="inst-card mineria">
         <div class="inst-icon">⛏️</div>
         <div class="inst-name">Min. Minería</div>
-        <div class="inst-rol">Regula y planifica el sector minero. Coordina con ENAMI y Codelco en formación especializada.</div>
+        <div class="inst-rol">Regula y planifica el sector minero. Coordina con ENAMI y Codelco en formación especializada en litio.</div>
         <div class="inst-tags">
           <span class="inst-tag">litio</span><span class="inst-tag">cobre</span><span class="inst-tag">ENAMI</span>
         </div>
       </div>
     </div>
-
-
-
-  <div class="sinergias-container"></div>
-  </div>
+    <div class="sinergias-container"></div>
   </div>
 </div>
 
@@ -644,11 +807,11 @@
     <div class="page-header">
       <div class="page-eyebrow">Reconocimiento de títulos · Asia–Chile</div>
       <h1 class="page-title">¿Tu título extranjero es válido en Chile?</h1>
-      <p class="page-sub">Selecciona el país donde estudiaste y tu área de formación. Te mostramos el estado actual del reconocimiento, los pasos concretos y la institución responsable.</p>
+      <p class="page-sub">Selecciona el país donde estudiaste y tu área de formación. Te mostramos el estado actual del reconocimiento, los pasos concretos y la institución responsable — basado en acuerdos públicos de Cancillería.</p>
     </div>
     <div class="titulos-buscador">
       <div class="tit-row">
-        <div class="tit-field">
+        <div>
           <label class="tit-label">País donde obtuviste tu título</label>
           <div class="tit-paises">
             <div class="tit-pais sel" onclick="selectPais(this,'china')" data-pais="china"><span class="tit-bandera">🇨🇳</span><span>China</span></div>
@@ -663,7 +826,7 @@
             <div class="tit-pais" onclick="selectPais(this,'brasil')" data-pais="brasil"><span class="tit-bandera">🇧🇷</span><span>Brasil</span></div>
           </div>
         </div>
-        <div class="tit-field">
+        <div>
           <label class="tit-label">Área de formación</label>
           <select class="tit-select" onchange="updateResult()" id="tit-area">
             <option value="ingenieria">Ingeniería (eléctrica, química, civil)</option>
@@ -695,7 +858,7 @@
         </div>
         <div class="tit-paso">
           <div class="tit-paso-num">3</div>
-          <div><div class="tit-paso-title" id="paso3-title">Solicitud de reconocimiento</div><div class="tit-paso-desc" id="paso3-desc">Para ingeniería: el Colegio de Ingenieros de Chile puede emitir reconocimiento profesional. Tiempo estimado: 3–6 meses. Alternativa: convalidación universitaria en institución chilena acreditada.</div></div>
+          <div><div class="tit-paso-title" id="paso3-title">Solicitud de reconocimiento</div><div class="tit-paso-desc" id="paso3-desc">Para ingeniería: el Colegio de Ingenieros de Chile puede emitir reconocimiento profesional. Tiempo estimado: 3–6 meses. Alternativa: convalidación universitaria en institución acreditada.</div></div>
         </div>
         <div class="tit-paso">
           <div class="tit-paso-num">4</div>
@@ -719,32 +882,338 @@
   </div>
 </div>
 
-<!-- ─────── PÁGINA 5: REGISTRO ─────── -->
+<!-- ─────── PÁGINA 5: ASIA-PACÍFICO ─────── -->
+<div class="page" id="pg-asia">
+  <div class="page-inner">
+    <div class="asia-hero">
+      <div class="asia-hero-badge">🌏 Módulo Asia-Pacífico</div>
+      <h2>Oportunidades para conectar Chile con Asia</h2>
+      <p>Becas, prácticas, empleos, investigación, cursos con diploma, fondos y servicios de traducción en sectores estratégicos. Para chilenos y latinoamericanos que quieren capacitarse en Asia o aportar al país con esa experiencia.</p>
+      <div class="asia-hero-flags">
+        <div class="asia-flag-chip">🇨🇳 China</div>
+        <div class="asia-flag-chip">🇰🇷 Corea del Sur</div>
+        <div class="asia-flag-chip">🇯🇵 Japón</div>
+        <div class="asia-flag-chip">🇸🇬 Singapur</div>
+        <div class="asia-flag-chip">🇹🇼 Taiwán</div>
+        <div class="asia-flag-chip">🇦🇺 Australia</div>
+      </div>
+    </div>
+
+    <div class="oportunidades-tabs">
+      <button class="op-tab active" onclick="filtrarOps('todos', this)"><span class="op-tab-icon">🔍</span>Todas</button>
+      <button class="op-tab" onclick="filtrarOps('beca', this)"><span class="op-tab-icon">🎓</span>Becas</button>
+      <button class="op-tab" onclick="filtrarOps('practica', this)"><span class="op-tab-icon">💼</span>Prácticas</button>
+      <button class="op-tab" onclick="filtrarOps('empleo', this)"><span class="op-tab-icon">🏢</span>Empleos</button>
+      <button class="op-tab" onclick="filtrarOps('investigacion', this)"><span class="op-tab-icon">🔬</span>Investigación</button>
+      <button class="op-tab" onclick="filtrarOps('curso', this)"><span class="op-tab-icon">📚</span>Cursos gratuitos</button>
+      <button class="op-tab" onclick="filtrarOps('fondo', this)"><span class="op-tab-icon">💰</span>Fondos</button>
+      <button class="op-tab" onclick="filtrarOps('traduccion', this)"><span class="op-tab-icon">🈶</span>Traducción</button>
+    </div>
+
+    <div class="op-grid" id="op-grid">
+
+      <!-- BECAS -->
+      <div class="op-card" data-tipo="beca">
+        <div class="op-card-top">
+          <span class="op-tipo beca">Beca</span>
+          <span class="op-pais-flag">🇨🇳</span>
+        </div>
+        <div>
+          <div class="op-titulo">Beca del Gobierno Chino (CSC)</div>
+          <div class="op-inst">Consejo de Becas de China · Pregrado, maestría y doctorado</div>
+        </div>
+        <div class="op-desc">Cubre arancel, alojamiento y mensualidad. Enfocada en ingeniería, ciencias y energías. Más de 20 universidades participantes en China continental.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Abierto</span>
+          <button class="op-link" onclick="window.open('https://www.campuschina.org','_blank')">Ver convocatoria →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="beca">
+        <div class="op-card-top">
+          <span class="op-tipo beca">Beca</span>
+          <span class="op-pais-flag">🇰🇷</span>
+        </div>
+        <div>
+          <div class="op-titulo">GKS – Global Korea Scholarship</div>
+          <div class="op-inst">NIIED · Maestría y Doctorado en Corea del Sur</div>
+        </div>
+        <div class="op-desc">Beca completa del gobierno coreano para estudios de postgrado. Incluye programa de 1 año de coreano. Áreas prioritarias: ciencia, tecnología e ingeniería.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Abierto</span>
+          <button class="op-link" onclick="window.open('https://www.studyinkorea.go.kr','_blank')">Ver convocatoria →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="beca">
+        <div class="op-card-top">
+          <span class="op-tipo beca">Beca AGCI</span>
+          <span class="op-pais-flag">🇨🇱</span>
+        </div>
+        <div>
+          <div class="op-titulo">Becas AGCI – Asia-Pacífico</div>
+          <div class="op-inst">Agencia Chilena de Cooperación Internacional</div>
+        </div>
+        <div class="op-desc">AGCI administra acuerdos con China, Corea, Japón y otros. Incluye becas de postgrado, pasantías técnicas y programas de cooperación sur-sur en sectores estratégicos.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Consultar</span>
+          <button class="op-link" onclick="window.open('https://www.agci.cl','_blank')">Ver convocatoria →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="beca">
+        <div class="op-card-top">
+          <span class="op-tipo beca">Beca</span>
+          <span class="op-pais-flag">🇯🇵</span>
+        </div>
+        <div>
+          <div class="op-titulo">MEXT Scholarship</div>
+          <div class="op-inst">Ministerio de Educación de Japón</div>
+        </div>
+        <div class="op-desc">Beca integral del gobierno japonés para pregrado, postgrado e investigación. Cubre pasaje, matrícula y mensualidad. Plazo anual, postulación via Embajada de Japón en Chile.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge">2025 cerrado</span>
+          <button class="op-link" onclick="window.open('https://www.studyjapan.go.jp','_blank')">Ver info →</button>
+        </div>
+      </div>
+
+      <!-- PRÁCTICAS -->
+      <div class="op-card" data-tipo="practica">
+        <div class="op-card-top">
+          <span class="op-tipo practica">Práctica</span>
+          <span class="op-pais-flag">🇸🇬</span>
+        </div>
+        <div>
+          <div class="op-titulo">ASEAN-Chile Student Exchange</div>
+          <div class="op-inst">NUS / NTU · Singapur</div>
+        </div>
+        <div class="op-desc">Programa de intercambio académico y pasantía en universidades de élite de Singapur. Foco en energía, IA y sostenibilidad. Duración: 1 semestre.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Abierto</span>
+          <button class="op-link" onclick="showToast('Redirigiendo a información del programa...')">Ver convocatoria →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="practica">
+        <div class="op-card-top">
+          <span class="op-tipo practica">Práctica</span>
+          <span class="op-pais-flag">🇨🇳</span>
+        </div>
+        <div>
+          <div class="op-titulo">Prácticas en empresas de energía renovable · China</div>
+          <div class="op-inst">CATL, BYD, Longi Solar · vía CORFO</div>
+        </div>
+        <div class="op-desc">CORFO facilita vinculación con empresas chinas estratégicas en baterías de litio y paneles solares. Para estudiantes de ingeniería eléctrica, química y mecánica.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Consultar</span>
+          <button class="op-link" onclick="window.open('https://www.corfo.cl','_blank')">Ver en CORFO →</button>
+        </div>
+      </div>
+
+      <!-- EMPLEOS -->
+      <div class="op-card" data-tipo="empleo">
+        <div class="op-card-top">
+          <span class="op-tipo empleo">Empleo</span>
+          <span class="op-pais-flag">🇨🇱🇨🇳</span>
+        </div>
+        <div>
+          <div class="op-titulo">Intérprete y liaison Chile-China en proyectos mineros</div>
+          <div class="op-inst">SQM, Codelco · Antofagasta y Santiago</div>
+        </div>
+        <div class="op-desc">Creciente demanda de profesionales bilingües chino-español con conocimiento de industria extractiva para negociaciones con socios asiáticos.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Demanda activa</span>
+          <button class="op-link" onclick="goPage('registro', null)">Regístrate →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="empleo">
+        <div class="op-card-top">
+          <span class="op-tipo empleo">Empleo</span>
+          <span class="op-pais-flag">🇦🇺</span>
+        </div>
+        <div>
+          <div class="op-titulo">Analista de datos · Sector minería crítica</div>
+          <div class="op-inst">Empresas australianas · Remote/híbrido</div>
+        </div>
+        <div class="op-desc">Australia busca profesionales de datos con experiencia en minería crítica (litio, cobre). Salario estimado: AUD 80–110k. Visa disponible para profesionales calificados.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Activo</span>
+          <button class="op-link" onclick="showToast('Información de contacto disponible al registrarte')">Ver oportunidad →</button>
+        </div>
+      </div>
+
+      <!-- INVESTIGACIÓN -->
+      <div class="op-card" data-tipo="investigacion">
+        <div class="op-card-top">
+          <span class="op-tipo investigacion">Investigación</span>
+          <span class="op-pais-flag">🇰🇷🇨🇱</span>
+        </div>
+        <div>
+          <div class="op-titulo">Proyecto conjunto KAIST–CENIA en IA aplicada</div>
+          <div class="op-inst">KAIST (Corea) · CENIA (Chile)</div>
+        </div>
+        <div class="op-desc">Convocatoria para investigadores en IA aplicada a análisis de recursos minerales. Financiado por ANID y NRF de Corea. Duración 2 años, posibilidad de movilidad.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">En evaluación</span>
+          <button class="op-link" onclick="window.open('https://www.cenia.cl','_blank')">Ver CENIA →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="investigacion">
+        <div class="op-card-top">
+          <span class="op-tipo investigacion">Investigación</span>
+          <span class="op-pais-flag">🇨🇳</span>
+        </div>
+        <div>
+          <div class="op-titulo">Postdoctorado en química de electrolitos · China</div>
+          <div class="op-inst">Universidad de Tsinghua · Beijing</div>
+        </div>
+        <div class="op-desc">Investigación en materiales para baterías de nueva generación. Relevante para Chile dada la cadena de valor del litio. Financiado por la Fundación Nacional de Ciencias Natural de China (NSFC).</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Abierto</span>
+          <button class="op-link" onclick="showToast('Información disponible en sitio de Tsinghua')">Ver convocatoria →</button>
+        </div>
+      </div>
+
+      <!-- CURSOS GRATUITOS -->
+      <div class="op-card" data-tipo="curso">
+        <div class="op-card-top">
+          <span class="op-tipo curso">Curso gratuito</span>
+          <span class="op-pais-flag">🇨🇳</span>
+        </div>
+        <div>
+          <div class="op-titulo">Chinese for Professionals · Mandarin + Energía</div>
+          <div class="op-inst">Hanban / Instituto Confucio · Online + presencial</div>
+        </div>
+        <div class="op-desc">Cursos gratuitos de chino mandarín con vocabulario técnico en energía y minería. Incluye diploma oficial. Dictado en los Institutos Confucio en Santiago, Valparaíso y Antofagasta.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Abierto permanente</span>
+          <button class="op-link" onclick="showToast('Consulta en el Instituto Confucio de tu ciudad')">Ver horarios →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="curso">
+        <div class="op-card-top">
+          <span class="op-tipo curso">Curso gratuito</span>
+          <span class="op-pais-flag">🇰🇷</span>
+        </div>
+        <div>
+          <div class="op-titulo">K-MOOC · Energía renovable y semiconductores</div>
+          <div class="op-inst">Korean National Institute for Lifelong Education</div>
+        </div>
+        <div class="op-desc">Plataforma online con más de 800 cursos en inglés y coreano, incluyendo energía solar, semiconductores y IA. Diplomas verificables gratuitos. Sin requisitos de admisión.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Siempre disponible</span>
+          <button class="op-link" onclick="window.open('https://www.kmooc.kr','_blank')">Ir a K-MOOC →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="curso">
+        <div class="op-card-top">
+          <span class="op-tipo curso">Curso gratuito</span>
+          <span class="op-pais-flag">🇯🇵</span>
+        </div>
+        <div>
+          <div class="op-titulo">Japan MOOC · Robótica e IA avanzada</div>
+          <div class="op-inst">JMOOC · Universidades japonesas asociadas</div>
+        </div>
+        <div class="op-desc">Plataforma de aprendizaje masivo con cursos de universidades como Tokio, Kyoto y Osaka. Temas: IA, robótica, manufactura avanzada. Certificados gratuitos en inglés.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Disponible</span>
+          <button class="op-link" onclick="window.open('https://www.jmooc.jp','_blank')">Ir a JMOOC →</button>
+        </div>
+      </div>
+
+      <!-- FONDOS -->
+      <div class="op-card" data-tipo="fondo">
+        <div class="op-card-top">
+          <span class="op-tipo fondo">Fondo</span>
+          <span class="op-pais-flag">🇨🇱</span>
+        </div>
+        <div>
+          <div class="op-titulo">FONDEF IDeA I+D · Proyectos Chile-Asia</div>
+          <div class="op-inst">ANID · Fondo de Fomento al Desarrollo Científico</div>
+        </div>
+        <div class="op-desc">Financiamiento para proyectos de investigación aplicada con vinculación internacional. Hasta $200M CLP. Prioridad en energía, minería crítica y tecnologías digitales.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge">Convocatoria 2026</span>
+          <button class="op-link" onclick="window.open('https://www.anid.cl','_blank')">Ver ANID →</button>
+        </div>
+      </div>
+
+      <div class="op-card" data-tipo="fondo">
+        <div class="op-card-top">
+          <span class="op-tipo fondo">Fondo</span>
+          <span class="op-pais-flag">🌏</span>
+        </div>
+        <div>
+          <div class="op-titulo">ADB Innovation Fund · ASEAN+3</div>
+          <div class="op-inst">Banco Asiático de Desarrollo</div>
+        </div>
+        <div class="op-desc">Fondo del Banco Asiático de Desarrollo para proyectos de innovación en energías limpias y recursos críticos con participación de países LATAM. Requisito: socio asiático confirmado.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Abierto</span>
+          <button class="op-link" onclick="window.open('https://www.adb.org','_blank')">Ver ADB →</button>
+        </div>
+      </div>
+
+      <!-- TRADUCCIÓN -->
+      <div class="op-card" data-tipo="traduccion">
+        <div class="op-card-top">
+          <span class="op-tipo traduccion">Traducción</span>
+          <span class="op-pais-flag">🈶</span>
+        </div>
+        <div>
+          <div class="op-titulo">Red de traductores Chile-Asia para instituciones públicas</div>
+          <div class="op-inst">Plataforma Talento País · Servicio colaborativo</div>
+        </div>
+        <div class="op-desc">¿Hablas chino, japonés o coreano y quieres contribuir? Conéctate con ministerios y organismos que necesitan traducción técnica remota en temas de energía, minería y política pública.</div>
+        <div class="op-footer">
+          <span class="op-plazo-badge abierto">Siempre activo</span>
+          <button class="op-link" onclick="goPage('registro', null)">Ofrece tu servicio →</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="asia-cta-box">
+      <div class="asia-cta-text">
+        <h3>¿Tienes experiencia en Asia y quieres aportar a Chile?</h3>
+        <p>Regístrate en la plataforma y te conectamos con las oportunidades más relevantes para tu perfil. Tu experiencia asiática es exactamente lo que Chile necesita en este momento.</p>
+      </div>
+      <button class="btn-primary" onclick="goPage('registro', null)" style="white-space:nowrap;flex-shrink:0;">Registrar mi perfil →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─────── PÁGINA 6: REGISTRO ─────── -->
 <div class="page" id="pg-registro">
   <div class="reg-layout">
     <div class="reg-left">
       <div class="page-eyebrow" style="margin-bottom:14px;">Registro voluntario de talento</div>
-      <h2>¿Tienes talento que Chile necesita?</h2>
-      <p>Registrarte toma 2 minutos. A cambio recibes un informe personalizado de oportunidades reales en tu área. Tu información aparece solo de forma agregada — nunca como perfil individual.</p>
+      <h2>¿Tienes el talento que Chile necesita?</h2>
+      <p>Registrarte toma 2 minutos. A cambio recibes un informe personalizado de oportunidades reales en tu área. Tu información aparece solo de forma agregada — nunca como perfil individual público.</p>
       <div class="reg-benefit">
         <div class="reg-icon c1">📊</div>
         <div class="reg-benefit-text">
           <strong>Informe personalizado</strong>
-          <span>Al registrarte recibes por correo un análisis de qué oportunidades existen para tu perfil en litio y renovables en Chile.</span>
+          <span>Al registrarte recibes por correo un análisis de qué oportunidades existen para tu perfil en litio, renovables e IA en Chile y Asia.</span>
         </div>
       </div>
       <div class="reg-benefit">
         <div class="reg-icon c2">🔒</div>
         <div class="reg-benefit-text">
-          <strong>Datos protegidos</strong>
+          <strong>Datos protegidos · Ley 19.628</strong>
           <span>Nunca se muestra tu nombre ni correo públicamente. Solo apareces como parte de estadísticas agregadas. Puedes pedir eliminación en cualquier momento.</span>
         </div>
       </div>
       <div class="reg-benefit">
         <div class="reg-icon c3">🌐</div>
         <div class="reg-benefit-text">
-          <strong>Impacto real en política pública</strong>
-          <span>Tu registro ayuda a demostrar al Estado que el talento existe y está disponible. Cada persona cuenta como evidencia.</span>
+          <strong>Impacto en política pública</strong>
+          <span>Tu registro ayuda a demostrar al Estado que el talento existe y está disponible. Cada persona cuenta como evidencia para la toma de decisiones.</span>
         </div>
       </div>
     </div>
@@ -755,72 +1224,111 @@
         <div class="reg-step" id="rs2"></div>
       </div>
       <div id="rf-step0">
-        <p style="font-size:13px;color:var(--gris-claro);margin-bottom:20px;">Paso 1 · Cuéntanos quién eres</p>
+        <p style="font-size:13px;color:var(--gris-azul);margin-bottom:20px;">Paso 1 · Cuéntanos quién eres</p>
         <div class="form-row">
-          <div><label class="form-label">Nombre</label><input class="form-input" placeholder="Como te llamas" type="text"></div>
+          <div><label class="form-label">Nombre</label><input class="form-input" placeholder="Tu nombre" type="text"></div>
           <div><label class="form-label">Correo</label><input class="form-input" placeholder="tu@correo.com" type="email"></div>
         </div>
         <label class="form-label">¿Dónde estás hoy?</label>
         <select class="form-select">
           <option value="">País actual...</option>
           <option>Chile</option><option>China</option><option>Corea del Sur</option>
-          <option>Alemania</option><option>Estados Unidos</option><option>Otro</option>
+          <option>Japón</option><option>Singapur</option><option>Alemania</option>
+          <option>Estados Unidos</option><option>Otro país de Asia</option><option>Otro</option>
         </select>
         <button class="form-btn" onclick="nextStep()">Continuar →</button>
       </div>
       <div id="rf-step1" style="display:none">
-        <p style="font-size:13px;color:var(--gris-claro);margin-bottom:20px;">Paso 2 · Tu formación y experiencia</p>
+        <p style="font-size:13px;color:var(--gris-azul);margin-bottom:20px;">Paso 2 · Tu formación y experiencia</p>
         <label class="form-label">¿En qué área te especializas?</label>
         <div class="tag-select">
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Ingeniería eléctrica</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Química / procesos</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Geología / minería</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Energías renovables</span>
-          <span class="ts-tag" onclick="this.classList.toggle('sel')">Ciencias de datos</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Inteligencia Artificial</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Relaciones internacionales</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Traducción / idiomas asiáticos</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Ciencias de datos</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Técnico especializado</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Otra área</span>
         </div>
-        <label class="form-label">¿Dónde estudiaste?</label>
-        <input class="form-input" placeholder="Ej: USACH, Universidad de Pekín, INACAP..." type="text">
+        <label class="form-label">¿Dónde estudiaste o trabajaste en Asia?</label>
+        <input class="form-input" placeholder="Ej: USACH, Universidad de Pekín, KAIST, INACAP..." type="text">
         <button class="form-btn" onclick="nextStep()">Continuar →</button>
       </div>
       <div id="rf-step2" style="display:none">
-        <p style="font-size:13px;color:var(--gris-claro);margin-bottom:20px;">Paso 3 · ¿Cómo quieres contribuir?</p>
+        <p style="font-size:13px;color:var(--gris-azul);margin-bottom:20px;">Paso 3 · ¿Cómo quieres contribuir?</p>
         <label class="form-label">Me interesaría...</label>
         <div class="tag-select">
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Trabajar en Chile</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Consultoría remota</span>
+          <span class="ts-tag" onclick="this.classList.toggle('sel')">Traducción técnica</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Investigación</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Mentoría</span>
           <span class="ts-tag" onclick="this.classList.toggle('sel')">Solo quiero ser contado</span>
         </div>
-        <label class="form-label" style="margin-top:4px;">¿Algo más que agregar? <span style="font-weight:300;color:var(--gris-claro)">(opcional)</span></label>
-        <textarea class="form-input" rows="3" placeholder="Cuéntanos algo sobre tu experiencia o motivación..."></textarea>
-        <button class="form-btn" onclick="submitForm()" style="background:var(--verde);margin-top:4px;">Registrarme ✓</button>
-        <p style="font-size:10px;color:var(--gris-claro);margin-top:12px;line-height:1.6;">Datos protegidos bajo Ley 19.628. Proyecto académico sin fines de lucro. Puedes pedir eliminación en cualquier momento.</p>
+        <label class="form-label" style="margin-top:4px;">¿Algo más que agregar? <span style="font-weight:300;color:var(--gris-azul)">(opcional)</span></label>
+        <textarea class="form-input" rows="3" placeholder="Cuéntanos sobre tu experiencia en Asia o motivación para contribuir a Chile..."></textarea>
+        <button class="form-btn" onclick="submitForm()" style="background:var(--verde);">Registrarme ✓</button>
+        <p style="font-size:10px;color:var(--gris-azul);margin-top:12px;line-height:1.6;">Datos protegidos bajo Ley 19.628. Proyecto académico sin fines de lucro. Puedes pedir eliminación en cualquier momento escribiendo a la plataforma.</p>
       </div>
     </div>
   </div>
 </div>
 
+<!-- TOAST -->
 <div class="toast" id="toast">
   <div class="toast-icon">✅</div>
   <div class="toast-text">
     <strong id="toast-title">Notificación enviada</strong>
-    <span id="toast-msg">CORFO ha sido notificado del match detectado</span>
+    <span id="toast-msg">Acción completada correctamente</span>
   </div>
 </div>
+
+<!-- ─────── CHATBOT ─────── -->
+<div id="chatbot-container" style="position:fixed;bottom:24px;right:24px;z-index:1000;">
+  <button id="chat-toggle"
+          style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#2563eb);color:white;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,0.5);font-size:22px;display:flex;align-items:center;justify-content:center;transition:all .2s;">
+    🤖
+  </button>
+
+  <div id="chat-window" style="display:none;position:absolute;bottom:72px;right:0;width:360px;height:500px;background:var(--azul-profundo);border-radius:18px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.6),0 0 40px rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.25);">
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1a2e4a,#1e3a5f);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(37,99,235,0.2);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:15px;">🤖</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--blanco-puro);">Asistente Talento País</div>
+          <div style="font-size:11px;color:var(--azul-cielo);">Con IA · Chile &amp; Asia-Pacífico</div>
+        </div>
+      </div>
+      <span id="chat-close" style="cursor:pointer;font-size:20px;color:var(--gris-azul);line-height:1;padding:4px;">×</span>
+    </div>
+    <!-- Messages -->
+    <div id="chat-messages" style="height:370px;padding:16px;overflow-y:auto;background:var(--azul-noche);color:var(--blanco);font-size:14px;line-height:1.6;">
+      <div style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.15);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--gris-azul);">
+        Hola, soy el asistente de <strong style="color:var(--azul-cielo)">Talento País</strong>. Puedo orientarte sobre brechas de talento, oportunidades en Asia-Pacífico, reconocimiento de títulos extranjeros y cómo registrar tu perfil. ¿En qué te ayudo?
+      </div>
+    </div>
+    <!-- Input -->
+    <div style="padding:12px;background:var(--azul-profundo);border-top:1px solid rgba(37,99,235,0.15);">
+      <input id="chat-input" type="text" placeholder="Escribe tu pregunta..."
+             style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(37,99,235,0.25);background:rgba(37,99,235,0.07);color:var(--blanco);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;">
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
+
 // ==================== NAVEGACIÓN ====================
-function goPage(id) {
+function goPage(id, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   document.getElementById('pg-'+id).classList.add('active');
-  event.target.classList.add('active');
-  
-  // Cargar datos al entrar a páginas específicas
+  window.scrollTo(0, 0);
+  if (el) el.classList.add('active');
   if (id === 'brechas') cargarBrechas();
   if (id === 'institucional') cargarSinergias();
 }
@@ -829,14 +1337,28 @@ function toggleChip(el) {
   el.classList.toggle('on');
 }
 
-function showToast(msg) {
+function showToast(msg, title) {
   const toast = document.getElementById('toast');
+  document.getElementById('toast-title').textContent = title || 'Información';
   document.getElementById('toast-msg').textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 3500);
 }
 
-// ==================== REGISTRO - STEPS ====================
+// ==================== ASIA-PACÍFICO: FILTROS ====================
+function filtrarOps(tipo, el) {
+  document.querySelectorAll('.op-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.op-card').forEach(card => {
+    if (tipo === 'todos' || card.dataset.tipo === tipo) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// ==================== REGISTRO ====================
 let currentStep = 0;
 function nextStep() {
   document.getElementById('rf-step'+currentStep).style.display = 'none';
@@ -848,8 +1370,8 @@ function nextStep() {
 }
 
 function submitForm() {
-  showToast('✅ Registro exitoso. Recibirás tu informe por correo en 24h.');
-  setTimeout(() => goPage('inicio'), 2000);
+  showToast('Recibirás tu informe personalizado por correo en 24h.', '✅ Registro exitoso');
+  setTimeout(() => goPage('inicio', null), 2500);
 }
 
 // ==================== GUÍA DE TÍTULOS ====================
@@ -869,19 +1391,17 @@ function updateResult() {
     alemania: 'Alemania', australia: 'Australia', eeuu: 'EE.UU.',
     espana: 'España', argentina: 'Argentina', reinounido: 'Reino Unido', brasil: 'Brasil'
   };
-  
   const areaNombres = {
     ingenieria: 'Ingeniería', ciencias: 'Ciencias', tecnico: 'Técnico/CFT',
     derecho: 'Derecho', medicina: 'Medicina', negocios: 'Negocios'
   };
 
-  document.getElementById('tit-res-titulo').textContent = 
+  document.getElementById('tit-res-titulo').textContent =
     `${areaNombres[area]} · ${paisNombres[paisSeleccionado]}`;
 
-  // Lógica simplificada de reconocimiento
   const tieneAcuerdo = ['china', 'corea', 'espana', 'argentina'].includes(paisSeleccionado);
   const badge = document.getElementById('tit-res-badge');
-  
+
   if (tieneAcuerdo && area !== 'derecho' && area !== 'medicina') {
     badge.className = 'tit-res-badge badge-posible';
     badge.textContent = 'Reconocimiento posible';
@@ -893,175 +1413,140 @@ function updateResult() {
     badge.textContent = 'Convalidación directa';
   }
 
-  // Actualizar alerta
   if (tieneAcuerdo) {
     document.getElementById('alerta-title').textContent = 'Acuerdo bilateral vigente';
-    document.getElementById('alerta-desc').textContent = 
-      `Chile y ${paisNombres[paisSeleccionado]} tienen acuerdos que facilitan el reconocimiento mutuo de títulos.`;
+    document.getElementById('alerta-desc').textContent =
+      `Chile y ${paisNombres[paisSeleccionado]} tienen acuerdos que facilitan el reconocimiento mutuo de títulos. Cancillería puede orientarte directamente.`;
   } else {
     document.getElementById('alerta-title').textContent = 'Sin acuerdo específico';
-    document.getElementById('alerta-desc').textContent = 
-      'Requiere proceso estándar de convalidación. Cancillería puede orientarte sobre el procedimiento.';
+    document.getElementById('alerta-desc').textContent =
+      'Requiere proceso estándar de convalidación. Cancillería puede orientarte sobre el procedimiento completo.';
   }
 }
 
-// ==================== CARGA DE DATOS DESDE GOOGLE SHEETS ====================
-const BRECHAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=0&single=true&output=csv";
+// ==================== BRECHAS Y SINERGIAS DESDE GOOGLE SHEETS ====================
+const BRECHAS_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=0&single=true&output=csv";
 const SINERGIAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-BABhz-cl5NcYoIhLrfQGwwb7YkwPSX4uApCK-sRhzQpW1jw1BVvFFnqImqeurgaenPygzG/pub?gid=1759317245&single=true&output=csv";
 
+// Columnas del pipeline (processor.py → uploader.py):
+// Brechas:   sector_label, nivel_brecha, demanda_oportunidades, matricula_estimada, ratio, recomendacion
+// Sinergias: titulo, fuente, tipo, sector_label, organizacion, region, fecha_cierre,
+//            monto_fmt, es_asia_pacifico, relevancia_score, url, descripcion, fecha_scraping
+
 async function cargarBrechas() {
-  console.log("🔄 Cargando brechas desde Google Sheets...");
   try {
     const response = await fetch(BRECHAS_CSV);
     const csv = await response.text();
-    console.log("📄 CSV recibido:", csv.substring(0, 200));
-    
-    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
-    console.log("✅ Brechas parseadas:", data.length, "filas");
-    console.table(data);
-
+    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
+                     .filter(r => r.sector_label && r.sector_label.trim() !== '' && r.sector_label !== 'sector_label');
     const grid = document.querySelector('.brechas-grid');
-    if (!grid) {
-      console.error("❌ No se encontró .brechas-grid");
-      return;
-    }
+    if (!grid || !data.length) return;
+
+    // Calcular % relativo al máximo de demanda para la barra
+    const maxDemanda = Math.max(...data.map(r => parseInt(r.demanda_oportunidades) || 0), 1);
 
     grid.innerHTML = '';
-
-    let cardsCreadas = 0;
     data.forEach(row => {
-      if (!row.titulo || row.titulo.trim() === '') {
-        console.warn("⚠️ Fila sin título, saltando:", row);
-        return;
-      }
-      
-      cardsCreadas++;
-      const sectorClass = (row.sector || 'litio').toLowerCase().replace(/\s/g, '');
-      const fillClass = sectorClass === 'solar' ? 'fill-azul' : 
-                        sectorClass === 'hidrogenoverde' || sectorClass.includes('hidro') ? 'fill-verde' : 
-                        'fill-cobre';
+      const nivel     = (row.nivel_brecha || 'MEDIA').toUpperCase();
+      const urgencia  = nivel === 'CRÍTICA' || nivel === 'ALTA' ? 'alta' : nivel === 'MEDIA' ? 'media' : 'baja';
+      const demanda   = parseInt(row.demanda_oportunidades) || 0;
+      const matricula = parseInt(row.matricula_estimada) || 0;
+      const pct       = Math.round((demanda / maxDemanda) * 100);
+      const fillClass = nivel === 'CRÍTICA' ? 'fill-dorado' : nivel === 'ALTA' ? 'fill-azul' : 'fill-verde';
+      const sectorSlug = (row.sector_label || '').toLowerCase().replace(/\s|&/g, '');
 
       const card = document.createElement('div');
-      card.className = `brecha-card ${row.urgencia === 'alta' ? 'urgente' : ''}`;
+      card.className = `brecha-card ${urgencia === 'alta' ? 'urgente' : ''}`;
       card.innerHTML = `
         <div class="bc-header">
-          <span class="bc-sector ${sectorClass}">${row.sector || 'Litio'}</span>
-          <span class="bc-urgencia ${row.urgencia || 'media'}">Urgencia ${row.urgencia || 'media'}</span>
+          <span class="bc-sector ${sectorSlug}">${row.sector_label || 'Sector'}</span>
+          <span class="bc-urgencia ${urgencia}">Brecha ${nivel}</span>
         </div>
-        <div class="bc-title">${row.titulo}</div>
-        <div class="bc-region">📍 ${row.region || 'Antofagasta'}${row.empresa ? ' · ' + row.empresa : ''}</div>
-        ${row.match_universidad ? `<div style="font-size:11px;color:var(--verde-claro);margin:8px 0;">🎯 Match: ${row.match_universidad}</div>` : ''}
-        <div class="bc-bar-label"><span>Demanda 2025–2027</span><span>${row.demanda_pct || 50}%</span></div>
-        <div class="bc-bar"><div class="bc-bar-fill ${fillClass}" style="width:${row.demanda_pct || 50}%"></div></div>
+        <div class="bc-title">${row.sector_label || ''}</div>
+        <div class="bc-region" style="font-size:11px;color:var(--gris-azul);margin:6px 0 10px;">
+          ${row.recomendacion || ''}
+        </div>
+        <div class="bc-bar-label"><span>Demanda de oportunidades</span><span>${pct}%</span></div>
+        <div class="bc-bar"><div class="bc-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
         <div class="bc-footer">
           <div>
-            <div class="bc-num">${row.puestos_sin_cubrir || 100}</div>
-            <div class="bc-num-label">puestos sin cubrir</div>
-            ${row.salario_estimado ? `<div style="font-size:11px;color:var(--gris-claro);margin-top:4px;">💰 ${row.salario_estimado}</div>` : ''}
+            <div class="bc-num">${demanda}</div>
+            <div class="bc-num-label">oportunidades activas</div>
+            ${matricula > 0 ? `<div style="font-size:11px;color:var(--gris-azul);margin-top:4px;">🎓 ${matricula.toLocaleString('es-CL')} matriculados</div>` : ''}
           </div>
-          <button class="bc-btn" onclick="showToast('Notificando sobre: ${row.titulo.replace(/'/g, "\\'")}')">Notificar →</button>
+          <button class="bc-btn" onclick="showToast('Alerta activada: ${(row.sector_label||'').replace(/'/g,"\\'")}', 'Te notificaremos sobre nuevas oportunidades')">Notificar →</button>
         </div>
       `;
       grid.appendChild(card);
     });
-    
-    console.log(`✅ ${cardsCreadas} cards de brechas creadas`);
-    
   } catch (e) {
-    console.error("❌ Error cargando brechas:", e);
+    console.error("Error cargando brechas:", e);
   }
 }
 
 async function cargarSinergias() {
-  console.log("🔄 Cargando sinergias desde Google Sheets...");
   try {
     const response = await fetch(SINERGIAS_CSV);
     const csv = await response.text();
-    console.log("📄 CSV recibido:", csv.substring(0, 200));
-    
-    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data;
-    console.log("✅ Sinergias parseadas:", data.length, "filas");
-    console.table(data);
+    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
+                     .filter(r => r.titulo && r.titulo.trim() !== '' && r.titulo !== 'titulo');
+    const container = document.querySelector('.sinergias-container');
+    if (!container || !data.length) return;
 
-    let container = document.querySelector('.sinergias-container');
-    if (!container) {
-      console.error("❌ No se encontró .sinergias-container");
-      return;
-    }
+    container.innerHTML = '<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--azul-cielo);display:flex;align-items:center;gap:8px;"><span style="width:20px;height:1px;background:var(--azul-electrico);"></span>Oportunidades detectadas automáticamente</div>';
 
-    container.innerHTML = '<div style="margin:40px 0 20px;font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--cobre);display:flex;align-items:center;gap:8px;"><span style="width:20px;height:1px;background:var(--cobre);"></span>Sinergias detectadas automáticamente por IA</div>';
-
-    let sinergiasCreadasCount = 0;
     data.forEach(row => {
-      if (!row.titulo || row.titulo.trim() === "") {
-        console.warn("⚠️ Sinergia sin título, saltando:", row);
-        return;
-      }
+      const tipoLabel = row.tipo === 'licitacion'         ? 'Licitación MP' :
+                        row.tipo === 'oferta_laboral'      ? 'Oferta laboral' :
+                        row.tipo === 'programa_convocatoria'? 'Programa/Convocatoria' :
+                        row.tipo || 'Oportunidad';
 
-      sinergiasCreadasCount++;
-      const ministeriosHTML = row.ministerios ? 
-        row.ministerios.split(',').map(m => `<div class="sin-min">${m.trim()}</div>`).join('<div class="sin-arrow">⟷</div>') : 
-        '';
+      const orgParts = [row.fuente, row.organizacion].filter(Boolean);
+      const ministeriosHTML = orgParts.length
+        ? orgParts.map(p => `<div class="sin-min">${p}</div>`).join('<div class="sin-arrow">·</div>')
+        : '';
+
+      const extras = [
+        row.region && row.region !== 'No especificada' ? `📍 ${row.region}` : '',
+        row.monto_fmt ? `💰 ${row.monto_fmt}` : '',
+        row.fecha_cierre ? `📅 Cierre: ${row.fecha_cierre}` : '',
+        row.es_asia_pacifico === 'Sí' ? '🌏 Asia-Pacífico' : '',
+      ].filter(Boolean).join('  ·  ');
+
+      const score = parseFloat(row.relevancia_score) || 0;
+      const scoreColor = score >= 0.7 ? 'var(--verde-claro)' : score >= 0.4 ? 'var(--dorado-claro)' : 'var(--gris-azul)';
 
       const box = document.createElement('div');
       box.className = 'sinergia-box';
       box.innerHTML = `
         <div class="sin-header">
           <div class="sin-title">${row.titulo}</div>
-          <span class="sin-badge">${row.tipo_sinergia || 'Sinergia potencial'}</span>
+          <span class="sin-badge">${tipoLabel}</span>
         </div>
         <div class="sin-ministerios">${ministeriosHTML}</div>
+        ${extras ? `<div style="font-size:11px;color:var(--gris-azul);margin:6px 0;">${extras}</div>` : ''}
         <p class="sin-desc">${row.descripcion || ''}</p>
         <div class="sin-actions">
-          <button class="btn-notify" onclick="showToast('Notificando: ${row.titulo.replace(/'/g, "\\'")}')">
-            ${row.accion_recomendada || 'Notificar →'}
-          </button>
-          <button class="btn-detail">Ver detalle completo</button>
+          ${row.url ? `<a href="${row.url}" target="_blank" rel="noopener" class="btn-notify" style="text-decoration:none;display:inline-block;">Ver oportunidad →</a>` : `<button class="btn-notify" onclick="showToast('${(row.titulo||'').replace(/'/g,"\\'")}', 'Alerta enviada')">Notificar →</button>`}
+          <span style="font-size:11px;color:${scoreColor};padding:6px 10px;">Relevancia: ${Math.round(score*100)}%</span>
         </div>
       `;
       container.appendChild(box);
     });
-    
-    console.log(`✅ ${sinergiasCreadasCount} sinergias creadas`);
-    
   } catch (e) {
-    console.error("❌ Error cargando sinergias:", e);
+    console.error("Error cargando sinergias:", e);
   }
 }
-// ==================== INICIALIZACIÓN ====================
+
+// ==================== CHATBOT ====================
 document.addEventListener('DOMContentLoaded', () => {
-  // Cargar datos iniciales
+
+  // Pre-cargar datos
   setTimeout(() => {
     cargarBrechas();
     cargarSinergias();
-  }, 500);
-});
-</script>
-<!-- CHATBOT FLOTANTE - Versión estable y simple -->
-<div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:1000;">
-  <button id="chat-toggle" 
-          style="width:60px;height:60px;border-radius:50%;background:#c8733a;color:white;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(200,115,58,0.5);font-size:26px;">
-    🤖
-  </button>
-  
-  <div id="chat-window" style="display:none;position:absolute;bottom:80px;right:0;width:350px;height:480px;background:#1a1d22;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.6);border:1px solid #4a4f57;">
-    <div style="background:#c8733a;padding:14px 16px;color:white;display:flex;align-items:center;justify-content:space-between;font-weight:600;">
-      Asistente Talento País
-      <span id="chat-close" style="cursor:pointer;font-size:22px;line-height:1;">×</span>
-    </div>
-    <div id="chat-messages" style="height:360px;padding:16px;overflow-y:auto;background:#0f1114;color:#e0e0e0;font-size:14.5px;line-height:1.5;">
-      <div style="color:#888;margin-bottom:15px;">¡Hola! Soy el asistente de Talento País.<br>¿En qué te puedo ayudar hoy?</div>
-    </div>
-    <div style="padding:12px;background:#1a1d22;border-top:1px solid #4a4f57;">
-      <input id="chat-input" type="text" placeholder="Escribe tu pregunta aquí..." 
-             style="width:100%;padding:12px 14px;border-radius:8px;border:1px solid #4a4f57;background:#25282e;color:white;font-size:14px;">
-    </div>
-  </div>
-</div>
+  }, 600);
 
-<script>
-// ==================== CHATBOT ====================
-document.addEventListener('DOMContentLoaded', () => {
   const chatToggle = document.getElementById('chat-toggle');
   const chatWindow = document.getElementById('chat-window');
   const chatClose = document.getElementById('chat-close');
@@ -1069,11 +1554,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatMessages = document.getElementById('chat-messages');
 
   chatToggle.addEventListener('click', () => {
-    chatWindow.style.display = chatWindow.style.display === 'none' ? 'block' : 'none';
+    const isOpen = chatWindow.style.display !== 'none';
+    chatWindow.style.display = isOpen ? 'none' : 'block';
+    chatToggle.style.background = isOpen
+      ? 'linear-gradient(135deg,#1e3a5f,#2563eb)'
+      : 'linear-gradient(135deg,#1e3a5f,#1a2e4a)';
   });
 
   chatClose.addEventListener('click', () => {
     chatWindow.style.display = 'none';
+    chatToggle.style.background = 'linear-gradient(135deg,#1e3a5f,#2563eb)';
+  });
+
+  chatInput.addEventListener('focus', () => {
+    chatInput.style.borderColor = 'rgba(37,99,235,0.5)';
+  });
+  chatInput.addEventListener('blur', () => {
+    chatInput.style.borderColor = 'rgba(37,99,235,0.25)';
   });
 
   async function sendToGemini(message) {
@@ -1083,17 +1580,13 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message })
       });
-
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || `Error ${res.status}`);
       }
-
       const data = await res.json();
       return data.reply || "No recibí respuesta válida.";
-      
     } catch (err) {
-      console.error('Error en chatbot:', err);
       if (err.message.includes('429') || err.message.includes('Límite')) {
         return "⏳ Límite de consultas alcanzado. Intenta en unos minutos.";
       }
@@ -1104,31 +1597,22 @@ document.addEventListener('DOMContentLoaded', () => {
   chatInput.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter' && chatInput.value.trim() !== '') {
       const msg = chatInput.value.trim();
-      
-      // Mostrar mensaje del usuario
       chatMessages.innerHTML += `
         <div style="text-align:right;margin:8px 0;">
-          <span style="background:#c8733a;color:white;padding:8px 14px;border-radius:18px;display:inline-block;max-width:80%;">
+          <span style="background:var(--azul-electrico);color:white;padding:8px 14px;border-radius:16px 16px 4px 16px;display:inline-block;max-width:80%;font-size:13px;">
             ${msg}
           </span>
         </div>`;
       chatMessages.scrollTop = chatMessages.scrollHeight;
-
       chatInput.value = '';
-
-      // Mostrar "escribiendo..."
       const loadingId = 'loading-' + Date.now();
-      chatMessages.innerHTML += `<div id="${loadingId}" style="color:#888;margin:10px 0;">✍️ Escribiendo...</div>`;
+      chatMessages.innerHTML += `<div id="${loadingId}" style="color:var(--gris-azul);margin:10px 0;font-size:13px;">✍️ Escribiendo...</div>`;
       chatMessages.scrollTop = chatMessages.scrollHeight;
-
-      // Obtener respuesta
       const reply = await sendToGemini(msg);
-
-      // Remover "escribiendo..." y mostrar respuesta
       document.getElementById(loadingId)?.remove();
       chatMessages.innerHTML += `
         <div style="margin:8px 0;">
-          <span style="background:#2a2d32;padding:8px 14px;border-radius:18px;display:inline-block;max-width:80%;">
+          <span style="background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.15);padding:10px 14px;border-radius:16px 16px 16px 4px;display:inline-block;max-width:85%;font-size:13px;line-height:1.6;">
             ${reply}
           </span>
         </div>`;
