@@ -209,19 +209,35 @@ def cargar_raw(run_id: str | None = None) -> list[dict]:
 
 
 def cargar_mineduc() -> dict:
-    """Carga el JSON de matrícula más reciente generado por scraper.py."""
+    """
+    Carga el resumen de carreras estratégicas del Mineduc.
+    Prioridad:
+      1. carreras_estrategicas.json  (generado por preparar_mineduc.py, va en el repo)
+      2. mineduc_matriculas_*.json   (legacy, generado por scraper.py)
+    """
+    # Opción 1: resumen pre-procesado (compacto, en el repo)
+    resumen = RAW_DIR / "carreras_estrategicas.json"
+    if resumen.exists():
+        with open(resumen, encoding="utf-8") as f:
+            datos = json.load(f)
+        mat = datos.get("matriculados_por_sector", {})
+        log.info(f"  Mineduc: carreras_estrategicas.json — {sum(mat.values()):,} matriculados en sectores")
+        return datos
+
+    # Opción 2: archivo legacy del scraper
     archivos = sorted(
         RAW_DIR.glob("mineduc_matriculas_*.json"),
         key=lambda f: f.stat().st_mtime,
         reverse=True,
     )
-    if not archivos:
-        log.warning("No se encontró archivo de matrícula Mineduc.")
-        return {}
-    with open(archivos[0], encoding="utf-8") as f:
-        datos = json.load(f)
-    log.info(f"  Matrícula Mineduc: {archivos[0].name}")
-    return datos
+    if archivos:
+        with open(archivos[0], encoding="utf-8") as f:
+            datos = json.load(f)
+        log.info(f"  Mineduc (legacy): {archivos[0].name}")
+        return datos
+
+    log.warning("  Sin datos Mineduc — brechas se calcularán solo con demanda laboral.")
+    return {}
 
 
 # ════════════════════════════════════════════════════════════════════════════

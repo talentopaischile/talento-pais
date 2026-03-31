@@ -9,6 +9,11 @@ datos/procesados/*.json
 # CSV grande del Mineduc (903MB, no cabe en GitHub)
 datos/raw/*.csv
 
+# Excluir JSONs crudos del scraper (se regeneran cada semana)
+# EXCEPTO carreras_estrategicas.json que va en el repo
+datos/raw/*.json
+!datos/raw/carreras_estrategicas.json
+
 # Logs
 *.log
 
