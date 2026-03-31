@@ -483,8 +483,8 @@ def scrapear_mercadopublico() -> list[dict]:
     }
 
     try:
-        log.info("  Descargando licitaciones activas...")
-        r = requests.get(url, params=params, timeout=30)
+        log.info("  Descargando licitaciones activas (puede tardar ~60s)...")
+        r = requests.get(url, params=params, timeout=90)
         r.raise_for_status()
         data = r.json()
     except Exception as e:
