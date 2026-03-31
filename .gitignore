@@ -2,17 +2,21 @@
 scripts/google_credentials.json
 *.env
 
-# Datos procesados (se regeneran en cada run)
-datos/raw/*.json
-datos/procesados/*.json
-
 # CSV grande del Mineduc (903MB, no cabe en GitHub)
 datos/raw/*.csv
 
-# Excluir JSONs crudos del scraper (se regeneran cada semana)
-# EXCEPTO carreras_estrategicas.json que va en el repo
-datos/raw/*.json
-!datos/raw/carreras_estrategicas.json
+# JSONs crudos del scraper (se regeneran cada semana, no van al repo)
+datos/raw/corfo_*.json
+datos/raw/minciencia_*.json
+datos/raw/cenia_*.json
+datos/raw/trabajando_*.json
+datos/raw/bumeran_*.json
+datos/raw/mercadopublico_*.json
+datos/raw/consolidado_*.json
+datos/raw/mineduc_matriculas_*.json
+datos/procesados/*.json
+
+# carreras_estrategicas.json SÍ va al repo (no lo ignoramos)
 
 # Logs
 *.log
