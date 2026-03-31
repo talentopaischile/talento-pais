@@ -217,6 +217,7 @@ def cargar_mineduc() -> dict:
     """
     # Opción 1: resumen pre-procesado (compacto, en el repo)
     resumen = RAW_DIR / "carreras_estrategicas.json"
+    log.info(f"  Buscando Mineduc en: {resumen} — existe: {resumen.exists()}")
     if resumen.exists():
         with open(resumen, encoding="utf-8") as f:
             datos = json.load(f)
