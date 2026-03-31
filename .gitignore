@@ -1,0 +1,18 @@
+# Credenciales — NUNCA subir
+scripts/google_credentials.json
+*.env
+
+# Datos procesados (se regeneran en cada run)
+datos/raw/*.json
+datos/procesados/*.json
+
+# CSV grande del Mineduc (903MB, no cabe en GitHub)
+datos/raw/*.csv
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/

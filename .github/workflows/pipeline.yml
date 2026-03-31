@@ -1,0 +1,52 @@
+name: Talento País — Pipeline Semanal
+
+on:
+  schedule:
+    # Cada lunes a las 8:00 AM hora Chile (UTC-3 = 11:00 UTC)
+    - cron: '0 11 * * 1'
+  workflow_dispatch:
+    # También permite correrlo manualmente desde GitHub → Actions → Run workflow
+
+jobs:
+  pipeline:
+    name: Scrape → Procesar → Subir a Sheets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: scripts/requirements.txt
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Etapa 1 — Scraper (sin Mineduc, datos web en vivo)
+        run: python scripts/scraper.py --sin-brechas
+        env:
+          Mercado_Publico_API_KEY: ${{ secrets.MERCADO_PUBLICO_API_KEY }}
+
+      - name: Etapa 2 — Processor
+        run: python scripts/processor.py
+
+      - name: Etapa 3 — Uploader a Google Sheets
+        run: python scripts/uploader.py
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Subir logs como artefacto (para debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-logs-${{ github.run_number }}
+          path: |
+            scraper.log
+            processor.log
+            uploader.log
+          retention-days: 7
