@@ -28,11 +28,13 @@ jobs:
         run: pip install -r scripts/requirements.txt
 
       - name: Etapa 1 — Scraper (sin Mineduc, datos web en vivo)
+        continue-on-error: true
         run: python scripts/scraper.py --sin-brechas
         env:
           Mercado_Publico_API_KEY: ${{ secrets.MERCADO_PUBLICO_API_KEY }}
 
       - name: Etapa 2 — Processor
+        continue-on-error: true
         run: python scripts/processor.py
 
       - name: Etapa 3 — Uploader a Google Sheets
