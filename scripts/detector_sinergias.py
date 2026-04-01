@@ -59,49 +59,49 @@ HEADERS = {
 
 # ─── Sectores estratégicos ────────────────────────────────────────────────────
 # Sufijo añadido automáticamente a todas las queries:
-# "when:7d" → solo noticias de los últimos 7 días
+# "when:30d" → solo noticias de los últimos 7 días
 # "Chile OR LATAM" ya está incluido en cada query
 SECTORES = {
     "litio": {
         "label": "Litio y Minería",
         "queries": [
-            "litio Chile acuerdo colaboración ministerio when:7d",
-            "minería Chile convenio institución universidad when:7d",
+            "litio Chile acuerdo colaboración ministerio when:30d",
+            "minería Chile convenio institución universidad when:30d",
         ],
     },
     "energias_renovables": {
         "label": "Energías Renovables",
         "queries": [
-            "energía renovable Chile acuerdo colaboración institucional when:7d",
-            "hidrógeno verde Chile ministerio empresa convenio when:7d",
+            "energía renovable Chile acuerdo colaboración institucional when:30d",
+            "hidrógeno verde Chile ministerio empresa convenio when:30d",
         ],
     },
     "ia_tecnologia": {
         "label": "IA y Tecnología",
         "queries": [
-            "inteligencia artificial Chile LATAM colaboración ministerio when:7d",
-            "tecnología digital Chile universidad empresa programa when:7d",
+            "inteligencia artificial Chile LATAM colaboración ministerio when:30d",
+            "tecnología digital Chile universidad empresa programa when:30d",
         ],
     },
     "astronomia": {
         "label": "Astronomía",
         "queries": [
-            "astronomía Chile convenio colaboración internacional when:7d",
-            "observatorio Chile ciencia acuerdo institución when:7d",
+            "astronomía Chile convenio colaboración internacional when:30d",
+            "observatorio Chile ciencia acuerdo institución when:30d",
         ],
     },
     "oceanografia": {
         "label": "Oceanografía",
         "queries": [
-            "oceanografía Chile LATAM colaboración investigación marina when:7d",
-            "recursos marinos Chile ministerio universidad acuerdo when:7d",
+            "oceanografía Chile LATAM colaboración investigación marina when:30d",
+            "recursos marinos Chile ministerio universidad acuerdo when:30d",
         ],
     },
     "asia_pacifico": {
         "label": "Asia-Pacífico",
         "queries": [
-            "Chile Asia Pacífico cooperación institucional acuerdo when:7d",
-            "Chile Corea Japón China convenio colaboración ciencia when:7d",
+            "Chile Asia Pacífico cooperación institucional acuerdo when:30d",
+            "Chile Corea Japón China convenio colaboración ciencia when:30d",
         ],
     },
 }

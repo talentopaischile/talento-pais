@@ -9,12 +9,16 @@ Fuentes:
   4.  Trabajando.com     — ofertas laborales
   5.  Bumeran Chile      — ofertas laborales
   6.  Mercado Público    — API licitaciones activas
-  7.  Programa DPS       — Desarrollo Productivo Sostenible
-  8.  AGCID              — Agencia de Cooperación Internacional
-  9.  Mintrab            — Ministerio del Trabajo
-  10. DECYTI             — Cancillería, Diplomacia Científica
-  11. BCN Asia-Pacífico  — Biblioteca del Congreso Nacional
-  12. Mineduc            — carreras_estrategicas.json (brechas)
+  7.  Programa DPS           — Desarrollo Productivo Sostenible
+  8.  AGCID                 — Agencia de Cooperación Internacional
+  9.  Mintrab               — Ministerio del Trabajo
+  10. DECYTI                — Cancillería, Diplomacia Científica
+  11. BCN Asia-Pacífico     — Biblioteca del Congreso Nacional
+  12. Getonboard.cl         — Demanda laboral tech/IA
+  13. Indeed Chile          — Demanda laboral amplia
+  14. Observatorio Laboral  — Estadísticas empleo (Mintrab)
+  15. INE                   — Estadísticas empleo por sector
+  16. Mineduc               — carreras_estrategicas.json (brechas)
 
 Salida:
   - datos/raw/        → JSON crudo por fuente
@@ -757,7 +761,212 @@ def scrapear_bcn_asia() -> list[dict]:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# FUENTE 12 — CSV MINISTERIO DE EDUCACIÓN → detección de brechas
+# FUENTE 12 — GETONBOARD.CL (demanda tech/IA)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_getonboard() -> list[dict]:
+    """
+    Portal de empleos tech chileno con buen HTML estático.
+    Señal de demanda real para IA, data science, energía y afines.
+    """
+    log.info("=== Getonboard ===")
+    resultados = []
+    base = "https://www.getonboard.com"
+
+    terminos = [
+        ("inteligencia-artificial", ["ia_tecnologia"]),
+        ("machine-learning",        ["ia_tecnologia"]),
+        ("data-scientist",          ["ia_tecnologia"]),
+        ("energia-renovable",       ["energias_renovables"]),
+        ("hidrogeno",               ["energias_renovables"]),
+        ("litio",                   ["litio"]),
+        ("astronomia",              ["astronomia"]),
+        ("oceanografia",            ["oceanografia"]),
+        ("asia",                    ["asia_pacifico"]),
+    ]
+
+    vistos: set[str] = set()
+
+    for slug, sectores in terminos:
+        url = f"{base}/empleos?q={slug}&country=cl"
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=15)
+            r.raise_for_status()
+        except Exception as e:
+            log.warning(f"  Getonboard [{slug}]: {e}")
+            time.sleep(1)
+            continue
+
+        soup = BeautifulSoup(r.text, "lxml")
+
+        for card in soup.find_all(["div", "article", "li"],
+                                  class_=re.compile(r"(job|card|result|offer|position)", re.I)):
+            titulo_el = card.find(["h2", "h3", "h4", "a"])
+            titulo    = titulo_el.get_text(strip=True) if titulo_el else ""
+            if not titulo or len(titulo) < 5:
+                continue
+
+            empresa_el = card.find(class_=re.compile(r"(company|empresa|employer)", re.I))
+            empresa    = empresa_el.get_text(strip=True) if empresa_el else ""
+
+            link_el = card.find("a", href=True)
+            href    = link_el["href"] if link_el else ""
+            if href and not href.startswith("http"):
+                href = base + href
+            if href in vistos:
+                continue
+            vistos.add(href)
+
+            resultados.append({
+                "fuente":        "Getonboard",
+                "tipo":          "oferta_laboral",
+                "titulo":        titulo,
+                "empresa":       empresa,
+                "url":           href,
+                "sectores":      sectores,
+                "fecha_scraping": datetime.now().isoformat(),
+            })
+
+        time.sleep(1.5)
+
+    log.info(f"  Getonboard: {len(resultados)} registros")
+    guardar_raw("getonboard", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 13 — INDEED CHILE (demanda laboral amplia)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_indeed() -> list[dict]:
+    """
+    Indeed.cl — mayor volumen de ofertas laborales en Chile.
+    Cubre todos los sectores estratégicos con resultados de búsqueda HTML.
+    """
+    log.info("=== Indeed Chile ===")
+    resultados = []
+    base = "https://cl.indeed.com"
+
+    terminos = [
+        "litio",
+        "hidrógeno verde",
+        "energía solar",
+        "inteligencia artificial",
+        "machine learning",
+        "data scientist",
+        "oceanografía",
+        "astronomía",
+        "Asia Pacífico",
+    ]
+
+    vistos: set[str] = set()
+
+    for termino in terminos:
+        slug = termino.replace(" ", "+")
+        url  = f"{base}/jobs?q={slug}&l=Chile"
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=15)
+            r.raise_for_status()
+        except Exception as e:
+            log.warning(f"  Indeed [{termino}]: {e}")
+            time.sleep(2)
+            continue
+
+        soup = BeautifulSoup(r.text, "lxml")
+
+        for card in soup.find_all("div", class_=re.compile(r"(job_seen_beacon|result|jobsearch)", re.I)):
+            titulo_el = card.find(["h2", "h3", "a"], class_=re.compile(r"(title|jobTitle)", re.I))
+            if not titulo_el:
+                titulo_el = card.find(["h2", "h3"])
+            titulo = titulo_el.get_text(strip=True) if titulo_el else ""
+            if not titulo or len(titulo) < 5:
+                continue
+
+            empresa_el = card.find(class_=re.compile(r"(company|companyName|employer)", re.I))
+            empresa    = empresa_el.get_text(strip=True) if empresa_el else ""
+
+            link_el = card.find("a", href=True)
+            href    = link_el["href"] if link_el else ""
+            if href and not href.startswith("http"):
+                href = base + href
+            if href in vistos:
+                continue
+            vistos.add(href)
+
+            resultados.append({
+                "fuente":        "Indeed Chile",
+                "tipo":          "oferta_laboral",
+                "titulo":        titulo,
+                "empresa":       empresa,
+                "url":           href,
+                "termino_busq":  termino,
+                "sectores":      detectar_sectores(f"{titulo} {termino}"),
+                "fecha_scraping": datetime.now().isoformat(),
+            })
+
+        time.sleep(2)  # Indeed es más sensible al scraping
+
+    log.info(f"  Indeed Chile: {len(resultados)} registros")
+    guardar_raw("indeed", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 14 — OBSERVATORIO LABORAL (Ministerio del Trabajo)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_observatorio_laboral() -> list[dict]:
+    """
+    Observatorio Laboral del Ministerio del Trabajo.
+    Publica estadísticas e informes de empleo por sector económico.
+    URL: observatoriolaboral.gob.cl
+    """
+    log.info("=== Observatorio Laboral ===")
+    BASE = "https://www.observatoriolaboral.gob.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="Observatorio Laboral",
+        base_url=BASE,
+        urls=[
+            f"{BASE}/empleabilidad/",
+            f"{BASE}/orientacion-laboral/",
+            f"{BASE}/estadisticas/",
+        ],
+        tipo="estadistica_laboral",
+    )
+    log.info(f"  Observatorio Laboral: {len(resultados)} registros")
+    guardar_raw("observatorio_laboral", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 15 — INE (Instituto Nacional de Estadísticas)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_ine() -> list[dict]:
+    """
+    INE — publica estadísticas de empleo por rama de actividad económica.
+    Útil para estimar la demanda real de trabajadores en sectores estratégicos.
+    URL: ine.gob.cl
+    """
+    log.info("=== INE ===")
+    BASE = "https://www.ine.gob.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="INE",
+        base_url=BASE,
+        urls=[
+            f"{BASE}/estadisticas/economia/mineria/",
+            f"{BASE}/estadisticas/economia/energia/",
+            f"{BASE}/estadisticas/sociales/mercado-laboral/empleo/",
+        ],
+        tipo="estadistica_empleo",
+    )
+    log.info(f"  INE: {len(resultados)} registros")
+    guardar_raw("ine", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 16 — CSV MINISTERIO DE EDUCACIÓN → detección de brechas
 # ════════════════════════════════════════════════════════════════════════════
 
 # Mapeo: palabras clave en nomb_carrera / area_carrera_generica → sector
@@ -1001,18 +1210,22 @@ def consolidar(todas_las_fuentes: list[list[dict]]) -> list[dict]:
 # ════════════════════════════════════════════════════════════════════════════
 
 FUENTES_DISPONIBLES = {
-    "corfo":           scrapear_corfo,
-    "minciencia":      scrapear_minciencia,
-    "cenia":           scrapear_cenia,
-    "trabajando":      scrapear_trabajando,
-    "bumeran":         scrapear_bumeran,
-    "mercadopublico":  scrapear_mercadopublico,
-    "dps":             scrapear_dps,
-    "agcid":           scrapear_agcid,
-    "mintrab":         scrapear_mintrab,
-    "decyti":          scrapear_decyti,
-    "bcn_asia":        scrapear_bcn_asia,
-    "educacion":       analizar_csv_mineduc,
+    "corfo":                scrapear_corfo,
+    "minciencia":           scrapear_minciencia,
+    "cenia":                scrapear_cenia,
+    "trabajando":           scrapear_trabajando,
+    "bumeran":              scrapear_bumeran,
+    "mercadopublico":       scrapear_mercadopublico,
+    "dps":                  scrapear_dps,
+    "agcid":                scrapear_agcid,
+    "mintrab":              scrapear_mintrab,
+    "decyti":               scrapear_decyti,
+    "bcn_asia":             scrapear_bcn_asia,
+    "getonboard":           scrapear_getonboard,
+    "indeed":               scrapear_indeed,
+    "observatorio_laboral": scrapear_observatorio_laboral,
+    "ine":                  scrapear_ine,
+    "educacion":            analizar_csv_mineduc,
 }
 
 
