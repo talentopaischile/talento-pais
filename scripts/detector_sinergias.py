@@ -18,6 +18,7 @@ Salida:
 import os
 import json
 import logging
+import re
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -301,56 +302,78 @@ def llamar_groq(sector_key: str, sector_label: str, textos: list[str]) -> list[d
         "max_tokens": 1200,
     }
 
-    try:
-        r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=30)
-        r.raise_for_status()
-        resp = r.json()
+    for intento in range(2):   # hasta 2 intentos (1 reintento en caso de 429)
+        try:
+            r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=30)
 
-        texto_resp = (
-            resp.get("choices", [{}])[0]
-            .get("message", {})
-            .get("content", "[]")
-            .strip()
-        )
+            # 429 Too Many Requests → esperar y reintentar
+            if r.status_code == 429:
+                espera = 20 if intento == 0 else 40
+                log.warning(f"  Groq 429 ({sector_key}): rate limit, esperando {espera}s...")
+                time.sleep(espera)
+                continue
 
-        # Limpiar markdown si el modelo devuelve ```json ... ```
-        if "```" in texto_resp:
-            partes = texto_resp.split("```")
-            for p in partes:
-                p = p.strip()
-                if p.startswith("json"):
-                    p = p[4:].strip()
-                if p.startswith("["):
-                    texto_resp = p
-                    break
+            r.raise_for_status()
+            resp = r.json()
 
-        texto_resp = texto_resp.strip()
-        if texto_resp == "[]" or not texto_resp:
+            texto_resp = (
+                resp.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "[]")
+                .strip()
+            )
+
+            # Limpiar markdown si el modelo devuelve ```json ... ```
+            if "```" in texto_resp:
+                partes = texto_resp.split("```")
+                for p in partes:
+                    p = p.strip()
+                    if p.startswith("json"):
+                        p = p[4:].strip()
+                    if p.startswith("["):
+                        texto_resp = p
+                        break
+
+            texto_resp = texto_resp.strip()
+            if texto_resp == "[]" or not texto_resp:
+                return []
+
+            # Intentar parsear; si falla, buscar array JSON con regex
+            try:
+                sinergias = json.loads(texto_resp)
+            except json.JSONDecodeError:
+                match = re.search(r"\[.*\]", texto_resp, re.DOTALL)
+                if match:
+                    try:
+                        sinergias = json.loads(match.group(0))
+                    except json.JSONDecodeError as e2:
+                        log.warning(f"  Groq respuesta no parseable ({sector_key}): {e2}")
+                        return []
+                else:
+                    log.warning(f"  Groq sin array JSON válido ({sector_key})")
+                    return []
+
+            # Agregar metadata a cada sinergia
+            fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+            for s in sinergias:
+                s["sector"]       = sector_key
+                s["sector_label"] = sector_label
+                s["fecha"]        = fecha_hoy
+                s["estado"]       = "detectada"
+                if not s.get("actor_c"):
+                    s["actor_c"] = ""
+                if not s.get("evidencia"):
+                    s["evidencia"] = ""
+
+            log.info(f"  Groq → {len(sinergias)} sinergias para '{sector_label}'")
+            return sinergias
+
+        except Exception as e:
+            log.error(f"  Groq error ({sector_key}): {e}")
             return []
 
-        sinergias = json.loads(texto_resp)
-
-        # Agregar metadata a cada sinergia
-        fecha_hoy = datetime.now().strftime("%Y-%m-%d")
-        for s in sinergias:
-            s["sector"]       = sector_key
-            s["sector_label"] = sector_label
-            s["fecha"]        = fecha_hoy
-            s["estado"]       = "detectada"
-            if not s.get("actor_c"):
-                s["actor_c"] = ""
-            if not s.get("evidencia"):
-                s["evidencia"] = ""
-
-        log.info(f"  Groq → {len(sinergias)} sinergias para '{sector_label}'")
-        return sinergias
-
-    except json.JSONDecodeError as e:
-        log.warning(f"  Groq respuesta no parseable ({sector_key}): {e}")
-        return []
-    except Exception as e:
-        log.error(f"  Groq error ({sector_key}): {e}")
-        return []
+    log.error(f"  Groq: máximo de reintentos alcanzado ({sector_key})")
+    return []
 
 
 # ════════════════════════════════════════════════════════════════════════════

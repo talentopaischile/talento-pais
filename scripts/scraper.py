@@ -651,7 +651,7 @@ def scrapear_dps() -> list[dict]:
     resultados = _extraer_por_enlaces(
         nombre_fuente="Programa DPS",
         base_url=BASE,
-        urls=[f"{BASE}/", f"{BASE}/noticias/", f"{BASE}/gobernanza/"],
+        urls=[f"{BASE}/", f"{BASE}/gobernanza/", f"{BASE}/sectores/"],
         tipo="programa_estado",
     )
     log.info(f"  DPS: {len(resultados)} registros")
@@ -794,7 +794,7 @@ def scrapear_getonboard() -> list[dict]:
     for slug, sectores in terminos:
         url = f"{base}/empleos?q={slug}&country=cl"
         try:
-            r = requests.get(url, headers=HEADERS, timeout=15)
+            r = requests.get(url, headers=HEADERS, timeout=15, verify=False)
             r.raise_for_status()
         except Exception as e:
             log.warning(f"  Getonboard [{slug}]: {e}")
@@ -926,13 +926,14 @@ def scrapear_observatorio_laboral() -> list[dict]:
     URL: observatoriolaboral.gob.cl
     """
     log.info("=== Observatorio Laboral ===")
-    BASE = "https://www.observatoriolaboral.gob.cl"
+    # Dominio actualizado — el anterior (observatoriolaboral.gob.cl) no resuelve DNS
+    BASE = "https://observatorio.mintrab.gob.cl"
     resultados = _extraer_por_enlaces(
         nombre_fuente="Observatorio Laboral",
         base_url=BASE,
         urls=[
+            f"{BASE}/",
             f"{BASE}/empleabilidad/",
-            f"{BASE}/orientacion-laboral/",
             f"{BASE}/estadisticas/",
         ],
         tipo="estadistica_laboral",
@@ -1137,6 +1138,8 @@ def scrapear_prochile() -> list[dict]:
     Publica convocatorias, estudios de mercado y oportunidades en Asia-Pacífico,
     minería, energía y tecnología con proyección internacional.
     URL: prochile.gob.cl
+    Nota: el contenido no usa las keywords de sectores en los títulos, por eso
+    se usan sectores_fijos para capturar toda la oferta institucional.
     """
     log.info("=== ProChile ===")
     BASE = "https://www.prochile.gob.cl"
@@ -1146,15 +1149,12 @@ def scrapear_prochile() -> list[dict]:
         urls=[
             f"{BASE}/",
             f"{BASE}/noticias/",
-            f"{BASE}/oportunidades-comerciales/",
-            f"{BASE}/estudios/",
+            f"{BASE}/informacion-para-exportar/",
+            f"{BASE}/herramientas/",
         ],
         tipo="oportunidad_exportacion",
+        sectores_fijos=["asia_pacifico", "litio", "energias_renovables"],
     )
-    # ProChile tiene fuerte foco Asia-Pacífico: si no detectó sector, asignar asia_pacifico
-    for r in resultados:
-        if not r["sectores"]:
-            r["sectores"] = ["asia_pacifico"]
     log.info(f"  ProChile: {len(resultados)} registros")
     guardar_raw("prochile", resultados)
     return resultados
@@ -1177,10 +1177,8 @@ def scrapear_cochilco() -> list[dict]:
         base_url=BASE,
         urls=[
             f"{BASE}/",
-            f"{BASE}/mercado-del-cobre/estadisticas/",
-            f"{BASE}/mercado-del-cobre/proyecciones/",
-            f"{BASE}/mineria-en-chile/litio/",
-            f"{BASE}/noticias/",
+            f"{BASE}/estadisticas-y-estudios/",
+            f"{BASE}/sala-de-prensa/",
         ],
         tipo="estadistica_mineria",
         sectores_fijos=["litio"],
@@ -1207,11 +1205,12 @@ def scrapear_anid() -> list[dict]:
         base_url=BASE,
         urls=[
             f"{BASE}/",
-            f"{BASE}/concursos/",
+            f"{BASE}/concursos-y-becas/",
             f"{BASE}/noticias/",
-            f"{BASE}/becas-y-concursos/",
+            f"{BASE}/fondos/",
         ],
         tipo="beca_concurso_id",
+        sectores_fijos=["ia_tecnologia", "energias_renovables", "litio", "astronomia", "oceanografia"],
     )
     log.info(f"  ANID: {len(resultados)} registros")
     guardar_raw("anid", resultados)
@@ -1237,10 +1236,11 @@ def scrapear_sence() -> list[dict]:
         urls=[
             f"{BASE}/",
             f"{BASE}/noticias/",
-            f"{BASE}/institucional/programas/",
-            f"{BASE}/trabajadores/capacitacion/",
+            f"{BASE}/programas/",
+            f"{BASE}/capacitacion/",
         ],
         tipo="capacitacion_laboral",
+        sectores_fijos=["ia_tecnologia", "energias_renovables", "litio"],
     )
     log.info(f"  SENCE: {len(resultados)} registros")
     guardar_raw("sence", resultados)
