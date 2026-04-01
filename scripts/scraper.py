@@ -19,6 +19,10 @@ Fuentes:
   14. Observatorio Laboral  — Estadísticas empleo (Mintrab)
   15. INE                   — Estadísticas empleo por sector
   16. Mineduc               — carreras_estrategicas.json (brechas)
+  17. ProChile              — Oportunidades exportación y mercados Asia-Pacífico
+  18. COCHILCO              — Estadísticas y proyecciones minería litio/cobre
+  19. ANID                  — Becas, Fondecyt, Fondef y concursos I+D
+  20. SENCE                 — Capacitación laboral y becas sectoriales
 
 Salida:
   - datos/raw/        → JSON crudo por fuente
@@ -1124,6 +1128,126 @@ def analizar_csv_mineduc() -> dict:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# FUENTE 17 — ProChile (Promoción de Exportaciones)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_prochile() -> list[dict]:
+    """
+    ProChile — agencia del Ministerio de RREE que impulsa exportaciones.
+    Publica convocatorias, estudios de mercado y oportunidades en Asia-Pacífico,
+    minería, energía y tecnología con proyección internacional.
+    URL: prochile.gob.cl
+    """
+    log.info("=== ProChile ===")
+    BASE = "https://www.prochile.gob.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="ProChile",
+        base_url=BASE,
+        urls=[
+            f"{BASE}/",
+            f"{BASE}/noticias/",
+            f"{BASE}/oportunidades-comerciales/",
+            f"{BASE}/estudios/",
+        ],
+        tipo="oportunidad_exportacion",
+    )
+    # ProChile tiene fuerte foco Asia-Pacífico: si no detectó sector, asignar asia_pacifico
+    for r in resultados:
+        if not r["sectores"]:
+            r["sectores"] = ["asia_pacifico"]
+    log.info(f"  ProChile: {len(resultados)} registros")
+    guardar_raw("prochile", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 18 — COCHILCO (Comisión Chilena del Cobre)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_cochilco() -> list[dict]:
+    """
+    COCHILCO — publica estadísticas, estudios y proyecciones de capital humano
+    en minería del litio y cobre. Fuente clave para brechas en sector extractivo.
+    URL: cochilco.cl
+    """
+    log.info("=== COCHILCO ===")
+    BASE = "https://www.cochilco.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="COCHILCO",
+        base_url=BASE,
+        urls=[
+            f"{BASE}/",
+            f"{BASE}/mercado-del-cobre/estadisticas/",
+            f"{BASE}/mercado-del-cobre/proyecciones/",
+            f"{BASE}/mineria-en-chile/litio/",
+            f"{BASE}/noticias/",
+        ],
+        tipo="estadistica_mineria",
+        sectores_fijos=["litio"],
+    )
+    log.info(f"  COCHILCO: {len(resultados)} registros")
+    guardar_raw("cochilco", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 19 — ANID (Agencia Nacional de Investigación y Desarrollo)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_anid() -> list[dict]:
+    """
+    ANID — financia investigación, postgrados y becas en todos los sectores
+    estratégicos. Concursos Fondecyt, Fondef, Becas Chile, etc.
+    URL: anid.cl
+    """
+    log.info("=== ANID ===")
+    BASE = "https://www.anid.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="ANID",
+        base_url=BASE,
+        urls=[
+            f"{BASE}/",
+            f"{BASE}/concursos/",
+            f"{BASE}/noticias/",
+            f"{BASE}/becas-y-concursos/",
+        ],
+        tipo="beca_concurso_id",
+    )
+    log.info(f"  ANID: {len(resultados)} registros")
+    guardar_raw("anid", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 20 — SENCE (Servicio Nacional de Capacitación y Empleo)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_sence() -> list[dict]:
+    """
+    SENCE — administra programas de capacitación laboral, becas sectoriales
+    y franquicia tributaria. Clave para medir oferta de formación continua
+    en sectores estratégicos (litio, energías renovables, IA).
+    URL: sence.cl
+    """
+    log.info("=== SENCE ===")
+    BASE = "https://www.sence.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="SENCE",
+        base_url=BASE,
+        urls=[
+            f"{BASE}/",
+            f"{BASE}/noticias/",
+            f"{BASE}/institucional/programas/",
+            f"{BASE}/trabajadores/capacitacion/",
+        ],
+        tipo="capacitacion_laboral",
+    )
+    log.info(f"  SENCE: {len(resultados)} registros")
+    guardar_raw("sence", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # ANÁLISIS DE BRECHAS — cruza oferta educativa vs demanda laboral
 # ════════════════════════════════════════════════════════════════════════════
 
@@ -1225,6 +1349,10 @@ FUENTES_DISPONIBLES = {
     "indeed":               scrapear_indeed,
     "observatorio_laboral": scrapear_observatorio_laboral,
     "ine":                  scrapear_ine,
+    "prochile":             scrapear_prochile,
+    "cochilco":             scrapear_cochilco,
+    "anid":                 scrapear_anid,
+    "sence":                scrapear_sence,
     "educacion":            analizar_csv_mineduc,
 }
 
