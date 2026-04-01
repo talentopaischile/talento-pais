@@ -1,11 +1,14 @@
 """
 detector_sinergias.py — Talento País
 Pipeline ETAPA 1.5: Detecta oportunidades de colaboración institucional
-usando Google News RSS + scraping de ministerios + Gemini Flash (gratuito).
+usando Google News RSS + scraping de ministerios + Groq (Llama 3.3, gratis).
 
 Fuentes:
   - Google News RSS (sin API key, totalmente gratis)
   - Páginas públicas de CORFO, AGCI, Min. Energía, ANID, CENIA, Min. Ciencia
+
+IA:
+  - Groq API — Llama 3.3 70B (plan gratuito: 1000 req/día, sin tarjeta)
 
 Salida:
   datos/procesados/sinergias_ia.json
@@ -35,11 +38,9 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # ─── Configuración ────────────────────────────────────────────────────────────
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-2.0-flash-lite:generateContent?key={key}"
-)
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_URL    = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL  = "llama-3.3-70b-versatile"   # gratis, alta calidad
 
 BASE_DIR = Path(__file__).parent.parent
 PROC_DIR = BASE_DIR / "datos" / "procesados"
@@ -239,53 +240,46 @@ def scrape_pagina(info: dict) -> str:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# 3. GEMINI FLASH — EXTRACCIÓN ESTRUCTURADA
+# 3. GROQ (LLAMA 3.3) — EXTRACCIÓN ESTRUCTURADA
 # ════════════════════════════════════════════════════════════════════════════
 
-def llamar_gemini(sector_key: str, sector_label: str, textos: list[str]) -> list[dict]:
+def llamar_groq(sector_key: str, sector_label: str, textos: list[str]) -> list[dict]:
     """
-    Envía los textos a Gemini 1.5 Flash y parsea la respuesta JSON.
-    Usa el plan gratuito de Google AI Studio (1M tokens/día, 15 RPM).
+    Envía los textos a Groq (Llama 3.3 70B) y parsea la respuesta JSON.
+    Plan gratuito: 1000 req/día, sin tarjeta de crédito requerida.
     """
-    if not GEMINI_API_KEY:
-        log.warning("  GEMINI_API_KEY no configurada — saltando análisis IA")
+    if not GROQ_API_KEY:
+        log.warning("  GROQ_API_KEY no configurada — saltando análisis IA")
         return []
 
-    # Combinar textos (límite ~6000 chars para no gastar tokens innecesarios)
+    # Combinar textos (límite ~6000 chars)
     texto_combinado = "\n\n---\n\n".join(textos)[:6000]
     prompt = PROMPT.format(sector_label=sector_label, texto=texto_combinado)
 
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
+    }
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.1,     # Baja = más determinista
-            "maxOutputTokens": 1200,
-        },
+        "model": GROQ_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.1,
+        "max_tokens": 1200,
     }
 
     try:
-        url = GEMINI_URL.format(key=GEMINI_API_KEY)
-        # Reintento automático ante 429 (rate limit): máx 2 intentos, espera corta
-        for intento in range(2):
-            r = requests.post(url, json=payload, timeout=30)
-            if r.status_code == 429:
-                espera = 15 * (intento + 1)   # 15s → 30s
-                log.warning(f"  429 rate limit — esperando {espera}s (intento {intento+1}/2)...")
-                time.sleep(espera)
-                continue
-            break
+        r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=30)
         r.raise_for_status()
         resp = r.json()
 
         texto_resp = (
-            resp.get("candidates", [{}])[0]
-            .get("content", {})
-            .get("parts", [{}])[0]
-            .get("text", "[]")
+            resp.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "[]")
             .strip()
         )
 
-        # Limpiar markdown si Gemini devuelve ```json ... ```
+        # Limpiar markdown si el modelo devuelve ```json ... ```
         if "```" in texto_resp:
             partes = texto_resp.split("```")
             for p in partes:
@@ -312,14 +306,14 @@ def llamar_gemini(sector_key: str, sector_label: str, textos: list[str]) -> list
             if not s.get("actor_c"):
                 s["actor_c"] = ""
 
-        log.info(f"  Gemini → {len(sinergias)} sinergias para '{sector_label}'")
+        log.info(f"  Groq → {len(sinergias)} sinergias para '{sector_label}'")
         return sinergias
 
     except json.JSONDecodeError as e:
-        log.warning(f"  Gemini respuesta no parseable ({sector_key}): {e}")
+        log.warning(f"  Groq respuesta no parseable ({sector_key}): {e}")
         return []
     except Exception as e:
-        log.error(f"  Gemini error ({sector_key}): {e}")
+        log.error(f"  Groq error ({sector_key}): {e}")
         return []
 
 
@@ -370,7 +364,7 @@ def main():
             log.warning(f"  Sin textos para {label}, saltando")
             continue
 
-        sinergias = llamar_gemini(sector_key, label, textos_sector)
+        sinergias = llamar_groq(sector_key, label, textos_sector)
         todas_sinergias.extend(sinergias)
 
         # Esperar 6s entre sectores (Gemini free: 15 RPM → seguro)

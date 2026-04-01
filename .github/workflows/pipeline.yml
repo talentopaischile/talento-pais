@@ -37,7 +37,7 @@ jobs:
         continue-on-error: true
         run: python scripts/detector_sinergias.py
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
 
       - name: Etapa 2 — Processor
         continue-on-error: true
