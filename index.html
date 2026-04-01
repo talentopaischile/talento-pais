@@ -392,6 +392,59 @@
     border: 1px solid var(--borde);
   }
 
+  /* ── MODAL INSTITUCIÓN ── */
+  .im-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(5,13,30,.78); backdrop-filter: blur(6px);
+    z-index: 500; align-items: center; justify-content: center;
+  }
+  .im-overlay.open { display: flex; }
+  .im-box {
+    background: linear-gradient(155deg, #0d1f3c, #0a1628);
+    border: 1px solid var(--borde-sutil); border-radius: 20px;
+    width: min(640px, 94vw); max-height: 90vh;
+    overflow-y: auto; position: relative;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    animation: bmIn .22s ease;
+  }
+  .im-accent-bar { height: 4px; border-radius: 20px 20px 0 0; }
+  .im-body { padding: 30px 32px 36px; }
+  .im-close {
+    position: absolute; top: 20px; right: 20px;
+    background: none; border: none; color: var(--gris-azul);
+    font-size: 20px; cursor: pointer; line-height: 1; transition: color .15s;
+  }
+  .im-close:hover { color: var(--blanco); }
+  .im-icon-row { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .im-icon-big { font-size: 36px; line-height: 1; }
+  .im-name { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -.3px; }
+  .im-url  { font-size: 11px; color: var(--gris-azul); margin-bottom: 18px; }
+  .im-url a { color: var(--azul-cielo); text-decoration: none; }
+  .im-url a:hover { text-decoration: underline; }
+  .im-rol-full {
+    font-size: 13px; color: var(--gris-azul); line-height: 1.65;
+    padding: 14px 16px; margin-bottom: 20px;
+    background: rgba(255,255,255,.03); border: 1px solid var(--borde-sutil); border-radius: 10px;
+  }
+  .im-tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+  .im-tag {
+    font-size: 11px; padding: 4px 12px; border-radius: 20px;
+    background: rgba(37,99,235,.12); color: var(--azul-cielo);
+    border: 1px solid rgba(37,99,235,.2); font-weight: 500;
+  }
+  .im-section { font-size: 11px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--gris-azul); margin-bottom: 12px; }
+  .im-sin-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  .im-sin-item {
+    background: rgba(52,211,153,.05); border: 1px solid rgba(52,211,153,.12);
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .im-sin-tipo  { font-size: 10px; color: var(--verde-claro); font-weight: 600; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
+  .im-sin-actors{ font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .im-sin-desc  { font-size: 12px; color: var(--gris-azul); line-height: 1.5; }
+  .im-sin-empty { font-size: 13px; color: var(--gris-azul); font-style: italic; }
+  .im-follow { display: flex; gap: 10px; }
+
   .sinergia-box {
     background: rgba(5,150,105,.07);
     border: 1px solid rgba(52,211,153,.15);
@@ -886,6 +939,32 @@
   </div>
 </div>
 
+<!-- ─────── MODAL DETALLE INSTITUCIÓN ─────── -->
+<div class="im-overlay" id="im-overlay" onclick="if(event.target===this)cerrarModalInst()">
+  <div class="im-box">
+    <div class="im-accent-bar" id="im-accent"></div>
+    <div class="im-body">
+      <button class="im-close" onclick="cerrarModalInst()">✕</button>
+      <div class="im-icon-row">
+        <div class="im-icon-big" id="im-icon">—</div>
+        <div>
+          <div class="im-name" id="im-name">—</div>
+          <div class="im-url"><a id="im-link" href="#" target="_blank" rel="noopener"></a></div>
+        </div>
+      </div>
+      <div class="im-rol-full" id="im-rol">—</div>
+      <div class="im-tags-row" id="im-tags"></div>
+      <div class="im-section">Sinergias detectadas por IA</div>
+      <div class="im-sin-list" id="im-sin-list"></div>
+      <div class="im-section">Seguir esta institución</div>
+      <div class="im-follow">
+        <input class="bm-email" id="im-email" type="email" placeholder="tu@email.com">
+        <button class="bm-notify-btn" onclick="notificarInst()">Notificarme →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ─────── MODAL DETALLE BRECHA ─────── -->
 <div class="bm-overlay" id="bm-overlay" onclick="if(event.target===this)cerrarModalBrecha()">
   <div class="bm-box">
@@ -944,7 +1023,7 @@
       <p class="page-sub">La IA lee memorias anuales, programas y licitaciones públicas de cada institución. Identifica qué hace cada una en materia de talento y dónde hay vacíos o duplicación de esfuerzos — habilitado por la Ley 21.180 de Transformación Digital del Estado.</p>
     </div>
     <div class="inst-grid">
-      <div class="inst-card energia">
+      <div class="inst-card energia"    onclick="abrirModalInst('energia')">
         <div class="inst-icon">⚡</div>
         <div class="inst-name">Min. Energía</div>
         <div class="inst-rol">Proyectos de litio, renovables y eficiencia. Financia formación técnica en zonas de influencia.</div>
@@ -952,7 +1031,7 @@
           <span class="inst-tag">litio</span><span class="inst-tag">solar</span><span class="inst-tag">eólica</span><span class="inst-tag">H₂ verde</span>
         </div>
       </div>
-      <div class="inst-card educacion">
+      <div class="inst-card educacion"  onclick="abrirModalInst('educacion')">
         <div class="inst-icon">🎓</div>
         <div class="inst-name">Min. Educación</div>
         <div class="inst-rol">Acredita programas, administra becas de postgrado y supervisa institutos técnicos y CFT.</div>
@@ -960,7 +1039,7 @@
           <span class="inst-tag">acreditación</span><span class="inst-tag">becas</span><span class="inst-tag">CFT</span>
         </div>
       </div>
-      <div class="inst-card cancilleria">
+      <div class="inst-card cancilleria" onclick="abrirModalInst('cancilleria')">
         <div class="inst-icon">🌐</div>
         <div class="inst-name">Cancillería</div>
         <div class="inst-rol">Negocia acuerdos de reconocimiento de títulos. Coordina diplomacia científica con Asia-Pacífico.</div>
@@ -968,7 +1047,7 @@
           <span class="inst-tag">títulos</span><span class="inst-tag">acuerdos</span><span class="inst-tag">Asia</span>
         </div>
       </div>
-      <div class="inst-card corfo">
+      <div class="inst-card corfo"      onclick="abrirModalInst('corfo')">
         <div class="inst-icon">🏗️</div>
         <div class="inst-name">CORFO</div>
         <div class="inst-rol">Fomenta inversión y emprendimiento. Financia proyectos de innovación con capital humano especializado.</div>
@@ -976,15 +1055,15 @@
           <span class="inst-tag">inversión</span><span class="inst-tag">FONDEF</span><span class="inst-tag">startup</span>
         </div>
       </div>
-      <div class="inst-card agci">
+      <div class="inst-card agci"       onclick="abrirModalInst('agci')">
         <div class="inst-icon">✈️</div>
-        <div class="inst-name">AGCI</div>
+        <div class="inst-name">AGCID</div>
         <div class="inst-rol">Administra becas internacionales y cooperación técnica. Incluye programas con China, Corea y Japón.</div>
         <div class="inst-tags">
           <span class="inst-tag">becas int'l</span><span class="inst-tag">China</span><span class="inst-tag">Corea</span>
         </div>
       </div>
-      <div class="inst-card mineria">
+      <div class="inst-card mineria"    onclick="abrirModalInst('mineria')">
         <div class="inst-icon">⛏️</div>
         <div class="inst-name">Min. Minería</div>
         <div class="inst-rol">Regula y planifica el sector minero. Coordina con ENAMI y Codelco en formación especializada en litio.</div>
@@ -1991,9 +2070,122 @@ function sinRenderizar() {
   });
 }
 
+// ==================== MODAL INSTITUCIÓN ====================
+
+const INST_DATA = {
+  energia: {
+    icon: '⚡', name: 'Ministerio de Energía', acento: '#c9a050',
+    url: 'https://energia.gob.cl',
+    rol: 'Diseña y ejecuta la política energética nacional. Lidera la Estrategia Nacional de Hidrógeno Verde y el Plan de Desarrollo Productivo Sostenible (DPS). Financia formación técnica especializada en zonas de influencia minero-energética (Antofagasta, Atacama). Coordina con CORFO y ANID para becas en ingeniería energética y electromovilidad.',
+    tags: ['litio', 'H₂ verde', 'solar', 'eólica', 'geotermia', 'electromovilidad', 'Plan DPS'],
+    alias: ['Ministerio de Energía', 'Min. Energía', 'Energía', 'MinEnergía'],
+  },
+  educacion: {
+    icon: '🎓', name: 'Ministerio de Educación', acento: '#2563eb',
+    url: 'https://www.mineduc.cl',
+    rol: 'Acredita carreras universitarias e institutos técnicos. Administra Becas Chile (postgrado en el extranjero) y PACE. Supervisa CFT y liceos técnico-profesionales. Sus datos de matrícula 2025 alimentan el cálculo de brechas de Talento País — actualmente 1,4 millones de estudiantes en carreras de educación superior.',
+    tags: ['acreditación', 'Becas Chile', 'CFT', 'PACE', 'postgrado', 'técnico-profesional'],
+    alias: ['Ministerio de Educación', 'Min. Educación', 'Mineduc', 'MINEDUC'],
+  },
+  cancilleria: {
+    icon: '🌐', name: 'Cancillería / DECYTI', acento: '#34d399',
+    url: 'https://www.minrel.gob.cl',
+    rol: 'Negocia y gestiona acuerdos internacionales de reconocimiento mutuo de títulos. La DECYTI (Dirección de Ciencia, Tecnología e Innovación) coordina la diplomacia científica con Asia-Pacífico. Administra acuerdos de cooperación con Japón (JICA), Corea (KOICA) y China. Clave para movilidad de investigadores y validación de diplomas extranjeros en Chile.',
+    tags: ['reconocimiento títulos', 'DECYTI', 'Asia-Pacífico', 'JICA', 'KOICA', 'diplomacia científica'],
+    alias: ['Cancillería', 'DECYTI', 'Cancillería DECYTI', 'Ministerio de RREE', 'Minrel'],
+  },
+  corfo: {
+    icon: '🏗️', name: 'CORFO', acento: '#f59e0b',
+    url: 'https://www.corfo.gob.cl',
+    rol: 'Principal agencia de fomento productivo de Chile. Financia I+D, startups y proyectos de innovación que requieren capital humano especializado. Opera programas FONDEF, InnovaChile y Bienes Públicos. Coordina con universidades para programas de formación dual. Fundamental en los sectores del litio, IA y energías renovables.',
+    tags: ['FONDEF', 'InnovaChile', 'startups', 'I+D', 'innovación', 'litio', 'IA'],
+    alias: ['CORFO', 'Corfo'],
+  },
+  agci: {
+    icon: '✈️', name: 'AGCID', acento: '#a78bfa',
+    url: 'https://www.agcid.gob.cl',
+    rol: 'Agencia Chilena de Cooperación Internacional para el Desarrollo. Administra becas de postgrado en países cooperantes: China, Japón, Corea, Alemania, Francia. Coordina intercambios técnicos bilaterales en minería, energía y ciencias marinas. Ofrece convocatorias abiertas varias veces al año — sin costo para el becario.',
+    tags: ['becas internacionales', 'China', 'Corea', 'Japón', 'cooperación técnica', 'APEC'],
+    alias: ['AGCID', 'AGCI', 'Agencia de Cooperación'],
+  },
+  mineria: {
+    icon: '⛏️', name: 'Ministerio de Minería', acento: '#f87171',
+    url: 'https://www.minmineria.gob.cl',
+    rol: 'Regula y planifica el sector minero nacional, incluyendo el litio como mineral estratégico. Coordina la Estrategia Nacional del Litio con CODELCO, SQM y ENAMI. Promueve formación de ingenieros de procesos, geólogos e hidrogeólogos. Trabaja con universidades del norte para crear programas afines a la minería del salar.',
+    tags: ['litio', 'cobre', 'ENAMI', 'CODELCO', 'SQM', 'geología', 'salares'],
+    alias: ['Ministerio de Minería', 'Min. Minería', 'MinMinería', 'Minminería'],
+  },
+};
+
+function abrirModalInst(id) {
+  const inst = INST_DATA[id];
+  if (!inst) return;
+
+  // Encabezado
+  document.getElementById('im-icon').textContent   = inst.icon;
+  document.getElementById('im-name').textContent   = inst.name;
+  document.getElementById('im-accent').style.background = inst.acento;
+  document.getElementById('im-rol').textContent    = inst.rol;
+
+  const linkEl = document.getElementById('im-link');
+  linkEl.href        = inst.url;
+  linkEl.textContent = inst.url.replace('https://', '');
+
+  // Tags
+  const tagsEl = document.getElementById('im-tags');
+  tagsEl.innerHTML = inst.tags.map(t => `<span class="im-tag">${t}</span>`).join('');
+
+  // Sinergias relacionadas desde datos vivos
+  const sinEl = document.getElementById('im-sin-list');
+  const relacionadas = sinData.filter(r =>
+    inst.alias.some(alias =>
+      ['actor_a','actor_b','actor_c'].some(k =>
+        r[k] && r[k].toLowerCase().includes(alias.toLowerCase())
+      )
+    )
+  ).slice(0, 4);
+
+  if (relacionadas.length) {
+    sinEl.innerHTML = relacionadas.map(r => {
+      const actores = ['actor_a','actor_b','actor_c']
+        .map(k => r[k]).filter(a => a && a.trim())
+        .join(' → ');
+      return `
+        <div class="im-sin-item">
+          <div class="im-sin-tipo">${r.tipo_sinergia || 'Colaboración'} · ${r.sector_label || ''}</div>
+          <div class="im-sin-actors">${actores}</div>
+          <div class="im-sin-desc">${r.descripcion || ''}</div>
+        </div>`;
+    }).join('');
+  } else {
+    sinEl.innerHTML = `<div class="im-sin-empty">Sin sinergias detectadas aún para esta institución. El pipeline actualiza cada lunes.</div>`;
+  }
+
+  document.getElementById('im-email').value = '';
+  document.getElementById('im-overlay').dataset.inst = inst.name;
+  document.getElementById('im-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModalInst() {
+  document.getElementById('im-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function notificarInst() {
+  const email = document.getElementById('im-email').value.trim();
+  const inst  = document.getElementById('im-overlay').dataset.inst || 'esta institución';
+  if (!email || !email.includes('@')) {
+    document.getElementById('im-email').focus();
+    return;
+  }
+  cerrarModalInst();
+  showToast('Alerta activada para ' + inst, '✅ Te avisaremos sobre nuevas sinergias detectadas');
+}
+
 // ==================== CHATBOT ====================
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') cerrarModalBrecha();
+  if (e.key === 'Escape') { cerrarModalBrecha(); cerrarModalInst(); }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
