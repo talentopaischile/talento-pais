@@ -54,47 +54,50 @@ HEADERS = {
 }
 
 # ─── Sectores estratégicos ────────────────────────────────────────────────────
+# Sufijo añadido automáticamente a todas las queries:
+# "when:7d" → solo noticias de los últimos 7 días
+# "Chile OR LATAM" ya está incluido en cada query
 SECTORES = {
     "litio": {
         "label": "Litio y Minería",
         "queries": [
-            "litio Chile colaboración ministerio universidad",
-            "minería Chile acuerdo institución tecnología",
+            "litio Chile acuerdo colaboración ministerio when:7d",
+            "minería Chile convenio institución universidad when:7d",
         ],
     },
     "energias_renovables": {
         "label": "Energías Renovables",
         "queries": [
-            "energía solar eólica Chile colaboración institucional",
-            "hidrógeno verde Chile ministerio empresa acuerdo",
+            "energía renovable Chile acuerdo colaboración institucional when:7d",
+            "hidrógeno verde Chile ministerio empresa convenio when:7d",
         ],
     },
     "ia_tecnologia": {
         "label": "IA y Tecnología",
         "queries": [
-            "inteligencia artificial Chile colaboración ministerio universidad",
-            "tecnología digital Chile programa conjunto institución",
+            "inteligencia artificial Chile LATAM colaboración ministerio when:7d",
+            "tecnología digital Chile universidad empresa programa when:7d",
         ],
     },
     "astronomia": {
         "label": "Astronomía",
         "queries": [
-            "astronomía Chile colaboración internacional observatorio",
-            "ciencia Chile convenio cooperación astrofísica",
+            "astronomía Chile convenio colaboración internacional when:7d",
+            "observatorio Chile ciencia acuerdo institución when:7d",
         ],
     },
     "oceanografia": {
         "label": "Oceanografía",
         "queries": [
-            "oceanografía Chile colaboración investigación marina",
-            "recursos marinos Chile ministerio universidad acuerdo",
+            "oceanografía Chile LATAM colaboración investigación marina when:7d",
+            "recursos marinos Chile ministerio universidad acuerdo when:7d",
         ],
     },
     "asia_pacifico": {
         "label": "Asia-Pacífico",
         "queries": [
-            "Chile Asia Pacífico cooperación institucional 2025",
-            "Chile Corea Japón China acuerdo colaboración ciencia",
+            "Chile Asia Pacífico cooperación institucional acuerdo when:7d",
+            "Chile Corea Japón China convenio colaboración ciencia when:7d",
         ],
     },
 }
@@ -262,12 +265,12 @@ def llamar_gemini(sector_key: str, sector_label: str, textos: list[str]) -> list
 
     try:
         url = GEMINI_URL.format(key=GEMINI_API_KEY)
-        # Reintento automático ante 429 (rate limit)
-        for intento in range(3):
+        # Reintento automático ante 429 (rate limit): máx 2 intentos, espera corta
+        for intento in range(2):
             r = requests.post(url, json=payload, timeout=30)
             if r.status_code == 429:
-                espera = 30 * (intento + 1)   # 30s → 60s → 90s
-                log.warning(f"  429 rate limit — esperando {espera}s (intento {intento+1}/3)...")
+                espera = 15 * (intento + 1)   # 15s → 30s
+                log.warning(f"  429 rate limit — esperando {espera}s (intento {intento+1}/2)...")
                 time.sleep(espera)
                 continue
             break
@@ -370,8 +373,8 @@ def main():
         sinergias = llamar_gemini(sector_key, label, textos_sector)
         todas_sinergias.extend(sinergias)
 
-        # Rate limiting: esperar 15s entre sectores para no saturar la API gratuita
-        time.sleep(15)
+        # Esperar 6s entre sectores (Gemini free: 15 RPM → seguro)
+        time.sleep(6)
 
     # ── 3. Deduplicar ─────────────────────────────────────────────────────
     vistas: set[str] = set()
