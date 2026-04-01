@@ -16,7 +16,7 @@ Fuentes:
   11. BCN Asia-Pacífico     — Biblioteca del Congreso Nacional
   12. Getonboard.cl         — Demanda laboral tech/IA
   13. Indeed Chile          — Demanda laboral amplia
-  14. Observatorio Laboral  — Estadísticas empleo (Mintrab)
+  14. Observatorio Laboral  — DESACTIVADO (dominio caído)
   15. INE                   — Estadísticas empleo por sector
   16. Mineduc               — carreras_estrategicas.json (brechas)
   17. ProChile              — Oportunidades exportación y mercados Asia-Pacífico
@@ -921,25 +921,14 @@ def scrapear_indeed() -> list[dict]:
 
 def scrapear_observatorio_laboral() -> list[dict]:
     """
-    Observatorio Laboral del Ministerio del Trabajo.
-    Publica estadísticas e informes de empleo por sector económico.
-    URL: observatoriolaboral.gob.cl
+    Observatorio Laboral — dominio original caído (DNS no resuelve).
+    Fuente desactivada hasta que el MINTRAB publique una URL estable.
+    Se mantiene la función para no romper FUENTES_DISPONIBLES.
     """
-    log.info("=== Observatorio Laboral ===")
-    # Dominio actualizado — el anterior (observatoriolaboral.gob.cl) no resuelve DNS
-    BASE = "https://observatorio.mintrab.gob.cl"
-    resultados = _extraer_por_enlaces(
-        nombre_fuente="Observatorio Laboral",
-        base_url=BASE,
-        urls=[
-            f"{BASE}/",
-            f"{BASE}/empleabilidad/",
-            f"{BASE}/estadisticas/",
-        ],
-        tipo="estadistica_laboral",
-    )
-    log.info(f"  Observatorio Laboral: {len(resultados)} registros")
-    guardar_raw("observatorio_laboral", resultados)
+    log.info("=== Observatorio Laboral (desactivado — dominio caído) ===")
+    log.warning("  Observatorio Laboral: fuente desactivada temporalmente.")
+    guardar_raw("observatorio_laboral", [])
+    return []
     return resultados
 
 
