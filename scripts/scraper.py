@@ -223,54 +223,62 @@ def scrapear_corfo() -> list[dict]:
 def scrapear_minciencia() -> list[dict]:
     """
     Extrae noticias y convocatorias del Ministerio de Ciencia.
+    Nota: los artículos no tienen clases CSS explícitas — se extraen por enlaces
+    que apuntan a /noticias/ o /areas/ dentro del dominio.
     """
     log.info("=== Ministerio de Ciencia ===")
     resultados = []
+    BASE = "https://www.minciencia.gob.cl"
 
     urls = [
-        "https://www.minciencia.gob.cl/noticias/",
-        "https://www.minciencia.gob.cl/categoria/convocatorias/",
-        "https://www.minciencia.gob.cl/",
+        f"{BASE}/noticias/",
+        f"{BASE}/areas/innovacion-y-emprendimiento/concurso-publico-premio-nacional-de-innovacion/",
+        f"{BASE}/ines/",
     ]
+
+    vistos = set()
 
     for url in urls:
         r = get(url)
         if not r:
             continue
-        soup = BeautifulSoup(r.text, "html.parser")
+        soup = BeautifulSoup(r.text, "lxml")
 
-        for card in soup.find_all(
-            ["article", "div"],
-            class_=re.compile(r"(noticia|post|card|convocatoria|item)", re.I),
-        ):
-            titulo_el = card.find(["h2", "h3", "h4", "a"])
-            titulo    = titulo_el.get_text(strip=True) if titulo_el else ""
-            if not titulo or len(titulo) < 10:
+        # Los artículos se presentan como <a> enlazando a /noticias/* o /areas/*
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            if not href:
+                continue
+            if href.startswith("/"):
+                href = BASE + href
+            if BASE not in href:
+                continue
+            if href in vistos:
+                continue
+            vistos.add(href)
+
+            titulo = a.get_text(strip=True)
+            if not titulo or len(titulo) < 15:
                 continue
 
-            desc_el = card.find("p")
-            desc    = desc_el.get_text(strip=True) if desc_el else ""
-
-            link_el = card.find("a", href=True)
-            link    = link_el["href"] if link_el else ""
-            if link and not link.startswith("http"):
-                link = "https://www.minciencia.gob.cl" + link
-
-            fecha_el = card.find(class_=re.compile(r"(fecha|date|time)", re.I))
-            fecha    = fecha_el.get_text(strip=True) if fecha_el else ""
-
-            texto_completo = f"{titulo} {desc}"
-            sectores       = detectar_sectores(texto_completo)
+            sectores = detectar_sectores(titulo)
             if not sectores:
                 continue
+
+            # Descripción desde el elemento contenedor
+            parent = a.find_parent(["article", "div", "li", "section"])
+            desc = ""
+            if parent:
+                p = parent.find("p")
+                if p:
+                    desc = p.get_text(strip=True)[:300]
 
             resultados.append({
                 "fuente":        "Ministerio de Ciencia",
                 "tipo":          "noticia_convocatoria",
                 "titulo":        titulo,
                 "descripcion":   desc,
-                "url":           link,
-                "fecha":         fecha,
+                "url":           href,
                 "sectores":      sectores,
                 "fecha_scraping": datetime.now().isoformat(),
             })
