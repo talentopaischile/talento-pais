@@ -463,7 +463,13 @@
     border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 500;
   }
   .sin-arrow { color: var(--verde-claro); font-size: 18px; }
-  .sin-desc { font-size: 13px; color: var(--gris-azul); line-height: 1.6; margin-bottom: 14px; }
+  .sin-desc { font-size: 13px; color: var(--gris-azul); line-height: 1.6; margin-bottom: 10px; }
+  .sin-evidencia {
+    font-size: 11px; color: var(--gris-azul); line-height: 1.55;
+    border-left: 2px solid rgba(52,211,153,.3); padding: 6px 10px;
+    margin-bottom: 14px; font-style: italic;
+  }
+  .sin-evidencia b { color: var(--verde-claro); font-style: normal; font-size: 10px; display: block; margin-bottom: 3px; }
   .sin-actions { display: flex; gap: 10px; }
   .btn-notify {
     font-size: 13px; padding: 9px 18px; border-radius: 8px;
@@ -987,7 +993,7 @@
       <div class="bm-metric">
         <div class="bm-metric-num verde"    id="bm-ratio">—</div>
         <div class="bm-metric-label">Ratio demanda / oferta</div>
-        <div class="bm-metric-desc">Ofertas laborales por cada 100 estudiantes matriculados. Más alto = mayor presión sobre el talento disponible.</div>
+        <div class="bm-metric-desc" id="bm-ratio-desc">—</div>
       </div>
       <div class="bm-metric">
         <div class="bm-metric-num"          id="bm-nivel" style="font-size:18px;margin-top:4px;">—</div>
@@ -1822,7 +1828,24 @@ function abrirModalBrecha(idx) {
   document.getElementById('bm-eyebrow').textContent      = 'Diagnóstico de brecha · ' + new Date().toLocaleDateString('es-CL', {month:'long', year:'numeric'});
   document.getElementById('bm-demanda').textContent      = demanda.toLocaleString('es-CL');
   document.getElementById('bm-matricula').textContent    = matricula > 0 ? matricula.toLocaleString('es-CL') : 'Sin datos';
-  document.getElementById('bm-ratio').textContent        = ratioPer100 === '∞' ? '∞' : ratioPer100 + '%';
+  document.getElementById('bm-ratio').textContent = ratioPer100 === '∞' ? '∞' : ratioPer100 + '%';
+
+  // Explicación en lenguaje natural del ratio
+  const ratioDesc = document.getElementById('bm-ratio-desc');
+  if (matricula === 0) {
+    ratioDesc.textContent = 'Sin datos de matrícula para este sector aún.';
+  } else if (ratioPer100 === '∞') {
+    ratioDesc.textContent = 'Hay demanda laboral activa pero sin estudiantes matriculados en carreras afines detectadas. Brecha estructural.';
+  } else {
+    const r = parseFloat(ratioPer100);
+    const por100 = r.toFixed(1);
+    const intensidad = r >= 10 ? 'muy alta — el mercado supera ampliamente la formación disponible'
+                     : r >= 5  ? 'alta — la demanda supera la oferta formativa'
+                     : r >= 1  ? 'moderada — hay oportunidades pero la formación cubre parte de la demanda'
+                     :           'baja — la formación supera la demanda laboral detectada';
+    ratioDesc.textContent =
+      `Por cada 100 estudiantes matriculados en carreras afines, el sistema detectó ${por100} ofertas laborales activas en el último mes. Presión ${intensidad}.`;
+  }
   document.getElementById('bm-nivel').textContent        = nivel;
 
   const badge = document.getElementById('bm-badge');
@@ -2056,6 +2079,7 @@ function sinRenderizar() {
 
     const box = document.createElement('div');
     box.className = 'sinergia-box';
+    const evidencia = (row.evidencia || '').trim();
     box.innerHTML = `
       <div class="sin-header">
         <div class="sin-title">${tipoLabel}${sectorChip}</div>
@@ -2064,6 +2088,7 @@ function sinRenderizar() {
       <div class="sin-ministerios">${actoresHTML}</div>
       ${fecha ? `<div style="font-size:11px;color:var(--gris-azul);margin:4px 0 12px;">${fecha}</div>` : ''}
       <p class="sin-desc">${row.descripcion || ''}</p>
+      ${evidencia ? `<div class="sin-evidencia"><b>📎 Evidencia textual</b>"${evidencia}"</div>` : ''}
       ${fuente ? `<div class="sin-actions">${fuente}</div>` : ''}
     `;
     container.appendChild(box);

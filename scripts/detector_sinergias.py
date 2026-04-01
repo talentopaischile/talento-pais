@@ -176,32 +176,39 @@ FUENTES_MINISTERIOS = [
     },
 ]
 
-# ─── Prompt de extracción para Gemini ─────────────────────────────────────────
+# ─── Prompt anti-alucinación para Groq ───────────────────────────────────────
 PROMPT = """\
-Eres un analista de políticas públicas chilenas. Analiza el siguiente texto \
-sobre el sector "{sector_label}" en Chile y extrae ÚNICAMENTE oportunidades \
-CONCRETAS de colaboración institucional entre organizaciones (ministerios, \
-universidades, empresas, centros de investigación, organismos internacionales).
+Eres un analista de políticas públicas chilenas. Tu única tarea es EXTRAER \
+(no inventar, no inferir, no completar) colaboraciones institucionales que \
+estén EXPLÍCITAMENTE descritas en el texto que se te entrega.
 
-Una oportunidad concreta debe:
-- Mencionar al menos dos actores institucionales específicos con nombre.
-- Describir una acción real o potencial de colaboración.
+REGLAS ESTRICTAS:
+1. Solo incluye colaboraciones que aparezcan textualmente en el texto.
+2. NUNCA inventes actores, acuerdos o descripciones que no estén en el texto.
+3. Si el texto no menciona una colaboración concreta entre dos instituciones \
+nombradas, NO la incluyas.
+4. El campo "evidencia" debe contener la frase EXACTA del texto que respalda \
+la colaboración — cópiala sin modificar.
+5. Si no hay evidencia suficiente, devuelve: []
+
+Sector analizado: {sector_label}
 
 Devuelve EXCLUSIVAMENTE un JSON array válido, sin markdown ni texto adicional:
 [
   {{
-    "actor_a": "nombre exacto de institución 1",
-    "actor_b": "nombre exacto de institución 2",
-    "actor_c": "nombre de tercera institución o null",
+    "actor_a": "nombre exacto de institución 1 tal como aparece en el texto",
+    "actor_b": "nombre exacto de institución 2 tal como aparece en el texto",
+    "actor_c": "tercera institución si aparece en el texto, si no: null",
     "tipo_sinergia": "uno de: investigación conjunta | financiamiento | \
 capacitación | regulación | transferencia tecnológica | \
 cooperación internacional | desarrollo de políticas",
-    "descripcion": "descripción breve y concisa en máximo 2 oraciones",
+    "descripcion": "resumen fiel en máximo 2 oraciones, sin agregar información",
+    "evidencia": "frase textual del texto que respalda esta colaboración",
     "fuente": "URL o nombre de la fuente donde se encontró"
   }}
 ]
 
-Si no hay oportunidades concretas con actores identificables, devuelve solo: []
+Si no hay colaboraciones con respaldo textual claro, devuelve solo: []
 
 Texto a analizar:
 {texto}
@@ -332,6 +339,8 @@ def llamar_groq(sector_key: str, sector_label: str, textos: list[str]) -> list[d
             s["estado"]       = "detectada"
             if not s.get("actor_c"):
                 s["actor_c"] = ""
+            if not s.get("evidencia"):
+                s["evidencia"] = ""
 
         log.info(f"  Groq → {len(sinergias)} sinergias para '{sector_label}'")
         return sinergias

@@ -64,6 +64,7 @@ COLUMNAS_SINERGIAS = [
     "actor_c",
     "tipo_sinergia",
     "descripcion",
+    "evidencia",
     "fuente",
     "estado",
 ]
