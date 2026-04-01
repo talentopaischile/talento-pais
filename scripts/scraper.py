@@ -145,53 +145,69 @@ def detectar_sectores(texto: str) -> list[str]:
 
 def scrapear_corfo() -> list[dict]:
     """
-    Extrae noticias y programas de CORFO relacionados con sectores estratégicos.
+    Extrae noticias y convocatorias de CORFO desde su Sala de Prensa.
+    Nota: la página de programas carga con JavaScript (no scrapeable con requests).
+    La Sala de Prensa sí es scrapeable y contiene convocatorias relevantes.
+    URL base correcta: corfo.gob.cl (corfo.cl redirige aquí)
     """
     log.info("=== CORFO ===")
     resultados = []
 
+    BASE_CORFO = "https://www.corfo.gob.cl"
     urls = [
-        "https://www.corfo.cl/sites/cpp/homecorfo",
-        "https://www.corfo.cl/sites/cpp/convocatoriasempresa",
-        "https://www.corfo.cl/sites/cpp/programas",
+        f"{BASE_CORFO}/sites/cpp/sala-de-prensa/",
+        f"{BASE_CORFO}/sites/cpp/nacional/",
     ]
+
+    vistos = set()
 
     for url in urls:
         r = get(url)
         if not r:
             continue
-        soup = BeautifulSoup(r.text, "html.parser")
+        soup = BeautifulSoup(r.text, "lxml")
 
-        # Buscar artículos, noticias y tarjetas de programas
-        for card in soup.find_all(
-            ["article", "div", "li"],
-            class_=re.compile(r"(noticia|convocatoria|card|item|programa|resultado)", re.I),
-        ):
-            titulo_el = card.find(["h1", "h2", "h3", "h4", "a"])
-            titulo    = titulo_el.get_text(strip=True) if titulo_el else ""
-            if not titulo or len(titulo) < 10:
+        # Extraer todos los enlaces de noticias/artículos
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            if not href:
+                continue
+            # Construir URL completa
+            if href.startswith("/"):
+                href = BASE_CORFO + href
+            elif not href.startswith("http"):
+                continue
+            # Solo artículos del dominio CORFO
+            if "corfo.gob.cl" not in href:
+                continue
+            if href in vistos:
+                continue
+            vistos.add(href)
+
+            titulo = a.get_text(strip=True)
+            if not titulo or len(titulo) < 15:
                 continue
 
-            desc_el = card.find("p")
-            desc    = desc_el.get_text(strip=True) if desc_el else ""
-
-            link_el = card.find("a", href=True)
-            link    = link_el["href"] if link_el else ""
-            if link and not link.startswith("http"):
-                link = "https://www.corfo.cl" + link
-
-            texto_completo = f"{titulo} {desc}"
-            sectores       = detectar_sectores(texto_completo)
+            # Filtrar por sectores estratégicos en el título
+            sectores = detectar_sectores(titulo)
             if not sectores:
                 continue
 
+            # Buscar descripción en el elemento padre
+            parent = a.find_parent(["article", "div", "li", "section"])
+            desc = ""
+            if parent:
+                p = parent.find("p")
+                if p:
+                    desc = p.get_text(strip=True)[:300]
+
             resultados.append({
-                "fuente":   "CORFO",
-                "tipo":     "programa_convocatoria",
-                "titulo":   titulo,
-                "descripcion": desc,
-                "url":      link,
-                "sectores": sectores,
+                "fuente":        "CORFO",
+                "tipo":          "programa_convocatoria",
+                "titulo":        titulo,
+                "descripcion":   desc,
+                "url":           href,
+                "sectores":      sectores,
                 "fecha_scraping": datetime.now().isoformat(),
             })
 
