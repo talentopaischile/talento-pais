@@ -591,6 +591,15 @@ def analizar_csv_mineduc() -> dict:
         log.error("Instala pandas: pip install pandas")
         return {}
 
+    # Prioridad: usar carreras_estrategicas.json (archivo liviano ya en el repo)
+    resumen_path = RAW_DIR / "carreras_estrategicas.json"
+    if resumen_path.exists():
+        import json as _json
+        with open(resumen_path, encoding="utf-8") as f:
+            datos = _json.load(f)
+        log.info(f"  Usando carreras_estrategicas.json ({sum(datos.get('matriculados_por_sector', {}).values()):,} matriculados)")
+        return datos
+
     if not MINEDUC_CSV_PATH.exists():
         log.error(f"CSV no encontrado: {MINEDUC_CSV_PATH}")
         return {}
