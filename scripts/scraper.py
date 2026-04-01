@@ -651,7 +651,8 @@ def scrapear_dps() -> list[dict]:
     resultados = _extraer_por_enlaces(
         nombre_fuente="Programa DPS",
         base_url=BASE,
-        urls=[f"{BASE}/", f"{BASE}/gobernanza/", f"{BASE}/sectores/"],
+        urls=[f"{BASE}/", f"{BASE}/gobernanza/"],
+        sectores_fijos=["litio", "energias_renovables", "ia_tecnologia"],
         tipo="programa_estado",
     )
     log.info(f"  DPS: {len(resultados)} registros")
@@ -754,7 +755,6 @@ def scrapear_bcn_asia() -> list[dict]:
         base_url=BASE,
         urls=[
             f"{BASE}/observatorio/asiapacifico/noticias",
-            f"{BASE}/observatorio/asiapacifico/investigacion",
         ],
         tipo="analisis_cooperacion",
         sectores_fijos=["asia_pacifico"],   # todo el contenido es Asia-Pacífico
@@ -770,72 +770,13 @@ def scrapear_bcn_asia() -> list[dict]:
 
 def scrapear_getonboard() -> list[dict]:
     """
-    Portal de empleos tech chileno con buen HTML estático.
-    Señal de demanda real para IA, data science, energía y afines.
+    Getonboard — desactivado: URL /empleos?q= retorna 404 (estructura de URL cambiada).
+    Se mantiene la función para no romper FUENTES_DISPONIBLES.
     """
-    log.info("=== Getonboard ===")
-    resultados = []
-    base = "https://www.getonboard.com"
-
-    terminos = [
-        ("inteligencia-artificial", ["ia_tecnologia"]),
-        ("machine-learning",        ["ia_tecnologia"]),
-        ("data-scientist",          ["ia_tecnologia"]),
-        ("energia-renovable",       ["energias_renovables"]),
-        ("hidrogeno",               ["energias_renovables"]),
-        ("litio",                   ["litio"]),
-        ("astronomia",              ["astronomia"]),
-        ("oceanografia",            ["oceanografia"]),
-        ("asia",                    ["asia_pacifico"]),
-    ]
-
-    vistos: set[str] = set()
-
-    for slug, sectores in terminos:
-        url = f"{base}/empleos?q={slug}&country=cl"
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=15, verify=False)
-            r.raise_for_status()
-        except Exception as e:
-            log.warning(f"  Getonboard [{slug}]: {e}")
-            time.sleep(1)
-            continue
-
-        soup = BeautifulSoup(r.text, "lxml")
-
-        for card in soup.find_all(["div", "article", "li"],
-                                  class_=re.compile(r"(job|card|result|offer|position)", re.I)):
-            titulo_el = card.find(["h2", "h3", "h4", "a"])
-            titulo    = titulo_el.get_text(strip=True) if titulo_el else ""
-            if not titulo or len(titulo) < 5:
-                continue
-
-            empresa_el = card.find(class_=re.compile(r"(company|empresa|employer)", re.I))
-            empresa    = empresa_el.get_text(strip=True) if empresa_el else ""
-
-            link_el = card.find("a", href=True)
-            href    = link_el["href"] if link_el else ""
-            if href and not href.startswith("http"):
-                href = base + href
-            if href in vistos:
-                continue
-            vistos.add(href)
-
-            resultados.append({
-                "fuente":        "Getonboard",
-                "tipo":          "oferta_laboral",
-                "titulo":        titulo,
-                "empresa":       empresa,
-                "url":           href,
-                "sectores":      sectores,
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-
-        time.sleep(1.5)
-
-    log.info(f"  Getonboard: {len(resultados)} registros")
-    guardar_raw("getonboard", resultados)
-    return resultados
+    log.info("=== Getonboard (desactivado — URL estructura cambiada) ===")
+    log.warning("  Getonboard: fuente desactivada temporalmente.")
+    guardar_raw("getonboard", [])
+    return []
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -844,10 +785,16 @@ def scrapear_getonboard() -> list[dict]:
 
 def scrapear_indeed() -> list[dict]:
     """
-    Indeed.cl — mayor volumen de ofertas laborales en Chile.
-    Cubre todos los sectores estratégicos con resultados de búsqueda HTML.
+    Indeed — desactivado: bloquea con 403 Forbidden (anti-bot permanente).
+    Se mantiene la función para no romper FUENTES_DISPONIBLES.
     """
-    log.info("=== Indeed Chile ===")
+    log.info("=== Indeed Chile (desactivado — 403 anti-bot) ===")
+    log.warning("  Indeed: fuente desactivada (bloqueo anti-bot permanente).")
+    guardar_raw("indeed", [])
+    return []
+
+def _scrapear_indeed_impl() -> list[dict]:
+    """Implementación original conservada por si se reactiva con proxy."""
     resultados = []
     base = "https://cl.indeed.com"
 
@@ -1194,9 +1141,7 @@ def scrapear_anid() -> list[dict]:
         base_url=BASE,
         urls=[
             f"{BASE}/",
-            f"{BASE}/concursos-y-becas/",
             f"{BASE}/noticias/",
-            f"{BASE}/fondos/",
         ],
         tipo="beca_concurso_id",
         sectores_fijos=["ia_tecnologia", "energias_renovables", "litio", "astronomia", "oceanografia"],

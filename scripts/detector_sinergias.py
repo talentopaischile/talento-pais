@@ -338,20 +338,22 @@ def llamar_groq(sector_key: str, sector_label: str, textos: list[str]) -> list[d
             if texto_resp == "[]" or not texto_resp:
                 return []
 
-            # Intentar parsear; si falla, buscar array JSON con regex
+            # Intentar parsear con raw_decode para ignorar texto extra tras el array
+            decoder = json.JSONDecoder()
+            sinergias = None
+            # Buscar el primer '[' para iniciar la decodificación
+            idx = texto_resp.find("[")
+            if idx == -1:
+                log.warning(f"  Groq sin array JSON válido ({sector_key})")
+                return []
             try:
-                sinergias = json.loads(texto_resp)
-            except json.JSONDecodeError:
-                match = re.search(r"\[.*\]", texto_resp, re.DOTALL)
-                if match:
-                    try:
-                        sinergias = json.loads(match.group(0))
-                    except json.JSONDecodeError as e2:
-                        log.warning(f"  Groq respuesta no parseable ({sector_key}): {e2}")
-                        return []
-                else:
-                    log.warning(f"  Groq sin array JSON válido ({sector_key})")
-                    return []
+                sinergias, _ = decoder.raw_decode(texto_resp, idx)
+            except json.JSONDecodeError as e:
+                log.warning(f"  Groq respuesta no parseable ({sector_key}): {e}")
+                return []
+            if not isinstance(sinergias, list):
+                log.warning(f"  Groq no devolvió lista ({sector_key})")
+                return []
 
             # Agregar metadata a cada sinergia
             fecha_hoy = datetime.now().strftime("%Y-%m-%d")
