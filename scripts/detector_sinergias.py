@@ -106,15 +106,9 @@ SECTORES = {
 # ─── Páginas de ministerios y organizaciones ──────────────────────────────────
 FUENTES_MINISTERIOS = [
     {
-        "nombre": "CORFO Inicio",
-        "url": "https://www.corfo.cl/sites/cpp/homecorfo",
+        "nombre": "CORFO Sala de Prensa",
+        "url": "https://www.corfo.gob.cl/sites/cpp/sala-de-prensa/",
         "sectores": ["litio", "energias_renovables", "ia_tecnologia"],
-        "verify_ssl": True,
-    },
-    {
-        "nombre": "AGCI Chile",
-        "url": "https://www.agci.cl/",
-        "sectores": ["asia_pacifico"],
         "verify_ssl": True,
     },
     {
@@ -146,6 +140,36 @@ FUENTES_MINISTERIOS = [
         "url": "https://www.minmineria.gob.cl/",
         "sectores": ["litio"],
         "verify_ssl": False,   # SSL problemático, se omite verificación
+    },
+    {
+        "nombre": "AGCID Cooperación Internacional",
+        "url": "https://www.agcid.gob.cl/noticias/",
+        "sectores": ["asia_pacifico", "energias_renovables", "ia_tecnologia"],
+        "verify_ssl": True,
+    },
+    {
+        "nombre": "Ministerio del Trabajo",
+        "url": "https://www.mintrab.gob.cl/noticias/",
+        "sectores": ["litio", "energias_renovables", "ia_tecnologia"],
+        "verify_ssl": True,
+    },
+    {
+        "nombre": "DECYTI Cancillería",
+        "url": "https://www.minrel.gob.cl/noticias/",
+        "sectores": ["asia_pacifico", "astronomia", "oceanografia"],
+        "verify_ssl": True,
+    },
+    {
+        "nombre": "BCN Asia-Pacífico",
+        "url": "https://www.bcn.cl/observatorio/asiapacifico/",
+        "sectores": ["asia_pacifico"],
+        "verify_ssl": True,
+    },
+    {
+        "nombre": "Servicio Civil DPS",
+        "url": "https://www.serviciocivil.cl/noticias/",
+        "sectores": ["litio", "energias_renovables", "ia_tecnologia", "astronomia", "oceanografia", "asia_pacifico"],
+        "verify_ssl": True,
     },
 ]
 

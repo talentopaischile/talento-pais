@@ -3,22 +3,28 @@ scraper.py — Talento País
 Pipeline ETAPA 1: Recolección de datos desde fuentes estratégicas.
 
 Fuentes:
-  - CORFO
-  - Ministerio de Ciencia
-  - CENIA
-  - Trabajando.com
-  - Bumeran Chile
-  - Mercado Público API
-  - PDF Matrícula Educación Superior (Mineduc) → detección de brechas
+  1.  CORFO              — sala-de-prensa / nacional
+  2.  Ministerio de Ciencia (MinCiencia)
+  3.  CENIA              — Centro Nacional de IA
+  4.  Trabajando.com     — ofertas laborales
+  5.  Bumeran Chile      — ofertas laborales
+  6.  Mercado Público    — API licitaciones activas
+  7.  Programa DPS       — Desarrollo Productivo Sostenible
+  8.  AGCID              — Agencia de Cooperación Internacional
+  9.  Mintrab            — Ministerio del Trabajo
+  10. DECYTI             — Cancillería, Diplomacia Científica
+  11. BCN Asia-Pacífico  — Biblioteca del Congreso Nacional
+  12. Mineduc            — carreras_estrategicas.json (brechas)
 
 Salida:
-  - datos/raw/      → JSON crudo por fuente
+  - datos/raw/        → JSON crudo por fuente
   - datos/procesados/ → JSON consolidado + análisis de brechas
 
 Uso:
-  python scraper.py
-  python scraper.py --fuente mercadopublico
-  python scraper.py --fuente educacion
+  python scripts/scraper.py
+  python scripts/scraper.py --fuente mercadopublico
+  python scripts/scraper.py --fuente dps
+  python scripts/scraper.py --fuente educacion
 """
 
 import os
@@ -555,7 +561,203 @@ def scrapear_mercadopublico() -> list[dict]:
 
 
 # ════════════════════════════════════════════════════════════════════════════
-# FUENTE 7 — CSV MINISTERIO DE EDUCACIÓN → detección de brechas
+# HELPER GENÉRICO — extracción de enlaces por sector
+# ════════════════════════════════════════════════════════════════════════════
+
+def _extraer_por_enlaces(
+    nombre_fuente: str,
+    base_url: str,
+    urls: list[str],
+    tipo: str,
+    sectores_fijos: list[str] | None = None,
+    verify_ssl: bool = True,
+) -> list[dict]:
+    """
+    Patrón común: descarga una página, extrae todos los <a href> del
+    mismo dominio, filtra por sectores estratégicos en el título.
+    Si sectores_fijos se especifica, todos los registros usan esos sectores.
+    """
+    resultados = []
+    vistos: set[str] = set()
+    dominio = base_url.rstrip("/").split("//")[-1].split("/")[0]
+
+    for url in urls:
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=20, verify=verify_ssl)
+            r.raise_for_status()
+        except Exception as e:
+            log.warning(f"  {nombre_fuente}: error en {url}: {e}")
+            continue
+
+        soup = BeautifulSoup(r.text, "lxml")
+        for a in soup.find_all("a", href=True):
+            href = a["href"].strip()
+            if href.startswith("/"):
+                href = base_url.rstrip("/") + href
+            if not href.startswith("http") or dominio not in href:
+                continue
+            if href in vistos:
+                continue
+            vistos.add(href)
+
+            titulo = a.get_text(strip=True)
+            if not titulo or len(titulo) < 15:
+                continue
+
+            sectores = sectores_fijos if sectores_fijos else detectar_sectores(titulo)
+            if not sectores:
+                continue
+
+            parent = a.find_parent(["article", "div", "li", "section"])
+            desc = ""
+            if parent:
+                p = parent.find("p")
+                if p:
+                    desc = p.get_text(strip=True)[:300]
+
+            resultados.append({
+                "fuente":        nombre_fuente,
+                "tipo":          tipo,
+                "titulo":        titulo,
+                "descripcion":   desc,
+                "url":           href,
+                "sectores":      sectores,
+                "fecha_scraping": datetime.now().isoformat(),
+            })
+
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 7 — PROGRAMA DPS (Desarrollo Productivo Sostenible)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_dps() -> list[dict]:
+    """
+    Programa interministerial (Economía, Hacienda, Minería, Energía, Ciencia).
+    Financia formación de talento en litio, H2 verde, IA y manufactura avanzada.
+    URL: programadps.gob.cl
+    """
+    log.info("=== Programa DPS ===")
+    BASE = "https://programadps.gob.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="Programa DPS",
+        base_url=BASE,
+        urls=[f"{BASE}/", f"{BASE}/noticias/", f"{BASE}/gobernanza/"],
+        tipo="programa_estado",
+    )
+    log.info(f"  DPS: {len(resultados)} registros")
+    guardar_raw("dps", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 8 — AGCID (Agencia Chilena de Cooperación Internacional)
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_agcid() -> list[dict]:
+    """
+    Convocatorias de becas y cooperación bilateral con Asia-Pacífico.
+    URL: agcid.gob.cl
+    """
+    log.info("=== AGCID ===")
+    BASE = "https://www.agcid.gob.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="AGCID",
+        base_url=BASE,
+        urls=[f"{BASE}/", f"{BASE}/noticias/", f"{BASE}/becas/"],
+        tipo="beca_cooperacion",
+    )
+    # Agregar sector asia_pacifico a todos los registros sin sector detectado
+    for r in resultados:
+        if "asia_pacifico" not in r["sectores"]:
+            r["sectores"].append("asia_pacifico")
+    log.info(f"  AGCID: {len(resultados)} registros")
+    guardar_raw("agcid", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 9 — MINISTERIO DEL TRABAJO
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_mintrab() -> list[dict]:
+    """
+    Noticias y programas del Ministerio del Trabajo relacionados con
+    formación, capacitación y mercado laboral en sectores estratégicos.
+    URL: mintrab.gob.cl
+    """
+    log.info("=== Ministerio del Trabajo ===")
+    BASE = "https://www.mintrab.gob.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="Ministerio del Trabajo",
+        base_url=BASE,
+        urls=[f"{BASE}/noticias/", f"{BASE}/"],
+        tipo="noticia_programa",
+    )
+    log.info(f"  Mintrab: {len(resultados)} registros")
+    guardar_raw("mintrab", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 10 — CANCILLERÍA DECYTI
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_decyti() -> list[dict]:
+    """
+    Dirección de Ciencia, Tecnología e Innovación de Cancillería.
+    Gestiona cooperación científica internacional y diplomacia del conocimiento.
+    Clave para sinergias con Asia-Pacífico y organismos internacionales.
+    URL: minrel.gob.cl/decyti
+    """
+    log.info("=== Cancillería DECYTI ===")
+    BASE = "https://minrel.gob.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="Cancillería DECYTI",
+        base_url=BASE,
+        urls=[f"{BASE}/decyti", f"{BASE}/sala-de-prensa/"],
+        tipo="cooperacion_internacional",
+    )
+    # DECYTI es relevante para asia_pacifico y todos los sectores de cooperación
+    for r in resultados:
+        if "asia_pacifico" not in r["sectores"]:
+            r["sectores"].append("asia_pacifico")
+    log.info(f"  DECYTI: {len(resultados)} registros")
+    guardar_raw("decyti", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 11 — BCN OBSERVATORIO ASIA-PACÍFICO
+# ════════════════════════════════════════════════════════════════════════════
+
+def scrapear_bcn_asia() -> list[dict]:
+    """
+    Observatorio Asia-Pacífico de la Biblioteca del Congreso Nacional.
+    Publica análisis e informes sobre relaciones Chile-Asia en sectores
+    estratégicos: litio, astronomía, energías renovables, cooperación.
+    URL: bcn.cl/observatorio/asiapacifico
+    """
+    log.info("=== BCN Observatorio Asia-Pacífico ===")
+    BASE = "https://www.bcn.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="BCN Observatorio Asia-Pacífico",
+        base_url=BASE,
+        urls=[
+            f"{BASE}/observatorio/asiapacifico/noticias",
+            f"{BASE}/observatorio/asiapacifico/investigacion",
+        ],
+        tipo="analisis_cooperacion",
+        sectores_fijos=["asia_pacifico"],   # todo el contenido es Asia-Pacífico
+    )
+    log.info(f"  BCN Asia-Pacífico: {len(resultados)} registros")
+    guardar_raw("bcn_asia", resultados)
+    return resultados
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FUENTE 12 — CSV MINISTERIO DE EDUCACIÓN → detección de brechas
 # ════════════════════════════════════════════════════════════════════════════
 
 # Mapeo: palabras clave en nomb_carrera / area_carrera_generica → sector
@@ -805,6 +1007,11 @@ FUENTES_DISPONIBLES = {
     "trabajando":      scrapear_trabajando,
     "bumeran":         scrapear_bumeran,
     "mercadopublico":  scrapear_mercadopublico,
+    "dps":             scrapear_dps,
+    "agcid":           scrapear_agcid,
+    "mintrab":         scrapear_mintrab,
+    "decyti":          scrapear_decyti,
+    "bcn_asia":        scrapear_bcn_asia,
     "educacion":       analizar_csv_mineduc,
 }
 
