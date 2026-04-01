@@ -5,7 +5,8 @@ usando Google News RSS + scraping de ministerios + Groq (Llama 3.3, gratis).
 
 Fuentes:
   - Google News RSS (sin API key, totalmente gratis)
-  - Páginas públicas de CORFO, AGCI, Min. Energía, ANID, CENIA, Min. Ciencia
+  - Páginas públicas de ministerios y organismos chilenos
+  - datos/raw/planes_estrategicos.json (si existe, generado por preparar_planes.py)
 
 IA:
   - Groq API — Llama 3.3 70B (plan gratuito: 1000 req/día, sin tarjeta)
@@ -42,9 +43,11 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_URL    = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL  = "llama-3.3-70b-versatile"   # gratis, alta calidad
 
-BASE_DIR = Path(__file__).parent.parent
-PROC_DIR = BASE_DIR / "datos" / "procesados"
+BASE_DIR  = Path(__file__).parent.parent
+RAW_DIR   = BASE_DIR / "datos" / "raw"
+PROC_DIR  = BASE_DIR / "datos" / "procesados"
 PROC_DIR.mkdir(parents=True, exist_ok=True)
+PLANES_JSON = RAW_DIR / "planes_estrategicos.json"
 
 HEADERS = {
     "User-Agent": (
@@ -345,16 +348,51 @@ def llamar_groq(sector_key: str, sector_label: str, textos: list[str]) -> list[d
 # MAIN
 # ════════════════════════════════════════════════════════════════════════════
 
+def cargar_planes() -> dict[str, str]:
+    """
+    Carga datos/raw/planes_estrategicos.json si existe.
+    Retorna dict sector → extracto de texto del plan.
+    """
+    if not PLANES_JSON.exists():
+        log.info("  planes_estrategicos.json no encontrado — se omite contexto de planes")
+        return {}
+    try:
+        with open(PLANES_JSON, encoding="utf-8") as f:
+            planes = json.load(f)
+        resultado: dict[str, str] = {}
+        for plan in planes:
+            sector = plan.get("sector", "")
+            extracto = plan.get("extracto", "")
+            actores = ", ".join(plan.get("actores_clave", [])[:8])
+            if extracto and sector:
+                texto = (
+                    f"[{plan['nombre']} — {plan['organismo']}, {plan['año']}]\n"
+                    f"Actores clave: {actores}\n"
+                    f"Extracto: {extracto[:1500]}"
+                )
+                resultado[sector] = texto
+        log.info(f"  planes_estrategicos.json: {len(resultado)} planes cargados")
+        return resultado
+    except Exception as e:
+        log.warning(f"  Error cargando planes_estrategicos.json: {e}")
+        return {}
+
+
 def main():
     log.info("=" * 60)
     log.info("TALENTO PAÍS — Detector de Sinergias IA (Etapa 1.5)")
     log.info(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    log.info(f"Modelo: {GROQ_MODEL}")
     log.info("=" * 60)
 
     todas_sinergias: list[dict] = []
 
+    # ── 0. Cargar planes estratégicos (contexto adicional) ─────────────────
+    log.info("\n[0/3] Cargando planes estratégicos nacionales...")
+    textos_planes = cargar_planes()
+
     # ── 1. Scrapear páginas de ministerios (una sola vez) ──────────────────
-    log.info("\n[1/2] Scrapeando ministerios y organismos...")
+    log.info("\n[1/3] Scrapeando ministerios y organismos...")
     textos_por_sector: dict[str, list[str]] = {k: [] for k in SECTORES}
 
     for fuente in FUENTES_MINISTERIOS:
@@ -364,8 +402,8 @@ def main():
                 textos_por_sector.setdefault(sec, []).append(texto)
         time.sleep(1)   # cortesía con los servidores
 
-    # ── 2. Por sector: RSS + textos de ministerios → Gemini ───────────────
-    log.info("\n[2/2] Analizando sectores con Gemini Flash...")
+    # ── 2. Por sector: RSS + ministerios + planes → Groq ──────────────────
+    log.info("\n[2/3] Analizando sectores con Groq (Llama 3.3 70B)...")
 
     for sector_key, sector_info in SECTORES.items():
         label = sector_info["label"]
@@ -382,6 +420,12 @@ def main():
         # Páginas de ministerios relevantes para este sector
         textos_sector.extend(textos_por_sector.get(sector_key, []))
 
+        # Extracto del plan estratégico nacional del sector (si existe)
+        plan_texto = textos_planes.get(sector_key) or textos_planes.get("transversal")
+        if plan_texto:
+            textos_sector.append(plan_texto)
+            log.info(f"  + Contexto de plan estratégico nacional")
+
         log.info(f"  Textos recopilados: {len(textos_sector)}")
 
         if not textos_sector:
@@ -391,7 +435,6 @@ def main():
         sinergias = llamar_groq(sector_key, label, textos_sector)
         todas_sinergias.extend(sinergias)
 
-        # Esperar 6s entre sectores (Gemini free: 15 RPM → seguro)
         time.sleep(6)
 
     # ── 3. Deduplicar ─────────────────────────────────────────────────────
@@ -407,7 +450,7 @@ def main():
             vistas.add(key)
             unicas.append(s)
 
-    log.info(f"\nTotal sinergias únicas: {len(unicas)}")
+    log.info(f"\n[3/3] Total sinergias únicas: {len(unicas)}")
 
     # ── 4. Guardar ────────────────────────────────────────────────────────
     out = PROC_DIR / "sinergias_ia.json"
