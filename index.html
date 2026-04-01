@@ -296,6 +296,71 @@
   }
   .bc-btn:hover { background: rgba(37,99,235,.12); border-color: var(--azul-electrico); color: var(--azul-cielo); }
 
+  /* ── MODAL BRECHA ── */
+  .bm-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(5,13,30,.75); backdrop-filter: blur(6px);
+    z-index: 500; align-items: center; justify-content: center;
+  }
+  .bm-overlay.open { display: flex; }
+  .bm-box {
+    background: linear-gradient(155deg, #0d1f3c, #0a1628);
+    border: 1px solid var(--borde-sutil); border-radius: 20px;
+    padding: 36px 32px; width: min(600px, 94vw); max-height: 90vh;
+    overflow-y: auto; position: relative;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6);
+    animation: bmIn .22s ease;
+  }
+  @keyframes bmIn { from { opacity:0; transform:translateY(18px) scale(.97); } to { opacity:1; transform:none; } }
+  .bm-close {
+    position: absolute; top: 16px; right: 18px;
+    background: none; border: none; color: var(--gris-azul);
+    font-size: 20px; cursor: pointer; line-height: 1;
+    transition: color .15s;
+  }
+  .bm-close:hover { color: var(--blanco); }
+  .bm-eyebrow { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--gris-azul); margin-bottom: 8px; }
+  .bm-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 6px; letter-spacing: -.3px; }
+  .bm-badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px; margin-bottom: 20px; }
+  .bm-badge.alta   { background: rgba(201,160,80,.15); color: var(--dorado-claro); }
+  .bm-badge.media  { background: rgba(37,99,235,.15);  color: var(--azul-cielo); }
+  .bm-badge.baja   { background: rgba(52,211,153,.12); color: var(--verde-claro); }
+  .bm-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+  .bm-metric {
+    background: rgba(255,255,255,.04); border: 1px solid var(--borde-sutil);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .bm-metric-num { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: var(--dorado); line-height: 1; }
+  .bm-metric-num.azul  { color: var(--azul-cielo); }
+  .bm-metric-num.verde { color: var(--verde-claro); }
+  .bm-metric-label { font-size: 12px; font-weight: 600; color: var(--blanco); margin: 4px 0 2px; }
+  .bm-metric-desc  { font-size: 11px; color: var(--gris-azul); line-height: 1.5; }
+  .bm-section-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gris-azul); margin-bottom: 10px; }
+  .bm-rec {
+    background: rgba(52,211,153,.06); border: 1px solid rgba(52,211,153,.15);
+    border-radius: 12px; padding: 14px 16px; font-size: 13px; line-height: 1.6;
+    color: var(--gris-azul); margin-bottom: 22px;
+  }
+  .bm-rec strong { color: var(--verde-claro); }
+  .bm-sources { font-size: 11px; color: var(--gris-azul); margin-bottom: 22px; line-height: 1.7; }
+  .bm-sources b { color: var(--gris-oscuro); }
+  .bm-notify { display: flex; gap: 10px; }
+  .bm-email {
+    flex: 1; background: rgba(255,255,255,.05); border: 1px solid var(--borde-sutil);
+    border-radius: 8px; padding: 10px 14px; color: var(--blanco); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none;
+    transition: border-color .2s;
+  }
+  .bm-email:focus { border-color: var(--azul-electrico); }
+  .bm-email::placeholder { color: var(--gris-azul); }
+  .bm-notify-btn {
+    background: var(--azul-electrico); color: white; border: none;
+    border-radius: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; font-family: 'DM Sans', sans-serif;
+    transition: opacity .2s;
+  }
+  .bm-notify-btn:hover { opacity: .85; }
+
   /* ── PÁGINA 3: MAPA INSTITUCIONAL ── */
   .inst-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
   .inst-card {
@@ -818,6 +883,55 @@
     </div>
     <div class="brechas-grid"></div>
     <div id="match-container"></div>
+  </div>
+</div>
+
+<!-- ─────── MODAL DETALLE BRECHA ─────── -->
+<div class="bm-overlay" id="bm-overlay" onclick="if(event.target===this)cerrarModalBrecha()">
+  <div class="bm-box">
+    <button class="bm-close" onclick="cerrarModalBrecha()">✕</button>
+    <div class="bm-eyebrow" id="bm-eyebrow">Diagnóstico de brecha</div>
+    <div class="bm-title"  id="bm-sector-title">—</div>
+    <span class="bm-badge" id="bm-badge">—</span>
+
+    <div class="bm-metrics">
+      <div class="bm-metric">
+        <div class="bm-metric-num"          id="bm-demanda">—</div>
+        <div class="bm-metric-label">Oportunidades activas</div>
+        <div class="bm-metric-desc">Ofertas laborales y licitaciones públicas detectadas en los últimos 30 días en Trabajando.com, Bumeran, Indeed, Getonboard y Mercado Público.</div>
+      </div>
+      <div class="bm-metric">
+        <div class="bm-metric-num azul"     id="bm-matricula">—</div>
+        <div class="bm-metric-label">Matriculados en carreras afines</div>
+        <div class="bm-metric-desc">Estudiantes activos en programas relacionados según los datos de matrícula Mineduc 2025.</div>
+      </div>
+      <div class="bm-metric">
+        <div class="bm-metric-num verde"    id="bm-ratio">—</div>
+        <div class="bm-metric-label">Ratio demanda / oferta</div>
+        <div class="bm-metric-desc">Ofertas laborales por cada 100 estudiantes matriculados. Más alto = mayor presión sobre el talento disponible.</div>
+      </div>
+      <div class="bm-metric">
+        <div class="bm-metric-num"          id="bm-nivel" style="font-size:18px;margin-top:4px;">—</div>
+        <div class="bm-metric-label">Nivel de brecha</div>
+        <div class="bm-metric-desc">Calculado por el pipeline IA según la relación entre demanda activa y oferta formativa disponible.</div>
+      </div>
+    </div>
+
+    <div class="bm-section-title">Recomendación del sistema</div>
+    <div class="bm-rec" id="bm-rec">—</div>
+
+    <div class="bm-section-title">Fuentes de los datos</div>
+    <div class="bm-sources">
+      <b>Demanda laboral:</b> Trabajando.com · Bumeran · Indeed Chile · Getonboard · Mercado Público API<br>
+      <b>Oferta formativa:</b> Mineduc — Matrícula Educación Superior 2025<br>
+      <b>Actualización:</b> Pipeline automático cada lunes · Datos públicos abiertos
+    </div>
+
+    <div class="bm-section-title">Recibir alertas de este sector</div>
+    <div class="bm-notify">
+      <input class="bm-email" id="bm-email" type="email" placeholder="tu@email.com">
+      <button class="bm-notify-btn" onclick="notificarBrecha()">Notificarme →</button>
+    </div>
   </div>
 </div>
 
@@ -1560,30 +1674,34 @@ const SINERGIAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-
 // Sinergias: titulo, fuente, tipo, sector_label, organizacion, region, fecha_cierre,
 //            monto_fmt, es_asia_pacifico, relevancia_score, url, descripcion, fecha_scraping
 
+// ── Datos de brechas en memoria para el modal ─────────────────────────────
+let brechasData = [];
+
 async function cargarBrechas() {
   try {
     const response = await fetch(BRECHAS_CSV);
     const csv = await response.text();
-    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
+    brechasData = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
                      .filter(r => r.sector_label && r.sector_label.trim() !== '' && r.sector_label !== 'sector_label');
     const grid = document.querySelector('.brechas-grid');
-    if (!grid || !data.length) return;
+    if (!grid || !brechasData.length) return;
 
-    // Calcular % relativo al máximo de demanda para la barra
-    const maxDemanda = Math.max(...data.map(r => parseInt(r.demanda_oportunidades) || 0), 1);
+    const maxDemanda = Math.max(...brechasData.map(r => parseInt(r.demanda_oportunidades) || 0), 1);
 
     grid.innerHTML = '';
-    data.forEach(row => {
-      const nivel     = (row.nivel_brecha || 'MEDIA').toUpperCase();
-      const urgencia  = nivel === 'CRÍTICA' || nivel === 'ALTA' ? 'alta' : nivel === 'MEDIA' ? 'media' : 'baja';
-      const demanda   = parseInt(row.demanda_oportunidades) || 0;
-      const matricula = parseInt(row.matricula_estimada) || 0;
-      const pct       = Math.round((demanda / maxDemanda) * 100);
-      const fillClass = nivel === 'CRÍTICA' ? 'fill-dorado' : nivel === 'ALTA' ? 'fill-azul' : 'fill-verde';
+    brechasData.forEach((row, idx) => {
+      const nivel      = (row.nivel_brecha || 'MEDIA').toUpperCase();
+      const urgencia   = nivel === 'CRÍTICA' || nivel === 'ALTA' ? 'alta' : nivel === 'MEDIA' ? 'media' : 'baja';
+      const demanda    = parseInt(row.demanda_oportunidades) || 0;
+      const matricula  = parseInt(row.matricula_estimada) || 0;
+      const pct        = Math.round((demanda / maxDemanda) * 100);
+      const fillClass  = nivel === 'CRÍTICA' ? 'fill-dorado' : nivel === 'ALTA' ? 'fill-azul' : 'fill-verde';
       const sectorSlug = (row.sector_label || '').toLowerCase().replace(/\s|&/g, '');
 
       const card = document.createElement('div');
       card.className = `brecha-card ${urgencia === 'alta' ? 'urgente' : ''}`;
+      card.setAttribute('title', 'Clic para ver detalles');
+      card.onclick = () => abrirModalBrecha(idx);
       card.innerHTML = `
         <div class="bc-header">
           <span class="bc-sector ${sectorSlug}">${row.sector_label || 'Sector'}</span>
@@ -1591,7 +1709,7 @@ async function cargarBrechas() {
         </div>
         <div class="bc-title">${row.sector_label || ''}</div>
         <div class="bc-region" style="font-size:11px;color:var(--gris-azul);margin:6px 0 10px;">
-          ${row.recomendacion || ''}
+          ${(row.recomendacion || '').slice(0, 80)}${(row.recomendacion||'').length > 80 ? '…' : ''}
         </div>
         <div class="bc-bar-label"><span>Demanda de oportunidades</span><span>${pct}%</span></div>
         <div class="bc-bar"><div class="bc-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
@@ -1601,7 +1719,7 @@ async function cargarBrechas() {
             <div class="bc-num-label">oportunidades activas</div>
             ${matricula > 0 ? `<div style="font-size:11px;color:var(--gris-azul);margin-top:4px;">🎓 ${matricula.toLocaleString('es-CL')} matriculados</div>` : ''}
           </div>
-          <button class="bc-btn" onclick="showToast('Alerta activada: ${(row.sector_label||'').replace(/'/g,"\\'")}', 'Te notificaremos sobre nuevas oportunidades')">Notificar →</button>
+          <button class="bc-btn" onclick="event.stopPropagation();abrirModalBrecha(${idx})">Ver detalles →</button>
         </div>
       `;
       grid.appendChild(card);
@@ -1609,6 +1727,54 @@ async function cargarBrechas() {
   } catch (e) {
     console.error("Error cargando brechas:", e);
   }
+}
+
+function abrirModalBrecha(idx) {
+  const row      = brechasData[idx];
+  if (!row) return;
+  const nivel    = (row.nivel_brecha || 'MEDIA').toUpperCase();
+  const urgencia = nivel === 'CRÍTICA' || nivel === 'ALTA' ? 'alta' : nivel === 'MEDIA' ? 'media' : 'baja';
+  const demanda  = parseInt(row.demanda_oportunidades) || 0;
+  const matricula= parseInt(row.matricula_estimada) || 0;
+  const ratio    = parseFloat(row.ratio) || 0;
+  const ratioPer100 = matricula > 0 ? ((demanda / matricula) * 100).toFixed(1) : '∞';
+
+  document.getElementById('bm-sector-title').textContent = row.sector_label || '—';
+  document.getElementById('bm-eyebrow').textContent      = 'Diagnóstico de brecha · ' + new Date().toLocaleDateString('es-CL', {month:'long', year:'numeric'});
+  document.getElementById('bm-demanda').textContent      = demanda.toLocaleString('es-CL');
+  document.getElementById('bm-matricula').textContent    = matricula > 0 ? matricula.toLocaleString('es-CL') : 'Sin datos';
+  document.getElementById('bm-ratio').textContent        = ratioPer100 === '∞' ? '∞' : ratioPer100 + '%';
+  document.getElementById('bm-nivel').textContent        = nivel;
+
+  const badge = document.getElementById('bm-badge');
+  badge.textContent  = 'Brecha ' + nivel;
+  badge.className    = 'bm-badge ' + urgencia;
+
+  const recEl = document.getElementById('bm-rec');
+  recEl.innerHTML = row.recomendacion
+    ? row.recomendacion.replace(/(urgente|crítica|alta prioridad|inmediata)/gi, '<strong>$1</strong>')
+    : 'Sin recomendación disponible aún.';
+
+  document.getElementById('bm-email').value = '';
+  document.getElementById('bm-overlay').dataset.sector = row.sector_label || '';
+  document.getElementById('bm-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarModalBrecha() {
+  document.getElementById('bm-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function notificarBrecha() {
+  const email  = document.getElementById('bm-email').value.trim();
+  const sector = document.getElementById('bm-overlay').dataset.sector || 'este sector';
+  if (!email || !email.includes('@')) {
+    document.getElementById('bm-email').focus();
+    return;
+  }
+  cerrarModalBrecha();
+  showToast('Alerta activada para ' + sector, '✅ Te avisaremos cuando aparezcan nuevas oportunidades');
 }
 
 // ── Estado global Sinergias ──────────────────────────────────────────────────
@@ -1826,6 +1992,10 @@ function sinRenderizar() {
 }
 
 // ==================== CHATBOT ====================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') cerrarModalBrecha();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // Pre-cargar datos
