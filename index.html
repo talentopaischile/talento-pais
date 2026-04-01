@@ -362,6 +362,31 @@
   }
   .btn-detail:hover { background: rgba(255,255,255,0.05); color: var(--blanco); }
 
+  /* ── FILTROS SINERGIAS ── */
+  .sin-filters { margin-bottom: 28px; }
+  .sin-filter-group { margin-bottom: 16px; }
+  .sin-filter-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--gris-azul);
+    display: block; margin-bottom: 8px;
+  }
+
+  /* ── PAGINACIÓN ── */
+  .pagination-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-top: 28px; padding: 16px 0;
+    border-top: 1px solid var(--borde-sutil);
+  }
+  .pag-btn {
+    font-size: 13px; padding: 8px 20px; border-radius: 8px;
+    background: rgba(255,255,255,0.05); color: var(--blanco);
+    border: 1px solid var(--borde); cursor: pointer;
+    transition: all .2s; font-family: 'DM Sans', sans-serif;
+  }
+  .pag-btn:hover:not(:disabled) { background: rgba(37,99,235,0.2); border-color: var(--azul-electrico); }
+  .pag-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .pag-info { font-size: 12px; color: var(--gris-azul); min-width: 160px; text-align: center; }
+
   /* ── PÁGINA 4: GUÍA DE TÍTULOS ── */
   .titulos-buscador {
     background: linear-gradient(135deg, var(--azul-medio), var(--azul-card));
@@ -797,7 +822,31 @@
         </div>
       </div>
     </div>
+    <!-- Filtros dinámicos (se construyen desde los datos del Sheet) -->
+    <div class="sin-filters" id="sin-filters" style="display:none">
+      <div class="sin-filter-group">
+        <span class="sin-filter-label">Sector</span>
+        <div class="filter-row" id="filter-sector"></div>
+      </div>
+      <div class="sin-filter-group">
+        <span class="sin-filter-label">Tipo de sinergia</span>
+        <div class="filter-row" id="filter-tipo"></div>
+      </div>
+      <div class="sin-filter-group">
+        <span class="sin-filter-label">Institución</span>
+        <div class="filter-row" id="filter-inst"></div>
+      </div>
+    </div>
+
+    <!-- Resultados -->
     <div class="sinergias-container"></div>
+
+    <!-- Paginación -->
+    <div class="pagination-bar" id="sin-pagination" style="display:none">
+      <button class="pag-btn" id="pag-prev" onclick="sinPaginar(-1)">← Anterior</button>
+      <span class="pag-info" id="pag-info"></span>
+      <button class="pag-btn" id="pag-next" onclick="sinPaginar(1)">Siguiente →</button>
+    </div>
   </div>
 </div>
 
@@ -1484,71 +1533,157 @@ async function cargarBrechas() {
   }
 }
 
-// Columnas Sinergias IA: fecha, sector_label, actor_a, actor_b, actor_c,
-//                        tipo_sinergia, descripcion, fuente, estado
+// ── Estado global Sinergias ──────────────────────────────────────────────────
+const SIN_POR_PAGINA = 6;
+let sinData      = [];   // todos los registros
+let sinFiltrados = [];   // registros tras aplicar filtros
+let sinPagina    = 0;    // página actual (0-indexed)
+let sinFiltros   = { sector: '', tipo: '', inst: '' };
+
+// Columnas: fecha, sector_label, actor_a, actor_b, actor_c,
+//           tipo_sinergia, descripcion, fuente, estado
 
 async function cargarSinergias() {
   try {
     const response = await fetch(SINERGIAS_CSV);
     const csv = await response.text();
-    const data = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
-                     .filter(r => r.actor_a && r.actor_a.trim() !== '' && r.actor_a !== 'actor_a');
+    sinData = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
+                  .filter(r => r.actor_a && r.actor_a.trim() !== '' && r.actor_a !== 'actor_a');
+
     const container = document.querySelector('.sinergias-container');
     if (!container) return;
 
-    if (!data.length) {
+    if (!sinData.length) {
       container.innerHTML = '<p style="color:var(--gris-azul);margin-top:40px;">El pipeline aún no ha detectado oportunidades de colaboración. Vuelve el próximo lunes.</p>';
       return;
     }
 
-    // Agrupar por sector para mostrar encabezados
-    const porSector = {};
-    data.forEach(row => {
-      const sec = row.sector_label || 'General';
-      if (!porSector[sec]) porSector[sec] = [];
-      porSector[sec].push(row);
-    });
+    // Construir chips de filtro desde los datos
+    sinConstruirFiltros();
+    document.getElementById('sin-filters').style.display = 'block';
 
-    container.innerHTML = '';
+    // Mostrar primera página
+    sinFiltros = { sector: '', tipo: '', inst: '' };
+    sinPagina  = 0;
+    sinAplicarFiltros();
 
-    Object.entries(porSector).forEach(([sector, filas]) => {
-      // Encabezado de sector
-      const secHeader = document.createElement('div');
-      secHeader.style.cssText = 'margin:36px 0 16px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--azul-cielo);display:flex;align-items:center;gap:10px;';
-      secHeader.innerHTML = `<span style="width:24px;height:1px;background:var(--azul-electrico);display:inline-block;"></span>${sector}`;
-      container.appendChild(secHeader);
-
-      filas.forEach(row => {
-        // Actores: actor_a → actor_b → actor_c (opcional)
-        const actores = [row.actor_a, row.actor_b, row.actor_c].filter(a => a && a.trim());
-        const actoresHTML = actores
-          .map(a => `<div class="sin-min">${a}</div>`)
-          .join('<div class="sin-arrow">→</div>');
-
-        const tipoLabel = row.tipo_sinergia || 'Colaboración';
-        const fecha = row.fecha ? `📅 ${row.fecha}` : '';
-        const fuente = row.fuente && row.fuente.startsWith('http')
-          ? `<a href="${row.fuente}" target="_blank" rel="noopener" class="btn-notify" style="text-decoration:none;display:inline-block;">Ver fuente →</a>`
-          : `<span style="font-size:12px;color:var(--gris-azul);padding:6px 0;">${row.fuente || ''}</span>`;
-
-        const box = document.createElement('div');
-        box.className = 'sinergia-box';
-        box.innerHTML = `
-          <div class="sin-header">
-            <div class="sin-title">${tipoLabel}</div>
-            <span class="sin-badge">IA detectada</span>
-          </div>
-          <div class="sin-ministerios">${actoresHTML}</div>
-          ${fecha ? `<div style="font-size:11px;color:var(--gris-azul);margin:6px 0;">${fecha}</div>` : ''}
-          <p class="sin-desc">${row.descripcion || ''}</p>
-          <div class="sin-actions">${fuente}</div>
-        `;
-        container.appendChild(box);
-      });
-    });
   } catch (e) {
-    console.error("Error cargando sinergias:", e);
+    console.error('Error cargando sinergias:', e);
   }
+}
+
+function sinConstruirFiltros() {
+  // Sectores únicos
+  const sectores = [...new Set(sinData.map(r => r.sector_label).filter(Boolean))].sort();
+  sinBuildChips('filter-sector', ['Todos', ...sectores], 'sector');
+
+  // Tipos únicos
+  const tipos = [...new Set(sinData.map(r => r.tipo_sinergia).filter(Boolean))].sort();
+  sinBuildChips('filter-tipo', ['Todos', ...tipos], 'tipo');
+
+  // Instituciones únicas (actor_a + actor_b + actor_c)
+  const insts = new Set();
+  sinData.forEach(r => {
+    if (r.actor_a && r.actor_a.trim()) insts.add(r.actor_a.trim());
+    if (r.actor_b && r.actor_b.trim()) insts.add(r.actor_b.trim());
+    if (r.actor_c && r.actor_c.trim()) insts.add(r.actor_c.trim());
+  });
+  sinBuildChips('filter-inst', ['Todos', ...[...insts].sort()], 'inst');
+}
+
+function sinBuildChips(containerId, valores, filterKey) {
+  const row = document.getElementById(containerId);
+  if (!row) return;
+  row.innerHTML = '';
+  valores.forEach(val => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip' + (val === 'Todos' ? ' on' : '');
+    btn.textContent = val;
+    btn.dataset.value = val === 'Todos' ? '' : val;
+    btn.onclick = () => {
+      row.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      sinFiltros[filterKey] = btn.dataset.value;
+      sinPagina = 0;
+      sinAplicarFiltros();
+    };
+    row.appendChild(btn);
+  });
+}
+
+function sinAplicarFiltros() {
+  sinFiltrados = sinData.filter(r => {
+    const okSec  = !sinFiltros.sector || r.sector_label === sinFiltros.sector;
+    const okTipo = !sinFiltros.tipo   || r.tipo_sinergia === sinFiltros.tipo;
+    const okInst = !sinFiltros.inst   ||
+      [r.actor_a, r.actor_b, r.actor_c].some(a => a && a.trim() === sinFiltros.inst);
+    return okSec && okTipo && okInst;
+  });
+  sinRenderizar();
+}
+
+function sinPaginar(dir) {
+  const totalPags = Math.ceil(sinFiltrados.length / SIN_POR_PAGINA);
+  sinPagina = Math.max(0, Math.min(sinPagina + dir, totalPags - 1));
+  sinRenderizar();
+  document.getElementById('sin-filters').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function sinRenderizar() {
+  const container = document.querySelector('.sinergias-container');
+  if (!container) return;
+
+  const totalPags = Math.ceil(sinFiltrados.length / SIN_POR_PAGINA);
+  const inicio    = sinPagina * SIN_POR_PAGINA;
+  const pagina    = sinFiltrados.slice(inicio, inicio + SIN_POR_PAGINA);
+
+  // Paginación
+  const barPag = document.getElementById('sin-pagination');
+  const info   = document.getElementById('pag-info');
+  const btnP   = document.getElementById('pag-prev');
+  const btnN   = document.getElementById('pag-next');
+
+  if (totalPags <= 1) {
+    barPag.style.display = 'none';
+  } else {
+    barPag.style.display = 'flex';
+    info.textContent     = `Página ${sinPagina + 1} de ${totalPags}  ·  ${sinFiltrados.length} resultado${sinFiltrados.length !== 1 ? 's' : ''}`;
+    btnP.disabled        = sinPagina === 0;
+    btnN.disabled        = sinPagina >= totalPags - 1;
+  }
+
+  if (!pagina.length) {
+    container.innerHTML = '<p style="color:var(--gris-azul);margin-top:24px;text-align:center;">Sin resultados para los filtros seleccionados.</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  pagina.forEach(row => {
+    const actores    = [row.actor_a, row.actor_b, row.actor_c].filter(a => a && a.trim());
+    const actoresHTML = actores.map(a => `<div class="sin-min">${a}</div>`).join('<div class="sin-arrow">→</div>');
+    const tipoLabel  = row.tipo_sinergia || 'Colaboración';
+    const fecha      = row.fecha ? `📅 ${row.fecha}` : '';
+    const sectorChip = row.sector_label
+      ? `<span style="font-size:10px;padding:3px 9px;border-radius:12px;background:rgba(37,99,235,0.15);color:var(--azul-cielo);margin-left:8px;">${row.sector_label}</span>`
+      : '';
+    const fuente = row.fuente && row.fuente.startsWith('http')
+      ? `<a href="${row.fuente}" target="_blank" rel="noopener" class="btn-notify" style="text-decoration:none;display:inline-block;">Ver fuente →</a>`
+      : `<span style="font-size:12px;color:var(--gris-azul);">${row.fuente || ''}</span>`;
+
+    const box = document.createElement('div');
+    box.className = 'sinergia-box';
+    box.innerHTML = `
+      <div class="sin-header">
+        <div class="sin-title">${tipoLabel}${sectorChip}</div>
+        <span class="sin-badge">IA detectada</span>
+      </div>
+      <div class="sin-ministerios">${actoresHTML}</div>
+      ${fecha ? `<div style="font-size:11px;color:var(--gris-azul);margin:4px 0 10px;">${fecha}</div>` : ''}
+      <p class="sin-desc">${row.descripcion || ''}</p>
+      <div class="sin-actions">${fuente}</div>
+    `;
+    container.appendChild(box);
+  });
 }
 
 // ==================== CHATBOT ====================
