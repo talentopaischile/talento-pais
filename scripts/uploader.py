@@ -208,13 +208,19 @@ def subir_hoja(client, nombre_hoja: str, filas: list[list]) -> bool:
 # ════════════════════════════════════════════════════════════════════════════
 
 def _clave_sinergia(s: dict) -> str:
-    """Clave de deduplicación: par de actores + tipo, normalizado."""
-    a = (s.get("actor_a") or "").lower().strip()
-    b = (s.get("actor_b") or "").lower().strip()
-    t = (s.get("tipo_sinergia") or "").lower().strip()
-    # Orden canónico para que A↔B == B↔A
+    """
+    Clave de deduplicación estable entre semanas.
+    - Matches educación-industria: empresa + sector (actor_b cambia cada semana)
+    - Sinergias institucionales:   par de actores + tipo (orden canónico A↔B)
+    """
+    tipo = (s.get("tipo_sinergia") or "").lower().strip()
+    a    = (s.get("actor_a") or "").lower().strip()
+    if tipo == "match educación-industria":
+        sector = (s.get("sector") or s.get("sector_label") or "").lower().strip()
+        return f"match|{a}|{sector}"
+    b   = (s.get("actor_b") or "").lower().strip()
     par = "|".join(sorted([a, b]))
-    return f"{par}|{t}"
+    return f"{par}|{tipo}"
 
 
 def acumular_sinergias(client, nuevas: list[dict]) -> bool:

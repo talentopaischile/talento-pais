@@ -408,8 +408,9 @@ def detectar_matches_educacion_industria() -> list[dict]:
     with open(op_path, encoding="utf-8") as f:
         oportunidades = json.load(f)
 
-    # ── Indexar demanda laboral por (sector, region) → {organización: count} ─
-    demanda: dict[tuple, dict] = {}
+    # ── Indexar demanda por (sector, empresa) → {region: count} ────────────────
+    # Agrupa TODAS las regiones de una empresa en el mismo sector
+    demanda: dict[tuple, dict] = {}   # (sector, empresa) → {region: n_ofertas}
     for op in oportunidades:
         if op.get("tipo") != "oferta_laboral":
             continue
@@ -418,77 +419,109 @@ def detectar_matches_educacion_industria() -> list[dict]:
         org    = (op.get("organizacion") or "").strip()
         if not (sector and region and org and org != "Desconocida"):
             continue
-        key = (sector, region)
+        key = (sector, org)
         demanda.setdefault(key, {})
-        demanda[key][org] = demanda[key].get(org, 0) + 1
+        demanda[key][region] = demanda[key].get(region, 0) + 1
 
     if not demanda:
         log.warning("  Sin demanda laboral indexada — verifica oportunidades.json")
         return []
 
-    # ── Generar matches ──────────────────────────────────────────────────────
-    matches: list[dict] = []
-    vistos:  set[str]   = set()
+    # ── Generar UN registro consolidado por (empresa, sector) ────────────────
+    matches:   list[dict] = []
     fecha_hoy = datetime.now().strftime("%Y-%m-%d")
 
-    for sector, programas in programas_por_sector.items():
-        sector_label = SECTORES.get(sector, {}).get("label", sector)
+    for (sector, empresa), regiones_count in demanda.items():
+        sector_label    = SECTORES.get(sector, {}).get("label", sector)
+        programas_sector = programas_por_sector.get(sector, [])
+        total_ofertas   = sum(regiones_count.values())
 
-        for prog in programas:
+        # Buscar programas relevantes en las regiones donde la empresa tiene demanda
+        vistos_inst: set[str] = set()
+        programas_match: list[dict] = []
+
+        for prog in programas_sector:
             if prog.get("relevancia") != "alta":
                 continue
-
-            region = prog.get("region_sede", "No especificada")
-            key    = (sector, region)
-            if key not in demanda:
+            region = prog.get("region_sede", "")
+            if region not in regiones_count:
                 continue
+            inst = prog["nomb_inst"]
+            if inst in vistos_inst:
+                continue          # una entrada por institución (la de mayor matrícula)
+            vistos_inst.add(inst)
+            programas_match.append({
+                "inst":       inst,
+                "region":     region,
+                "carrera":    prog["nomb_carrera"].title(),
+                "matriculados": prog["matriculados"],
+                "ofertas_region": regiones_count[region],
+            })
 
-            inst    = prog["nomb_inst"]
-            carrera = prog["nomb_carrera"].title()
-            mat     = prog["matriculados"]
+        if not programas_match:
+            continue
 
-            # Top 3 empresas con más ofertas en esa región/sector
-            top_empresas = sorted(demanda[key].items(), key=lambda x: -x[1])[:3]
+        # Ordenar por matrícula desc; tomar top 5 para la descripción
+        programas_match.sort(key=lambda x: -x["matriculados"])
+        top5   = programas_match[:5]
+        n_inst = len(programas_match)
+        total_mat = sum(p["matriculados"] for p in programas_match)
 
-            for empresa, n_ofertas in top_empresas:
-                # Evitar duplicados y auto-matches
-                clave = f"{inst.lower()}|{empresa.lower()}|{sector}|{region.lower()}"
-                if clave in vistos or empresa.lower() == inst.lower():
-                    continue
-                vistos.add(clave)
+        # Descripción consolidada
+        regiones_str = ", ".join(
+            f"{r} ({c} oferta{'s' if c > 1 else ''})"
+            for r, c in sorted(regiones_count.items(), key=lambda x: -x[1])
+        )
+        inst_lines = "  |  ".join(
+            f"{p['inst']} · {p['region']}: {p['carrera']} ({p['matriculados']:,} est.)"
+            for p in top5
+        )
+        mas = f" y {n_inst - 5} más" if n_inst > 5 else ""
 
-                desc = (
-                    f"{inst} ({region}) forma {mat:,} estudiantes en {carrera}. "
-                    f"{empresa} publicó {n_ofertas} oferta{'s' if n_ofertas > 1 else ''} "
-                    f"en {region} para el sector {sector_label}. "
-                    f"Perfil de egresado compatible con la demanda detectada."
-                )
-                evidencia = (
-                    f"{n_ofertas} oferta{'s' if n_ofertas > 1 else ''} laboral"
-                    f"{'es' if n_ofertas > 1 else ''} de {empresa} en {region} "
-                    f"detectada{'s' if n_ofertas > 1 else ''} por el scraper semanal."
-                )
+        desc = (
+            f"{empresa} demandó {total_ofertas} oferta{'s' if total_ofertas > 1 else ''} "
+            f"en {sector_label} ({regiones_str}). "
+            f"{n_inst} institución{'es' if n_inst > 1 else ''} forman el perfil compatible: "
+            f"{inst_lines}{mas}. "
+            f"Total: {total_mat:,} estudiantes con perfil afín. "
+            f"CORFO puede articular un programa{'nacional' if n_inst > 1 else ''} "
+            f"de práctica profesional y empleabilidad directa."
+        )
 
-                matches.append({
-                    "actor_a":       inst,
-                    "actor_b":       empresa,
-                    "actor_c":       "CORFO",
-                    "tipo_sinergia": "match educación-industria",
-                    "descripcion":   desc,
-                    "evidencia":     evidencia,
-                    "fuente":        "Pipeline Talento País — matching algorítmico",
-                    "sector":        sector,
-                    "sector_label":  sector_label,
-                    "fecha":         fecha_hoy,
-                    "estado":        "detectada",
-                    "region":        region,
-                    "carrera":       carrera,
-                    "matriculados":  mat,
-                    "n_ofertas":     n_ofertas,
-                })
+        actor_b = (
+            f"{n_inst} instituciones formadoras"
+            if n_inst > 1 else top5[0]["inst"]
+        )
 
-    log.info(f"  Matches educación-industria: {len(matches)} "
-             f"({len(programas_por_sector)} sectores × regiones)")
+        matches.append({
+            "actor_a":        empresa,
+            "actor_b":        actor_b,
+            "actor_c":        "CORFO",
+            "tipo_sinergia":  "match educación-industria",
+            "descripcion":    desc,
+            "evidencia":      (
+                f"{total_ofertas} oferta(s) en {len(regiones_count)} "
+                f"región(es): {regiones_str}"
+            ),
+            "fuente":         "Pipeline Talento País — matching algorítmico",
+            "sector":         sector,
+            "sector_label":   sector_label,
+            "fecha":          fecha_hoy,
+            "estado":         "detectada",
+            "region":         ", ".join(regiones_count.keys()),
+            "carrera":        (
+                top5[0]["carrera"] if n_inst == 1
+                else f"{n_inst} carreras afines"
+            ),
+            "matriculados":   total_mat,
+            "n_ofertas":      total_ofertas,
+            "n_instituciones": n_inst,
+        })
+
+    log.info(
+        f"  Matches consolidados: {len(matches)} "
+        f"(empresas únicas × sector)"
+    )
     return matches
 
 
