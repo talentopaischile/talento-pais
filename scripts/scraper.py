@@ -24,8 +24,10 @@ Fuentes:
   19. ANID                  — Becas, Fondecyt, Fondef y concursos I+D
   20. SENCE                 — Capacitación laboral y becas sectoriales
   21. RemoteOK              — Empleos remotos tech/IA (API pública, sin clave)
-  22. Adzuna Chile          — Ofertas laborales Chile (API gratuita, requiere clave)
+  22. Adzuna                — Demanda global gb+us (API gratuita, requiere clave)
   23. Jooble                — Agregador empleos Chile (API gratuita, requiere clave)
+  24. Computrabajo Chile    — Mayor portal empleo latinoamericano, ofertas reales Chile
+  25. Portal Empleo Mintrab — Portal oficial Ministerio del Trabajo, empleos formales Chile
 
 Salida:
   - datos/raw/        → JSON crudo por fuente
@@ -953,6 +955,160 @@ def scrapear_jooble() -> list[dict]:
     return resultados
 
 
+# ── FUENTE 24 — COMPUTRABAJO CHILE (empleos reales en Chile, HTML scraping) ───
+
+def scrapear_computrabajo() -> list[dict]:
+    """
+    Computrabajo Chile — mayor portal de empleo latinoamericano.
+    Scrapea ofertas laborales reales en Chile para sectores estratégicos.
+    Sin API key. Mide demanda laboral directamente en el mercado chileno.
+    """
+    log.info("=== Computrabajo Chile ===")
+    terminos = [
+        "litio", "energia-solar", "energia-renovable", "inteligencia-artificial",
+        "machine-learning", "data-science", "hidrogeno", "oceanografia",
+        "astronomia", "mineria",
+    ]
+    BASE       = "https://cl.computrabajo.com/empleos-de-{termino}"
+    resultados: list[dict] = []
+    vistos: set[str]       = set()
+
+    for termino in terminos:
+        url = BASE.format(termino=termino)
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=15)
+            r.raise_for_status()
+        except Exception as e:
+            log.warning(f"  Computrabajo ({termino}): {e}")
+            time.sleep(1)
+            continue
+
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        # Computrabajo usa <article class="box_offer"> para cada oferta
+        for oferta in soup.find_all("article", class_=re.compile(r"box_offer|js_vacancy", re.I)):
+            titulo_el  = oferta.find(["h2", "h3", "a"], class_=re.compile(r"title|js-o-link", re.I))
+            titulo     = titulo_el.get_text(strip=True) if titulo_el else ""
+            if not titulo or len(titulo) < 5:
+                continue
+
+            empresa_el = oferta.find(class_=re.compile(r"company|empresa", re.I))
+            empresa    = empresa_el.get_text(strip=True) if empresa_el else "No especificada"
+
+            region_el  = oferta.find(class_=re.compile(r"city|location|ubicacion|ciudad", re.I))
+            region     = region_el.get_text(strip=True) if region_el else "Chile"
+
+            link_el    = oferta.find("a", href=True)
+            link       = link_el["href"] if link_el else ""
+            if link and not link.startswith("http"):
+                link = "https://cl.computrabajo.com" + link
+
+            uid_key = f"{titulo}|{empresa}"
+            if uid_key in vistos:
+                continue
+            vistos.add(uid_key)
+
+            sectores = detectar_sectores(f"{titulo} {termino}")
+            if not sectores:
+                sectores = detectar_sectores(termino)
+
+            resultados.append({
+                "fuente":         "Computrabajo",
+                "tipo":           "oferta_laboral",
+                "titulo":         titulo,
+                "organizacion":   empresa,
+                "region":         region,
+                "descripcion":    "",
+                "url":            link,
+                "sectores":       sectores,
+                "fecha_cierre":   "",
+                "fecha_scraping": datetime.now().isoformat(),
+            })
+        time.sleep(1.5)
+
+    log.info(f"  Computrabajo: {len(resultados)} ofertas en Chile")
+    guardar_raw("computrabajo", resultados)
+    return resultados
+
+
+# ── FUENTE 25 — PORTAL EMPLEO MINTRAB (empleos formales Chile) ────────────────
+
+def scrapear_portal_empleo() -> list[dict]:
+    """
+    Portal Empleo Mintrab — portal oficial del Ministerio del Trabajo de Chile.
+    Ofertas laborales formales registradas en Chile. Sin API key.
+    URL de búsqueda: https://portalempleo.mintrab.gob.cl/buscar-empleo?q=TERMINO
+    """
+    log.info("=== Portal Empleo Mintrab ===")
+    terminos = [
+        "litio", "energía renovable", "inteligencia artificial",
+        "data science", "hidrógeno", "oceanografía", "minería",
+        "astronomía", "energía solar",
+    ]
+    BASE       = "https://portalempleo.mintrab.gob.cl/buscar-empleo"
+    resultados: list[dict] = []
+    vistos: set[str]       = set()
+
+    for termino in terminos:
+        try:
+            r = requests.get(BASE, params={"q": termino}, headers=HEADERS, timeout=15)
+            r.raise_for_status()
+        except Exception as e:
+            log.warning(f"  Portal Empleo ({termino}): {e}")
+            time.sleep(1)
+            continue
+
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        # Intentar varios selectores comunes de portales de empleo
+        ofertas = (
+            soup.find_all(class_=re.compile(r"job|oferta|vacancy|empleo|card", re.I))
+            or soup.find_all("article")
+            or soup.find_all("li", class_=re.compile(r"result|item", re.I))
+        )
+
+        for oferta in ofertas:
+            titulo_el = oferta.find(["h2", "h3", "h4", "a"])
+            titulo    = titulo_el.get_text(strip=True) if titulo_el else ""
+            if not titulo or len(titulo) < 5:
+                continue
+
+            empresa_el = oferta.find(class_=re.compile(r"company|empresa|empleador", re.I))
+            empresa    = empresa_el.get_text(strip=True) if empresa_el else "No especificada"
+
+            region_el  = oferta.find(class_=re.compile(r"region|ciudad|location|lugar", re.I))
+            region     = region_el.get_text(strip=True) if region_el else "Chile"
+
+            link_el    = oferta.find("a", href=True)
+            link       = link_el["href"] if link_el else ""
+            if link and not link.startswith("http"):
+                link = "https://portalempleo.mintrab.gob.cl" + link
+
+            uid_key = f"{titulo}|{empresa}"
+            if uid_key in vistos:
+                continue
+            vistos.add(uid_key)
+
+            resultados.append({
+                "fuente":         "PortalEmpleoMintrab",
+                "tipo":           "oferta_laboral",
+                "titulo":         titulo,
+                "organizacion":   empresa,
+                "region":         region,
+                "descripcion":    "",
+                "url":            link,
+                "sectores":       detectar_sectores(f"{titulo} {termino}") or
+                                  detectar_sectores(termino),
+                "fecha_cierre":   "",
+                "fecha_scraping": datetime.now().isoformat(),
+            })
+        time.sleep(1.5)
+
+    log.info(f"  Portal Empleo Mintrab: {len(resultados)} ofertas en Chile")
+    guardar_raw("portal_empleo", resultados)
+    return resultados
+
+
 # ── Análisis de brechas — cruza oferta educativa vs demanda laboral ──────────
 
 def calcular_brechas(
@@ -1054,6 +1210,8 @@ FUENTES_DISPONIBLES = {
     "remoteok":             scrapear_remoteok,
     "adzuna":               scrapear_adzuna,
     "jooble":               scrapear_jooble,
+    "computrabajo":         scrapear_computrabajo,
+    "portal_empleo":        scrapear_portal_empleo,
     "educacion":            analizar_csv_mineduc,
 }
 
