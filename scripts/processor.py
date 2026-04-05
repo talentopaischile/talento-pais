@@ -333,7 +333,12 @@ def calcular_brechas(
 
     Clasifica cada sector en: CRÍTICA / ALTA / MEDIA / BAJA
     """
-    matricula = mineduc.get("matriculados_por_sector", {})
+    # Preferir matrícula ponderada (generada por preparar_mallas.py, más precisa)
+    # Fallback a matrícula bruta si aún no se ha corrido preparar_mallas.py
+    matricula = (
+        mineduc.get("matriculados_ponderados_por_sector")
+        or mineduc.get("matriculados_por_sector", {})
+    )
 
     # Contar demanda por sector
     demanda: dict[str, int] = {s: 0 for s in SECTORES}
