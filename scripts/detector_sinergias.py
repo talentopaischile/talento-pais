@@ -28,40 +28,19 @@ from urllib.parse import quote
 import requests
 from bs4 import BeautifulSoup
 
-# ─── Logging ──────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("detector_sinergias.log", encoding="utf-8"),
-    ],
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s",
+                    handlers=[logging.StreamHandler(), logging.FileHandler("detector_sinergias.log", encoding="utf-8")])
 log = logging.getLogger(__name__)
 
-# ─── Configuración ────────────────────────────────────────────────────────────
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-GROQ_URL    = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL  = "llama-3.3-70b-versatile"   # gratis, alta calidad
-
-BASE_DIR  = Path(__file__).parent.parent
-RAW_DIR   = BASE_DIR / "datos" / "raw"
-PROC_DIR  = BASE_DIR / "datos" / "procesados"
+GROQ_URL     = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL   = "llama-3.3-70b-versatile"
+BASE_DIR     = Path(__file__).parent.parent
+RAW_DIR      = BASE_DIR / "datos" / "raw"
+PROC_DIR     = BASE_DIR / "datos" / "procesados"
 PROC_DIR.mkdir(parents=True, exist_ok=True)
-PLANES_JSON = RAW_DIR / "planes_estrategicos.json"
-
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-}
-
-# ─── Sectores estratégicos ────────────────────────────────────────────────────
-# Sufijo añadido automáticamente a todas las queries:
-# "when:30d" → solo noticias de los últimos 7 días
-# "Chile OR LATAM" ya está incluido en cada query
+PLANES_JSON  = RAW_DIR / "planes_estrategicos.json"
+HEADERS      = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
 SECTORES = {
     "litio": {
         "label": "Litio y Minería",
@@ -216,9 +195,7 @@ Texto a analizar:
 """
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# 1. GOOGLE NEWS RSS
-# ════════════════════════════════════════════════════════════════════════════
+# ── 1. Google News RSS ────────────────────────────────────────────────────────
 
 def fetch_rss(query: str, max_items: int = 6) -> list[str]:
     """Descarga Google News RSS y retorna textos de los artículos."""
@@ -244,9 +221,7 @@ def fetch_rss(query: str, max_items: int = 6) -> list[str]:
         return []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# 2. SCRAPING DE MINISTERIOS
-# ════════════════════════════════════════════════════════════════════════════
+# ── 2. Scraping de ministerios ────────────────────────────────────────────────
 
 def scrape_pagina(info: dict) -> str:
     """Scrapea texto relevante de la página de un ministerio u organismo."""
@@ -274,9 +249,7 @@ def scrape_pagina(info: dict) -> str:
         return ""
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# 3. GROQ (LLAMA 3.3) — EXTRACCIÓN ESTRUCTURADA
-# ════════════════════════════════════════════════════════════════════════════
+# ── 3. Groq (Llama 3.3) — extracción estructurada ────────────────────────────
 
 def llamar_groq(sector_key: str, sector_label: str, textos: list[str]) -> list[dict]:
     """
@@ -316,24 +289,14 @@ def llamar_groq(sector_key: str, sector_label: str, textos: list[str]) -> list[d
             r.raise_for_status()
             resp = r.json()
 
-            texto_resp = (
-                resp.get("choices", [{}])[0]
-                .get("message", {})
-                .get("content", "[]")
-                .strip()
-            )
+            texto_resp = resp.get("choices", [{}])[0].get("message", {}).get("content", "[]").strip()
 
             # Limpiar markdown si el modelo devuelve ```json ... ```
-            if "```" in texto_resp:
-                partes = texto_resp.split("```")
-                for p in partes:
-                    p = p.strip()
-                    if p.startswith("json"):
-                        p = p[4:].strip()
-                    if p.startswith("["):
-                        texto_resp = p
-                        break
-
+            for p in texto_resp.split("```"):
+                p = p.strip().lstrip("json").strip()
+                if p.startswith("["):
+                    texto_resp = p
+                    break
             texto_resp = texto_resp.strip()
             if texto_resp == "[]" or not texto_resp:
                 return []
@@ -378,9 +341,7 @@ def llamar_groq(sector_key: str, sector_label: str, textos: list[str]) -> list[d
     return []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# MAIN
-# ════════════════════════════════════════════════════════════════════════════
+# ── MAIN ─────────────────────────────────────────────────────────────────────
 
 def cargar_planes() -> dict[str, str]:
     """
@@ -421,14 +382,11 @@ def main():
 
     todas_sinergias: list[dict] = []
 
-    # ── 0. Cargar planes estratégicos (contexto adicional) ─────────────────
-    log.info("\n[0/3] Cargando planes estratégicos nacionales...")
+    log.info("\n[1/4] Cargando planes estratégicos nacionales...")
     textos_planes = cargar_planes()
 
-    # ── 1. Scrapear páginas de ministerios (una sola vez) ──────────────────
-    log.info("\n[1/3] Scrapeando ministerios y organismos...")
+    log.info("\n[2/4] Scrapeando ministerios y organismos...")
     textos_por_sector: dict[str, list[str]] = {k: [] for k in SECTORES}
-
     for fuente in FUENTES_MINISTERIOS:
         texto = scrape_pagina(fuente)
         if texto:
@@ -436,8 +394,7 @@ def main():
                 textos_por_sector.setdefault(sec, []).append(texto)
         time.sleep(1)   # cortesía con los servidores
 
-    # ── 2. Por sector: RSS + ministerios + planes → Groq ──────────────────
-    log.info("\n[2/3] Analizando sectores con Groq (Llama 3.3 70B)...")
+    log.info("\n[3/4] Analizando sectores con Groq (Llama 3.3 70B)...")
 
     for sector_key, sector_info in SECTORES.items():
         label = sector_info["label"]
@@ -471,27 +428,16 @@ def main():
 
         time.sleep(6)
 
-    # ── 3. Deduplicar ─────────────────────────────────────────────────────
     vistas: set[str] = set()
-    unicas: list[dict] = []
-    for s in todas_sinergias:
-        key = (
-            f"{s.get('actor_a', '').lower()}|"
-            f"{s.get('actor_b', '').lower()}|"
-            f"{s.get('tipo_sinergia', '').lower()}"
-        )
-        if key not in vistas:
-            vistas.add(key)
-            unicas.append(s)
+    unicas = [s for s in todas_sinergias
+              if (k := f"{s.get('actor_a','').lower()}|{s.get('actor_b','').lower()}|{s.get('tipo_sinergia','').lower()}")
+              not in vistas and not vistas.add(k)]
 
-    log.info(f"\n[3/3] Total sinergias únicas: {len(unicas)}")
-
-    # ── 4. Guardar ────────────────────────────────────────────────────────
+    log.info(f"\nTotal sinergias únicas: {len(unicas)}")
     out = PROC_DIR / "sinergias_ia.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump(unicas, f, ensure_ascii=False, indent=2)
-    log.info(f"Guardado: {out} ({len(unicas)} sinergias)")
-    log.info("\nDetector de Sinergias completado.")
+    log.info(f"Guardado: {out} ({len(unicas)} sinergias)\nDetector de Sinergias completado.")
 
 
 if __name__ == "__main__":

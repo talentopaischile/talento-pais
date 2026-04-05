@@ -822,6 +822,27 @@
   .toast-text strong { display: block; margin-bottom: 2px; color: var(--verde-claro); }
   .toast-text span { color: var(--gris-azul); font-size: 12px; }
 
+  /* ── CHATBOT ── */
+  #chatbot-container { position:fixed; bottom:24px; right:24px; z-index:1000; }
+  #chat-toggle { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#1e3a5f,#2563eb); color:white; border:none; cursor:pointer; box-shadow:0 4px 20px rgba(37,99,235,0.5); font-size:22px; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+  #chat-window { display:none; position:absolute; bottom:72px; right:0; width:360px; height:500px; background:var(--azul-profundo); border-radius:18px; overflow:hidden; box-shadow:0 16px 40px rgba(0,0,0,0.6),0 0 40px rgba(37,99,235,0.15); border:1px solid rgba(37,99,235,0.25); }
+  .chat-header { background:linear-gradient(135deg,#1a2e4a,#1e3a5f); padding:14px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(37,99,235,0.2); }
+  .chat-header-left { display:flex; align-items:center; gap:10px; }
+  .chat-bot-icon { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#2563eb,#60a5fa); display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .chat-bot-name { font-family:'Syne',sans-serif; font-weight:700; font-size:14px; color:var(--blanco-puro); }
+  .chat-bot-sub { font-size:11px; color:var(--azul-cielo); }
+  #chat-close { cursor:pointer; font-size:20px; color:var(--gris-azul); line-height:1; padding:4px; }
+  #chat-messages { height:370px; padding:16px; overflow-y:auto; background:var(--azul-noche); color:var(--blanco); font-size:14px; line-height:1.6; }
+  .chat-welcome { background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.15); border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:13px; color:var(--gris-azul); }
+  .chat-welcome strong { color:var(--azul-cielo); }
+  .chat-input-area { padding:12px; background:var(--azul-profundo); border-top:1px solid rgba(37,99,235,0.15); }
+  #chat-input { width:100%; padding:11px 14px; border-radius:10px; border:1px solid rgba(37,99,235,0.25); background:rgba(37,99,235,0.07); color:var(--blanco); font-size:13px; font-family:'DM Sans',sans-serif; outline:none; transition:border-color .2s; }
+  .chat-msg-user { text-align:right; margin:8px 0; }
+  .chat-msg-user span { background:var(--azul-electrico); color:white; padding:8px 14px; border-radius:16px 16px 4px 16px; display:inline-block; max-width:80%; font-size:13px; }
+  .chat-msg-bot { margin:8px 0; }
+  .chat-msg-bot span { background:rgba(37,99,235,0.1); border:1px solid rgba(37,99,235,0.15); padding:10px 14px; border-radius:16px 16px 16px 4px; display:inline-block; max-width:85%; font-size:13px; line-height:1.6; }
+  .chat-loading { color:var(--gris-azul); margin:10px 0; font-size:13px; }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 900px) {
     .op-grid { grid-template-columns: 1fr 1fr; }
@@ -983,7 +1004,7 @@
       <div class="bm-metric">
         <div class="bm-metric-num"          id="bm-demanda">—</div>
         <div class="bm-metric-label">Oportunidades activas</div>
-        <div class="bm-metric-desc">Ofertas laborales y licitaciones públicas detectadas en los últimos 30 días en Trabajando.com, Bumeran, Indeed, Getonboard y Mercado Público.</div>
+        <div class="bm-metric-desc">Ofertas laborales y licitaciones detectadas automáticamente desde Adzuna, Jooble, RemoteOK, Mercado Público, ProChile, COCHILCO, ANID, SENCE y otras fuentes institucionales.</div>
       </div>
       <div class="bm-metric">
         <div class="bm-metric-num azul"     id="bm-matricula">—</div>
@@ -1007,7 +1028,9 @@
 
     <div class="bm-section-title">Fuentes de los datos</div>
     <div class="bm-sources">
-      <b>Demanda laboral:</b> Trabajando.com · Bumeran · Indeed Chile · Getonboard · Mercado Público API<br>
+      <b>Ofertas laborales:</b> Adzuna Chile · Jooble · RemoteOK<br>
+      <b>Licitaciones:</b> Mercado Público API<br>
+      <b>Oportunidades institucionales:</b> ProChile · COCHILCO · ANID · SENCE · CORFO · MinCiencia · AGCID · BCN<br>
       <b>Oferta formativa:</b> Mineduc — Matrícula Educación Superior 2025<br>
       <b>Actualización:</b> Pipeline automático cada lunes · Datos públicos abiertos
     </div>
@@ -1613,34 +1636,26 @@
 </div>
 
 <!-- ─────── CHATBOT ─────── -->
-<div id="chatbot-container" style="position:fixed;bottom:24px;right:24px;z-index:1000;">
-  <button id="chat-toggle"
-          style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1e3a5f,#2563eb);color:white;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(37,99,235,0.5);font-size:22px;display:flex;align-items:center;justify-content:center;transition:all .2s;">
-    🤖
-  </button>
-
-  <div id="chat-window" style="display:none;position:absolute;bottom:72px;right:0;width:360px;height:500px;background:var(--azul-profundo);border-radius:18px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,0.6),0 0 40px rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.25);">
-    <!-- Header -->
-    <div style="background:linear-gradient(135deg,#1a2e4a,#1e3a5f);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(37,99,235,0.2);">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:15px;">🤖</div>
+<div id="chatbot-container">
+  <button id="chat-toggle">🤖</button>
+  <div id="chat-window">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <div class="chat-bot-icon">🤖</div>
         <div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--blanco-puro);">Asistente Talento País</div>
-          <div style="font-size:11px;color:var(--azul-cielo);">Con IA · Chile &amp; Asia-Pacífico</div>
+          <div class="chat-bot-name">Asistente Talento País</div>
+          <div class="chat-bot-sub">Con IA · Chile &amp; Asia-Pacífico</div>
         </div>
       </div>
-      <span id="chat-close" style="cursor:pointer;font-size:20px;color:var(--gris-azul);line-height:1;padding:4px;">×</span>
+      <span id="chat-close">×</span>
     </div>
-    <!-- Messages -->
-    <div id="chat-messages" style="height:370px;padding:16px;overflow-y:auto;background:var(--azul-noche);color:var(--blanco);font-size:14px;line-height:1.6;">
-      <div style="background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.15);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--gris-azul);">
-        Hola, soy el asistente de <strong style="color:var(--azul-cielo)">Talento País</strong>. Puedo orientarte sobre brechas de talento, oportunidades en Asia-Pacífico, reconocimiento de títulos extranjeros y cómo registrar tu perfil. ¿En qué te ayudo?
+    <div id="chat-messages">
+      <div class="chat-welcome">
+        Hola, soy el asistente de <strong>Talento País</strong>. Puedo orientarte sobre brechas de talento, oportunidades en Asia-Pacífico, reconocimiento de títulos extranjeros y cómo registrar tu perfil. ¿En qué te ayudo?
       </div>
     </div>
-    <!-- Input -->
-    <div style="padding:12px;background:var(--azul-profundo);border-top:1px solid rgba(37,99,235,0.15);">
-      <input id="chat-input" type="text" placeholder="Escribe tu pregunta..."
-             style="width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(37,99,235,0.25);background:rgba(37,99,235,0.07);color:var(--blanco);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;">
+    <div class="chat-input-area">
+      <input id="chat-input" type="text" placeholder="Escribe tu pregunta...">
     </div>
   </div>
 </div>
@@ -2271,25 +2286,15 @@ document.addEventListener('DOMContentLoaded', () => {
   chatInput.addEventListener('keypress', async (e) => {
     if (e.key === 'Enter' && chatInput.value.trim() !== '') {
       const msg = chatInput.value.trim();
-      chatMessages.innerHTML += `
-        <div style="text-align:right;margin:8px 0;">
-          <span style="background:var(--azul-electrico);color:white;padding:8px 14px;border-radius:16px 16px 4px 16px;display:inline-block;max-width:80%;font-size:13px;">
-            ${msg}
-          </span>
-        </div>`;
+      chatMessages.innerHTML += `<div class="chat-msg-user"><span>${msg}</span></div>`;
       chatMessages.scrollTop = chatMessages.scrollHeight;
       chatInput.value = '';
       const loadingId = 'loading-' + Date.now();
-      chatMessages.innerHTML += `<div id="${loadingId}" style="color:var(--gris-azul);margin:10px 0;font-size:13px;">✍️ Escribiendo...</div>`;
+      chatMessages.innerHTML += `<div id="${loadingId}" class="chat-loading">✍️ Escribiendo...</div>`;
       chatMessages.scrollTop = chatMessages.scrollHeight;
       const reply = await sendToGemini(msg);
       document.getElementById(loadingId)?.remove();
-      chatMessages.innerHTML += `
-        <div style="margin:8px 0;">
-          <span style="background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.15);padding:10px 14px;border-radius:16px 16px 16px 4px;display:inline-block;max-width:85%;font-size:13px;line-height:1.6;">
-            ${reply}
-          </span>
-        </div>`;
+      chatMessages.innerHTML += `<div class="chat-msg-bot"><span>${reply}</span></div>`;
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
   });

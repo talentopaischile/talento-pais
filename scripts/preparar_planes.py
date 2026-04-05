@@ -34,30 +34,17 @@ from pathlib import Path
 
 import requests
 
-# ─── Logging ─────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()],
-)
-log = logging.getLogger(__name__)
-
-# ─── Rutas ───────────────────────────────────────────────────────────────────
+# ─── Logging / Rutas ─────────────────────────────────────────────────────────
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s",
+                    handlers=[logging.StreamHandler()])
+log        = logging.getLogger(__name__)
 BASE_DIR   = Path(__file__).parent.parent / "datos"
 RAW_DIR    = BASE_DIR / "raw"
 PLANES_DIR = RAW_DIR / "planes"
 SALIDA     = RAW_DIR / "planes_estrategicos.json"
-
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 PLANES_DIR.mkdir(parents=True, exist_ok=True)
-
-HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0 Safari/537.36"
-    ),
-}
+HEADERS    = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
 
 # ─── Catálogo de planes ───────────────────────────────────────────────────────
 PLANES = [
@@ -152,66 +139,35 @@ def descargar_pdf(plan: dict, forzar: bool = False) -> Path | None:
 # ════════════════════════════════════════════════════════════════════════════
 
 def extraer_texto_pdf(ruta: Path, paginas_clave: list[int]) -> str:
-    """
-    Extrae texto de las páginas clave del PDF.
-    Intenta pdfplumber primero (mejor calidad), luego pypdf como fallback.
-    """
-    texto_total = []
-
-    # Intentar con pdfplumber
-    try:
-        import pdfplumber
-        with pdfplumber.open(str(ruta)) as pdf:
-            total_pags = len(pdf.pages)
-            paginas = [p - 1 for p in paginas_clave if 0 < p <= total_pags]
-            for idx in paginas:
-                page = pdf.pages[idx]
-                texto = page.extract_text()
-                if texto:
-                    texto_total.append(texto)
-        log.info(f"    pdfplumber: {len(paginas)} páginas extraídas")
-        return "\n\n".join(texto_total)
-    except ImportError:
-        pass
-    except Exception as e:
-        log.warning(f"    pdfplumber error: {e}")
-
-    # Fallback: pypdf
-    try:
-        import pypdf
-        reader = pypdf.PdfReader(str(ruta))
-        total_pags = len(reader.pages)
-        paginas = [p - 1 for p in paginas_clave if 0 < p <= total_pags]
-        for idx in paginas:
-            texto = reader.pages[idx].extract_text()
-            if texto:
-                texto_total.append(texto)
-        log.info(f"    pypdf: {len(paginas)} páginas extraídas")
-        return "\n\n".join(texto_total)
-    except ImportError:
-        pass
-    except Exception as e:
-        log.warning(f"    pypdf error: {e}")
-
-    # Segundo fallback: PyPDF2 (legado)
-    try:
-        import PyPDF2
-        with open(str(ruta), "rb") as f:
-            reader = PyPDF2.PdfReader(f)
-            total_pags = len(reader.pages)
-            paginas = [p - 1 for p in paginas_clave if 0 < p <= total_pags]
-            for idx in paginas:
-                texto = reader.pages[idx].extract_text()
-                if texto:
-                    texto_total.append(texto)
-        log.info(f"    PyPDF2: {len(paginas)} páginas extraídas")
-        return "\n\n".join(texto_total)
-    except ImportError:
-        log.error("    Sin biblioteca PDF disponible. Instala: pip install pdfplumber")
-        return ""
-    except Exception as e:
-        log.error(f"    Error extrayendo texto: {e}")
-        return ""
+    """Extrae texto de páginas clave. Prueba pdfplumber → pypdf → PyPDF2."""
+    for lib in ("pdfplumber", "pypdf", "PyPDF2"):
+        try:
+            mod = __import__(lib)
+            texto_total = []
+            if lib == "pdfplumber":
+                with mod.open(str(ruta)) as pdf:
+                    total_pags = len(pdf.pages)
+                    paginas = [p - 1 for p in paginas_clave if 0 < p <= total_pags]
+                    for idx in paginas:
+                        t = pdf.pages[idx].extract_text()
+                        if t:
+                            texto_total.append(t)
+            else:
+                reader = mod.PdfReader(str(ruta)) if lib == "pypdf" else mod.PdfReader(open(str(ruta), "rb"))
+                total_pags = len(reader.pages)
+                paginas = [p - 1 for p in paginas_clave if 0 < p <= total_pags]
+                for idx in paginas:
+                    t = reader.pages[idx].extract_text()
+                    if t:
+                        texto_total.append(t)
+            log.info(f"    {lib}: {len(paginas)} páginas extraídas")
+            return "\n\n".join(texto_total)
+        except ImportError:
+            continue
+        except Exception as e:
+            log.warning(f"    {lib} error: {e}")
+    log.error("    Sin biblioteca PDF disponible. Instala: pip install pdfplumber")
+    return ""
 
 
 # ════════════════════════════════════════════════════════════════════════════

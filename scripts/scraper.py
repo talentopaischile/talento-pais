@@ -23,6 +23,9 @@ Fuentes:
   18. COCHILCO              — Estadísticas y proyecciones minería litio/cobre
   19. ANID                  — Becas, Fondecyt, Fondef y concursos I+D
   20. SENCE                 — Capacitación laboral y becas sectoriales
+  21. RemoteOK              — Empleos remotos tech/IA (API pública, sin clave)
+  22. Adzuna Chile          — Ofertas laborales Chile (API gratuita, requiere clave)
+  23. Jooble                — Agregador empleos Chile (API gratuita, requiere clave)
 
 Salida:
   - datos/raw/        → JSON crudo por fuente
@@ -41,39 +44,22 @@ import json
 import time
 import logging
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
 
-# ─── Configuración de logging ───────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("scraper.log", encoding="utf-8"),
-    ],
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s",
+                    handlers=[logging.StreamHandler(), logging.FileHandler("scraper.log", encoding="utf-8")])
 log = logging.getLogger(__name__)
 
-# ─── CONFIGURACIÓN — pon aquí tu API key de Mercado Público ─────────────────
-# También puedes crear un archivo .env con: MERCADOPUBLICO_API_KEY=TU_KEY
-MERCADOPUBLICO_API_KEY = os.environ.get(
-    "Mercado_Publico_API_KEY",
-    "PEGA_AQUI_TU_API_KEY_DE_MERCADOPUBLICO"
-)
-
-# Ruta al CSV del Ministerio de Educación (matrícula 2025)
-# Directorios de salida — relativos al repo (funciona en GitHub Actions y local)
+MERCADOPUBLICO_API_KEY = os.environ.get("Mercado_Publico_API_KEY", "PEGA_AQUI_TU_API_KEY_DE_MERCADOPUBLICO")
 BASE_DIR   = Path(__file__).parent.parent / "datos"
 RAW_DIR    = BASE_DIR / "raw"
 PROC_DIR   = BASE_DIR / "procesados"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 PROC_DIR.mkdir(parents=True, exist_ok=True)
-
-# CSV del Ministerio de Educación
 MINEDUC_CSV_PATH = RAW_DIR / "20250729_Matrícula_Ed_Superior_2025_PUBL_MRUN.csv"
 
 # ─── Sectores estratégicos ────────────────────────────────────────────────────
@@ -116,9 +102,7 @@ HEADERS = {
 }
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# HELPERS
-# ════════════════════════════════════════════════════════════════════════════
+# ── Helpers ──────────────────────────────────────────────────────────────────
 
 def get(url: str, timeout: int = 15) -> requests.Response | None:
     """GET con reintentos y manejo de errores."""
@@ -153,9 +137,7 @@ def detectar_sectores(texto: str) -> list[str]:
     ]
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCRAPER 1 — CORFO
-# ════════════════════════════════════════════════════════════════════════════
+# ── SCRAPER 1 — CORFO ────────────────────────────────────────────────────────
 
 def scrapear_corfo() -> list[dict]:
     """
@@ -165,74 +147,23 @@ def scrapear_corfo() -> list[dict]:
     URL base correcta: corfo.gob.cl (corfo.cl redirige aquí)
     """
     log.info("=== CORFO ===")
-    resultados = []
-
     BASE_CORFO = "https://www.corfo.gob.cl"
     urls = [
         f"{BASE_CORFO}/sites/cpp/sala-de-prensa/",
         f"{BASE_CORFO}/sites/cpp/nacional/",
     ]
-
-    vistos = set()
-
-    for url in urls:
-        r = get(url)
-        if not r:
-            continue
-        soup = BeautifulSoup(r.text, "lxml")
-
-        # Extraer todos los enlaces de noticias/artículos
-        for a in soup.find_all("a", href=True):
-            href = a["href"]
-            if not href:
-                continue
-            # Construir URL completa
-            if href.startswith("/"):
-                href = BASE_CORFO + href
-            elif not href.startswith("http"):
-                continue
-            # Solo artículos del dominio CORFO
-            if "corfo.gob.cl" not in href:
-                continue
-            if href in vistos:
-                continue
-            vistos.add(href)
-
-            titulo = a.get_text(strip=True)
-            if not titulo or len(titulo) < 15:
-                continue
-
-            # Filtrar por sectores estratégicos en el título
-            sectores = detectar_sectores(titulo)
-            if not sectores:
-                continue
-
-            # Buscar descripción en el elemento padre
-            parent = a.find_parent(["article", "div", "li", "section"])
-            desc = ""
-            if parent:
-                p = parent.find("p")
-                if p:
-                    desc = p.get_text(strip=True)[:300]
-
-            resultados.append({
-                "fuente":        "CORFO",
-                "tipo":          "programa_convocatoria",
-                "titulo":        titulo,
-                "descripcion":   desc,
-                "url":           href,
-                "sectores":      sectores,
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="CORFO",
+        base_url=BASE_CORFO,
+        urls=urls,
+        tipo="programa_convocatoria",
+    )
     log.info(f"  CORFO: {len(resultados)} registros con sectores estratégicos")
     guardar_raw("corfo", resultados)
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCRAPER 2 — MINISTERIO DE CIENCIA
-# ════════════════════════════════════════════════════════════════════════════
+# ── SCRAPER 2 — MINISTERIO DE CIENCIA ────────────────────────────────────────
 
 def scrapear_minciencia() -> list[dict]:
     """
@@ -241,266 +172,61 @@ def scrapear_minciencia() -> list[dict]:
     que apuntan a /noticias/ o /areas/ dentro del dominio.
     """
     log.info("=== Ministerio de Ciencia ===")
-    resultados = []
     BASE = "https://www.minciencia.gob.cl"
-
-    urls = [
-        f"{BASE}/noticias/",
-        f"{BASE}/areas/innovacion-y-emprendimiento/concurso-publico-premio-nacional-de-innovacion/",
-        f"{BASE}/ines/",
-    ]
-
-    vistos = set()
-
-    for url in urls:
-        r = get(url)
-        if not r:
-            continue
-        soup = BeautifulSoup(r.text, "lxml")
-
-        # Los artículos se presentan como <a> enlazando a /noticias/* o /areas/*
-        for a in soup.find_all("a", href=True):
-            href = a["href"]
-            if not href:
-                continue
-            if href.startswith("/"):
-                href = BASE + href
-            if BASE not in href:
-                continue
-            if href in vistos:
-                continue
-            vistos.add(href)
-
-            titulo = a.get_text(strip=True)
-            if not titulo or len(titulo) < 15:
-                continue
-
-            sectores = detectar_sectores(titulo)
-            if not sectores:
-                continue
-
-            # Descripción desde el elemento contenedor
-            parent = a.find_parent(["article", "div", "li", "section"])
-            desc = ""
-            if parent:
-                p = parent.find("p")
-                if p:
-                    desc = p.get_text(strip=True)[:300]
-
-            resultados.append({
-                "fuente":        "Ministerio de Ciencia",
-                "tipo":          "noticia_convocatoria",
-                "titulo":        titulo,
-                "descripcion":   desc,
-                "url":           href,
-                "sectores":      sectores,
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="Ministerio de Ciencia",
+        base_url=BASE,
+        urls=[
+            f"{BASE}/noticias/",
+            f"{BASE}/areas/innovacion-y-emprendimiento/concurso-publico-premio-nacional-de-innovacion/",
+            f"{BASE}/ines/",
+        ],
+        tipo="noticia_convocatoria",
+    )
     log.info(f"  MinCiencia: {len(resultados)} registros")
     guardar_raw("minciencia", resultados)
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCRAPER 3 — CENIA (Centro Nacional de IA)
-# ════════════════════════════════════════════════════════════════════════════
+# ── SCRAPER 3 — CENIA ────────────────────────────────────────────────────────
 
 def scrapear_cenia() -> list[dict]:
-    """
-    Extrae proyectos, noticias y oportunidades de CENIA.
-    """
+    """Centro Nacional de IA — proyectos, noticias y oportunidades."""
     log.info("=== CENIA ===")
-    resultados = []
-
-    urls = [
-        "https://cenia.cl/",
-        "https://cenia.cl/noticias/",
-        "https://cenia.cl/investigacion/",
-    ]
-
-    for url in urls:
-        r = get(url)
-        if not r:
-            continue
-        soup = BeautifulSoup(r.text, "html.parser")
-
-        for card in soup.find_all(
-            ["article", "div", "section"],
-            class_=re.compile(r"(post|news|card|proyecto|research|item)", re.I),
-        ):
-            titulo_el = card.find(["h2", "h3", "h4"])
-            titulo    = titulo_el.get_text(strip=True) if titulo_el else ""
-            if not titulo or len(titulo) < 8:
-                continue
-
-            desc_el = card.find("p")
-            desc    = desc_el.get_text(strip=True) if desc_el else ""
-
-            link_el = card.find("a", href=True)
-            link    = link_el["href"] if link_el else ""
-            if link and not link.startswith("http"):
-                link = "https://cenia.cl" + link
-
-            resultados.append({
-                "fuente":      "CENIA",
-                "tipo":        "proyecto_noticia",
-                "titulo":      titulo,
-                "descripcion": desc,
-                "url":         link,
-                "sectores":    ["ia_tecnologia"],
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-
+    BASE = "https://cenia.cl"
+    resultados = _extraer_por_enlaces(
+        nombre_fuente="CENIA",
+        base_url=BASE,
+        urls=[f"{BASE}/", f"{BASE}/noticias/", f"{BASE}/investigacion/"],
+        tipo="proyecto_noticia",
+        sectores_fijos=["ia_tecnologia"],
+    )
     log.info(f"  CENIA: {len(resultados)} registros")
     guardar_raw("cenia", resultados)
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCRAPER 4 — TRABAJANDO.COM
-# ════════════════════════════════════════════════════════════════════════════
+# ── SCRAPER 4 — TRABAJANDO.COM (desactivado — JS rendering) ──────────────────
 
 def scrapear_trabajando() -> list[dict]:
-    """
-    Busca ofertas laborales en Trabajando.com para sectores estratégicos.
-    """
-    log.info("=== Trabajando.com ===")
-    resultados = []
-
-    terminos_busqueda = [
-        "litio", "energía renovable", "inteligencia artificial",
-        "data science", "oceanografía", "astronomía", "hidrógeno verde",
-    ]
-
-    base_url = "https://www.trabajando.com/trabajo-de-{termino}.html"
-
-    for termino in terminos_busqueda:
-        slug = termino.lower().replace(" ", "-").replace("á","a").replace("é","e").replace("í","i").replace("ó","o").replace("ú","u")
-        url  = base_url.format(termino=slug)
-        r    = get(url)
-        if not r:
-            time.sleep(1)
-            continue
-
-        soup = BeautifulSoup(r.text, "html.parser")
-
-        for oferta in soup.find_all(
-            ["div", "article", "li"],
-            class_=re.compile(r"(oferta|job|aviso|vacante|resultado|listing)", re.I),
-        ):
-            titulo_el  = oferta.find(["h2", "h3", "a"])
-            titulo     = titulo_el.get_text(strip=True) if titulo_el else ""
-            if not titulo or len(titulo) < 5:
-                continue
-
-            empresa_el = oferta.find(class_=re.compile(r"(empresa|company|employer)", re.I))
-            empresa    = empresa_el.get_text(strip=True) if empresa_el else "No especificada"
-
-            region_el  = oferta.find(class_=re.compile(r"(region|lugar|ciudad|location)", re.I))
-            region     = region_el.get_text(strip=True) if region_el else "Chile"
-
-            link_el    = oferta.find("a", href=True)
-            link       = link_el["href"] if link_el else ""
-            if link and not link.startswith("http"):
-                link = "https://www.trabajando.com" + link
-
-            resultados.append({
-                "fuente":         "Trabajando.com",
-                "tipo":           "oferta_laboral",
-                "titulo":         titulo,
-                "empresa":        empresa,
-                "region":         region,
-                "url":            link,
-                "termino_busq":   termino,
-                "sectores":       detectar_sectores(f"{titulo} {termino}"),
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-
-        time.sleep(1.5)  # cortesía al servidor
-
-    log.info(f"  Trabajando.com: {len(resultados)} registros")
-    guardar_raw("trabajando", resultados)
-    return resultados
+    """Trabajando.com — desactivado: el sitio no responde a requests sin JS."""
+    log.info("=== Trabajando.com (desactivado — JS rendering) ===")
+    log.warning("  Trabajando.com: fuente desactivada temporalmente.")
+    guardar_raw("trabajando", [])
+    return []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCRAPER 5 — BUMERAN CHILE
-# ════════════════════════════════════════════════════════════════════════════
+# ── SCRAPER 5 — BUMERAN CHILE (desactivado — JS rendering) ───────────────────
 
 def scrapear_bumeran() -> list[dict]:
-    """
-    Busca ofertas laborales en Bumeran.cl para sectores estratégicos.
-    """
-    log.info("=== Bumeran Chile ===")
-    resultados = []
-
-    terminos_busqueda = [
-        "litio", "energía solar", "inteligencia artificial",
-        "machine learning", "oceanografía", "astrónomo",
-        "hidrógeno", "data scientist",
-    ]
-
-    # Bumeran usa una API interna vía fetch — intentamos la URL de búsqueda HTML
-    base_url = "https://www.bumeran.cl/empleos-{termino}.html"
-
-    for termino in terminos_busqueda:
-        slug = (
-            termino.lower()
-            .replace(" ", "-")
-            .replace("á","a").replace("é","e").replace("í","i")
-            .replace("ó","o").replace("ú","u").replace("ó","o")
-        )
-        url = base_url.format(termino=slug)
-        r   = get(url)
-        if not r:
-            time.sleep(1)
-            continue
-
-        soup = BeautifulSoup(r.text, "html.parser")
-
-        for oferta in soup.find_all(
-            ["div", "article"],
-            class_=re.compile(r"(aviso|job|card|listing|result)", re.I),
-        ):
-            titulo_el  = oferta.find(["h2", "h3", "h4", "a"])
-            titulo     = titulo_el.get_text(strip=True) if titulo_el else ""
-            if not titulo or len(titulo) < 5:
-                continue
-
-            empresa_el = oferta.find(class_=re.compile(r"(empresa|company)", re.I))
-            empresa    = empresa_el.get_text(strip=True) if empresa_el else "No especificada"
-
-            region_el  = oferta.find(class_=re.compile(r"(ubicacion|region|location)", re.I))
-            region     = region_el.get_text(strip=True) if region_el else "Chile"
-
-            link_el    = oferta.find("a", href=True)
-            link       = link_el["href"] if link_el else ""
-            if link and not link.startswith("http"):
-                link = "https://www.bumeran.cl" + link
-
-            resultados.append({
-                "fuente":         "Bumeran",
-                "tipo":           "oferta_laboral",
-                "titulo":         titulo,
-                "empresa":        empresa,
-                "region":         region,
-                "url":            link,
-                "termino_busq":   termino,
-                "sectores":       detectar_sectores(f"{titulo} {termino}"),
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-
-        time.sleep(1.5)
-
-    log.info(f"  Bumeran: {len(resultados)} registros")
-    guardar_raw("bumeran", resultados)
-    return resultados
+    """Bumeran.cl — desactivado: usa API interna vía fetch, no scrapeable sin JS."""
+    log.info("=== Bumeran Chile (desactivado — JS rendering) ===")
+    log.warning("  Bumeran: fuente desactivada temporalmente.")
+    guardar_raw("bumeran", [])
+    return []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 6 — MERCADO PÚBLICO API
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 6 — MERCADO PÚBLICO API ───────────────────────────────────────────
 
 def scrapear_mercadopublico() -> list[dict]:
     """
@@ -568,9 +294,7 @@ def scrapear_mercadopublico() -> list[dict]:
     return todos
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# HELPER GENÉRICO — extracción de enlaces por sector
-# ════════════════════════════════════════════════════════════════════════════
+# ── Helper genérico — extracción de enlaces por sector ───────────────────────
 
 def _extraer_por_enlaces(
     nombre_fuente: str,
@@ -636,9 +360,7 @@ def _extraer_por_enlaces(
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 7 — PROGRAMA DPS (Desarrollo Productivo Sostenible)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 7 — PROGRAMA DPS ───────────────────────────────────────────────────
 
 def scrapear_dps() -> list[dict]:
     """
@@ -660,9 +382,7 @@ def scrapear_dps() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 8 — AGCID (Agencia Chilena de Cooperación Internacional)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 8 — AGCID ─────────────────────────────────────────────────────────
 
 def scrapear_agcid() -> list[dict]:
     """
@@ -686,16 +406,10 @@ def scrapear_agcid() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 9 — MINISTERIO DEL TRABAJO
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 9 — MINISTERIO DEL TRABAJO ────────────────────────────────────────
 
 def scrapear_mintrab() -> list[dict]:
-    """
-    Noticias y programas del Ministerio del Trabajo relacionados con
-    formación, capacitación y mercado laboral en sectores estratégicos.
-    URL: mintrab.gob.cl
-    """
+    """Ministerio del Trabajo — noticias y programas en sectores estratégicos."""
     log.info("=== Ministerio del Trabajo ===")
     BASE = "https://www.mintrab.gob.cl"
     resultados = _extraer_por_enlaces(
@@ -709,17 +423,10 @@ def scrapear_mintrab() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 10 — CANCILLERÍA DECYTI
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 10 — CANCILLERÍA DECYTI ───────────────────────────────────────────
 
 def scrapear_decyti() -> list[dict]:
-    """
-    Dirección de Ciencia, Tecnología e Innovación de Cancillería.
-    Gestiona cooperación científica internacional y diplomacia del conocimiento.
-    Clave para sinergias con Asia-Pacífico y organismos internacionales.
-    URL: minrel.gob.cl/decyti
-    """
+    """Cancillería DECYTI — diplomacia científica y cooperación internacional."""
     log.info("=== Cancillería DECYTI ===")
     BASE = "https://minrel.gob.cl"
     resultados = _extraer_por_enlaces(
@@ -737,17 +444,10 @@ def scrapear_decyti() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 11 — BCN OBSERVATORIO ASIA-PACÍFICO
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 11 — BCN OBSERVATORIO ASIA-PACÍFICO ───────────────────────────────
 
 def scrapear_bcn_asia() -> list[dict]:
-    """
-    Observatorio Asia-Pacífico de la Biblioteca del Congreso Nacional.
-    Publica análisis e informes sobre relaciones Chile-Asia en sectores
-    estratégicos: litio, astronomía, energías renovables, cooperación.
-    URL: bcn.cl/observatorio/asiapacifico
-    """
+    """BCN Observatorio Asia-Pacífico — análisis Chile-Asia."""
     log.info("=== BCN Observatorio Asia-Pacífico ===")
     BASE = "https://www.bcn.cl"
     resultados = _extraer_por_enlaces(
@@ -764,9 +464,7 @@ def scrapear_bcn_asia() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 12 — GETONBOARD.CL (demanda tech/IA)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 12 — GETONBOARD.CL ────────────────────────────────────────────────
 
 def scrapear_getonboard() -> list[dict]:
     """
@@ -779,9 +477,7 @@ def scrapear_getonboard() -> list[dict]:
     return []
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 13 — INDEED CHILE (demanda laboral amplia)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 13 — INDEED CHILE ─────────────────────────────────────────────────
 
 def scrapear_indeed() -> list[dict]:
     """
@@ -793,78 +489,8 @@ def scrapear_indeed() -> list[dict]:
     guardar_raw("indeed", [])
     return []
 
-def _scrapear_indeed_impl() -> list[dict]:
-    """Implementación original conservada por si se reactiva con proxy."""
-    resultados = []
-    base = "https://cl.indeed.com"
 
-    terminos = [
-        "litio",
-        "hidrógeno verde",
-        "energía solar",
-        "inteligencia artificial",
-        "machine learning",
-        "data scientist",
-        "oceanografía",
-        "astronomía",
-        "Asia Pacífico",
-    ]
-
-    vistos: set[str] = set()
-
-    for termino in terminos:
-        slug = termino.replace(" ", "+")
-        url  = f"{base}/jobs?q={slug}&l=Chile"
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=15)
-            r.raise_for_status()
-        except Exception as e:
-            log.warning(f"  Indeed [{termino}]: {e}")
-            time.sleep(2)
-            continue
-
-        soup = BeautifulSoup(r.text, "lxml")
-
-        for card in soup.find_all("div", class_=re.compile(r"(job_seen_beacon|result|jobsearch)", re.I)):
-            titulo_el = card.find(["h2", "h3", "a"], class_=re.compile(r"(title|jobTitle)", re.I))
-            if not titulo_el:
-                titulo_el = card.find(["h2", "h3"])
-            titulo = titulo_el.get_text(strip=True) if titulo_el else ""
-            if not titulo or len(titulo) < 5:
-                continue
-
-            empresa_el = card.find(class_=re.compile(r"(company|companyName|employer)", re.I))
-            empresa    = empresa_el.get_text(strip=True) if empresa_el else ""
-
-            link_el = card.find("a", href=True)
-            href    = link_el["href"] if link_el else ""
-            if href and not href.startswith("http"):
-                href = base + href
-            if href in vistos:
-                continue
-            vistos.add(href)
-
-            resultados.append({
-                "fuente":        "Indeed Chile",
-                "tipo":          "oferta_laboral",
-                "titulo":        titulo,
-                "empresa":       empresa,
-                "url":           href,
-                "termino_busq":  termino,
-                "sectores":      detectar_sectores(f"{titulo} {termino}"),
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-
-        time.sleep(2)  # Indeed es más sensible al scraping
-
-    log.info(f"  Indeed Chile: {len(resultados)} registros")
-    guardar_raw("indeed", resultados)
-    return resultados
-
-
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 14 — OBSERVATORIO LABORAL (Ministerio del Trabajo)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 14 — OBSERVATORIO LABORAL ─────────────────────────────────────────
 
 def scrapear_observatorio_laboral() -> list[dict]:
     """
@@ -876,19 +502,12 @@ def scrapear_observatorio_laboral() -> list[dict]:
     log.warning("  Observatorio Laboral: fuente desactivada temporalmente.")
     guardar_raw("observatorio_laboral", [])
     return []
-    return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 15 — INE (Instituto Nacional de Estadísticas)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 15 — INE ───────────────────────────────────────────────────────────
 
 def scrapear_ine() -> list[dict]:
-    """
-    INE — publica estadísticas de empleo por rama de actividad económica.
-    Útil para estimar la demanda real de trabajadores en sectores estratégicos.
-    URL: ine.gob.cl
-    """
+    """INE — estadísticas de empleo por sector económico."""
     log.info("=== INE ===")
     BASE = "https://www.ine.gob.cl"
     resultados = _extraer_por_enlaces(
@@ -906,9 +525,7 @@ def scrapear_ine() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 16 — CSV MINISTERIO DE EDUCACIÓN → detección de brechas
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 16 — CSV MINISTERIO DE EDUCACIÓN → detección de brechas ───────────
 
 # Mapeo: palabras clave en nomb_carrera / area_carrera_generica → sector
 CARRERA_SECTOR = {
@@ -990,17 +607,13 @@ def analizar_csv_mineduc() -> dict:
     )
     log.info(f"  {len(df):,} filas cargadas | columnas: {len(df.columns)}")
 
-    # Normalizar nombres de columna a minúsculas sin espacios
     df.columns = [c.strip().lower() for c in df.columns]
-
-    # Campo de búsqueda: combina nombre de carrera + área genérica
     df["_texto"] = (
         df.get("nomb_carrera", pd.Series(dtype=str)).fillna("").str.lower()
         + " "
         + df.get("area_carrera_generica", pd.Series(dtype=str)).fillna("").str.lower()
     )
 
-    # Asignar sector a cada fila (primera coincidencia)
     def asignar_sector(texto: str) -> str | None:
         for kw, sector in CARRERA_SECTOR.items():
             if kw.lower() in texto:
@@ -1012,15 +625,10 @@ def analizar_csv_mineduc() -> dict:
 
     log.info(f"  Filas en sectores estratégicos: {len(df_sector):,}")
 
-    # ── 1. Total matriculados por sector ──────────────────────────────────
-    matriculados_por_sector = (
-        df_sector.groupby("sector").size().to_dict()
-    )
-    # Asegurar que todos los sectores aparecen (aunque sea con 0)
+    matriculados_por_sector = df_sector.groupby("sector").size().to_dict()
     for s in SECTORES:
         matriculados_por_sector.setdefault(s, 0)
 
-    # ── 2. Top carreras por sector ────────────────────────────────────────
     carreras_por_sector: dict[str, list] = {}
     for sector, grupo in df_sector.groupby("sector"):
         top = (
@@ -1032,7 +640,6 @@ def analizar_csv_mineduc() -> dict:
         )
         carreras_por_sector[sector] = top.to_dict(orient="records")
 
-    # ── 3. Matrícula por región en sectores estratégicos ──────────────────
     if "region_sede" in df_sector.columns:
         resumen_regional = (
             df_sector.groupby(["region_sede", "sector"])
@@ -1044,7 +651,6 @@ def analizar_csv_mineduc() -> dict:
     else:
         resumen_regional = []
 
-    # ── Log resumen ───────────────────────────────────────────────────────
     for sector, total in sorted(matriculados_por_sector.items(), key=lambda x: -x[1]):
         log.info(f"  {sector:<28} {total:>7,} alumnos")
 
@@ -1064,19 +670,10 @@ def analizar_csv_mineduc() -> dict:
     return resultado
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 17 — ProChile (Promoción de Exportaciones)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 17 — ProChile ─────────────────────────────────────────────────────
 
 def scrapear_prochile() -> list[dict]:
-    """
-    ProChile — agencia del Ministerio de RREE que impulsa exportaciones.
-    Publica convocatorias, estudios de mercado y oportunidades en Asia-Pacífico,
-    minería, energía y tecnología con proyección internacional.
-    URL: prochile.gob.cl
-    Nota: el contenido no usa las keywords de sectores en los títulos, por eso
-    se usan sectores_fijos para capturar toda la oferta institucional.
-    """
+    """ProChile — exportaciones y oportunidades internacionales. sectores_fijos porque el contenido no usa keywords de sector."""
     log.info("=== ProChile ===")
     BASE = "https://www.prochile.gob.cl"
     resultados = _extraer_por_enlaces(
@@ -1096,16 +693,10 @@ def scrapear_prochile() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 18 — COCHILCO (Comisión Chilena del Cobre)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 18 — COCHILCO ─────────────────────────────────────────────────────
 
 def scrapear_cochilco() -> list[dict]:
-    """
-    COCHILCO — publica estadísticas, estudios y proyecciones de capital humano
-    en minería del litio y cobre. Fuente clave para brechas en sector extractivo.
-    URL: cochilco.cl
-    """
+    """COCHILCO — estadísticas y proyecciones de capital humano en litio/cobre."""
     log.info("=== COCHILCO ===")
     BASE = "https://www.cochilco.cl"
     resultados = _extraer_por_enlaces(
@@ -1124,16 +715,10 @@ def scrapear_cochilco() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 19 — ANID (Agencia Nacional de Investigación y Desarrollo)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 19 — ANID ─────────────────────────────────────────────────────────
 
 def scrapear_anid() -> list[dict]:
-    """
-    ANID — financia investigación, postgrados y becas en todos los sectores
-    estratégicos. Concursos Fondecyt, Fondef, Becas Chile, etc.
-    URL: anid.cl
-    """
+    """ANID — becas, Fondecyt, Fondef y concursos de I+D."""
     log.info("=== ANID ===")
     BASE = "https://www.anid.cl"
     resultados = _extraer_por_enlaces(
@@ -1151,17 +736,10 @@ def scrapear_anid() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# FUENTE 20 — SENCE (Servicio Nacional de Capacitación y Empleo)
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 20 — SENCE ────────────────────────────────────────────────────────
 
 def scrapear_sence() -> list[dict]:
-    """
-    SENCE — administra programas de capacitación laboral, becas sectoriales
-    y franquicia tributaria. Clave para medir oferta de formación continua
-    en sectores estratégicos (litio, energías renovables, IA).
-    URL: sence.cl
-    """
+    """SENCE — capacitación laboral y becas sectoriales."""
     log.info("=== SENCE ===")
     BASE = "https://www.sence.cl"
     resultados = _extraer_por_enlaces(
@@ -1181,9 +759,195 @@ def scrapear_sence() -> list[dict]:
     return resultados
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# ANÁLISIS DE BRECHAS — cruza oferta educativa vs demanda laboral
-# ════════════════════════════════════════════════════════════════════════════
+# ── FUENTE 21 — REMOTEOK (API pública, sin API key) ──────────────────────────
+
+def scrapear_remoteok() -> list[dict]:
+    """
+    RemoteOK — API pública gratuita, sin clave.
+    Filtra empleos remotos tech/IA relevantes para sectores estratégicos.
+    """
+    log.info("=== RemoteOK ===")
+    # Tags relevantes para nuestros sectores
+    tags_busqueda = [
+        "machine-learning", "data-science", "artificial-intelligence",
+        "python", "renewable-energy", "mining", "geology",
+    ]
+    resultados = []
+    vistos: set[str] = set()
+
+    for tag in tags_busqueda:
+        url = f"https://remoteok.com/api?tag={tag}"
+        try:
+            r = requests.get(url, headers={**HEADERS, "Accept": "application/json"}, timeout=15)
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            log.warning(f"  RemoteOK ({tag}): {e}")
+            time.sleep(2)
+            continue
+
+        # La API devuelve un array; el primer elemento es metadata, ignorarlo
+        jobs = [j for j in data if isinstance(j, dict) and j.get("id")]
+        for job in jobs:
+            jid = str(job.get("id", ""))
+            if jid in vistos:
+                continue
+            vistos.add(jid)
+            titulo = job.get("position", "")
+            empresa = job.get("company", "")
+            descripcion = job.get("description", "")[:300]
+            sectores = detectar_sectores(f"{titulo} {descripcion}")
+            if not sectores:
+                sectores = ["ia_tecnologia"]   # RemoteOK es mayormente tech
+            resultados.append({
+                "fuente":         "RemoteOK",
+                "tipo":           "oferta_laboral",
+                "titulo":         titulo,
+                "organizacion":   empresa,
+                "region":         "Remoto",
+                "descripcion":    descripcion,
+                "url":            job.get("url", f"https://remoteok.com/jobs/{jid}"),
+                "sectores":       sectores,
+                "fecha_cierre":   "",
+                "fecha_scraping": datetime.now().isoformat(),
+            })
+        time.sleep(2)   # cortesía — API pública compartida
+
+    log.info(f"  RemoteOK: {len(resultados)} ofertas remotas")
+    guardar_raw("remoteok", resultados)
+    return resultados
+
+
+# ── FUENTE 22 — ADZUNA CHILE (API gratuita, requiere app_id + app_key) ────────
+
+def scrapear_adzuna() -> list[dict]:
+    """
+    Adzuna — API de empleos gratuita (250 req/día). Cubre Chile directamente.
+    Requiere: ADZUNA_APP_ID y ADZUNA_APP_KEY como secrets de GitHub.
+    """
+    app_id  = os.environ.get("ADZUNA_APP_ID", "")
+    app_key = os.environ.get("ADZUNA_APP_KEY", "")
+    if not app_id or not app_key:
+        log.warning("  Adzuna: ADZUNA_APP_ID / ADZUNA_APP_KEY no configurados — saltando.")
+        guardar_raw("adzuna", [])
+        return []
+
+    log.info("=== Adzuna Chile ===")
+    terminos = [
+        "litio", "energía solar", "energía eólica", "inteligencia artificial",
+        "machine learning", "data science", "hidrógeno verde",
+        "oceanografía", "astronomía", "energía renovable",
+    ]
+    BASE      = "https://api.adzuna.com/v1/api/jobs/cl/search/1"
+    resultados: list[dict] = []
+    vistos: set[str]       = set()
+
+    for termino in terminos:
+        params = {
+            "app_id": app_id, "app_key": app_key,
+            "what": termino, "results_per_page": 20,
+            "content-type": "application/json",
+        }
+        try:
+            r = requests.get(BASE, params=params, timeout=15)
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            log.warning(f"  Adzuna ({termino}): {e}")
+            time.sleep(2)
+            continue
+
+        for job in data.get("results", []):
+            jid = str(job.get("id", ""))
+            if jid in vistos:
+                continue
+            vistos.add(jid)
+            titulo      = job.get("title", "")
+            descripcion = job.get("description", "")[:300]
+            resultados.append({
+                "fuente":         "Adzuna",
+                "tipo":           "oferta_laboral",
+                "titulo":         titulo,
+                "organizacion":   job.get("company", {}).get("display_name", ""),
+                "region":         job.get("location", {}).get("display_name", "Chile"),
+                "descripcion":    descripcion,
+                "url":            job.get("redirect_url", ""),
+                "sectores":       detectar_sectores(f"{titulo} {descripcion}") or
+                                  detectar_sectores(termino),
+                "fecha_cierre":   "",
+                "fecha_scraping": datetime.now().isoformat(),
+            })
+        time.sleep(1)
+
+    log.info(f"  Adzuna: {len(resultados)} ofertas")
+    guardar_raw("adzuna", resultados)
+    return resultados
+
+
+# ── FUENTE 23 — JOOBLE (API gratuita, requiere api_key) ──────────────────────
+
+def scrapear_jooble() -> list[dict]:
+    """
+    Jooble — agregador de empleos, API gratuita (uso no comercial).
+    Cubre Chile. Requiere: JOOBLE_API_KEY como secret de GitHub.
+    """
+    api_key = os.environ.get("JOOBLE_API_KEY", "")
+    if not api_key:
+        log.warning("  Jooble: JOOBLE_API_KEY no configurado — saltando.")
+        guardar_raw("jooble", [])
+        return []
+
+    log.info("=== Jooble ===")
+    terminos = [
+        "litio Chile", "energía renovable Chile", "inteligencia artificial Chile",
+        "data science Chile", "hidrógeno verde Chile",
+        "oceanografía Chile", "astrónomo Chile",
+    ]
+    url        = f"https://jooble.org/api/{api_key}"
+    resultados: list[dict] = []
+    vistos: set[str]       = set()
+
+    for termino in terminos:
+        payload = json.dumps({"keywords": termino, "location": "Chile", "page": "1"})
+        try:
+            r = requests.post(url, data=payload,
+                              headers={**HEADERS, "Content-Type": "application/json"},
+                              timeout=15)
+            r.raise_for_status()
+            data = r.json()
+        except Exception as e:
+            log.warning(f"  Jooble ({termino}): {e}")
+            time.sleep(2)
+            continue
+
+        for job in data.get("jobs", []):
+            jid = str(job.get("id", ""))
+            if jid in vistos:
+                continue
+            vistos.add(jid)
+            titulo      = job.get("title", "")
+            descripcion = job.get("snippet", "")[:300]
+            resultados.append({
+                "fuente":         "Jooble",
+                "tipo":           "oferta_laboral",
+                "titulo":         titulo,
+                "organizacion":   job.get("company", ""),
+                "region":         job.get("location", "Chile"),
+                "descripcion":    descripcion,
+                "url":            job.get("link", ""),
+                "sectores":       detectar_sectores(f"{titulo} {descripcion}") or
+                                  detectar_sectores(termino),
+                "fecha_cierre":   job.get("updated", ""),
+                "fecha_scraping": datetime.now().isoformat(),
+            })
+        time.sleep(1.5)
+
+    log.info(f"  Jooble: {len(resultados)} ofertas")
+    guardar_raw("jooble", resultados)
+    return resultados
+
+
+# ── Análisis de brechas — cruza oferta educativa vs demanda laboral ──────────
 
 def calcular_brechas(
     datos_educacion: dict,
@@ -1196,7 +960,6 @@ def calcular_brechas(
     if not datos_educacion or not ofertas_laborales:
         return []
 
-    # Contar ofertas por sector
     demanda: dict[str, int] = {s: 0 for s in SECTORES}
     for oferta in ofertas_laborales:
         for sector in oferta.get("sectores", []):
@@ -1239,9 +1002,7 @@ def calcular_brechas(
     return brechas
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# CONSOLIDADOR — une todos los resultados en un solo JSON
-# ════════════════════════════════════════════════════════════════════════════
+# ── Consolidador — une todos los resultados en un solo JSON ──────────────────
 
 def consolidar(todas_las_fuentes: list[list[dict]]) -> list[dict]:
     todos = [item for fuente in todas_las_fuentes for item in fuente]
@@ -1250,7 +1011,6 @@ def consolidar(todas_las_fuentes: list[list[dict]]) -> list[dict]:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(todos, f, ensure_ascii=False, indent=2)
 
-    # Estadísticas
     por_fuente: dict[str, int] = {}
     for item in todos:
         f = item.get("fuente", "desconocido")
@@ -1263,9 +1023,7 @@ def consolidar(todas_las_fuentes: list[list[dict]]) -> list[dict]:
     return todos
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# MAIN
-# ════════════════════════════════════════════════════════════════════════════
+# ── MAIN ─────────────────────────────────────────────────────────────────────
 
 FUENTES_DISPONIBLES = {
     "corfo":                scrapear_corfo,
@@ -1287,6 +1045,9 @@ FUENTES_DISPONIBLES = {
     "cochilco":             scrapear_cochilco,
     "anid":                 scrapear_anid,
     "sence":                scrapear_sence,
+    "remoteok":             scrapear_remoteok,
+    "adzuna":               scrapear_adzuna,
+    "jooble":               scrapear_jooble,
     "educacion":            analizar_csv_mineduc,
 }
 

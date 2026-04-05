@@ -32,6 +32,9 @@ jobs:
         run: python scripts/scraper.py --sin-brechas
         env:
           Mercado_Publico_API_KEY: ${{ secrets.MERCADO_PUBLICO_API_KEY }}
+          ADZUNA_APP_ID:           ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY:          ${{ secrets.ADZUNA_APP_KEY }}
+          JOOBLE_API_KEY:          ${{ secrets.JOOBLE_API_KEY }}
 
       - name: Etapa 1.5 — Detector de Sinergias IA
         continue-on-error: true
