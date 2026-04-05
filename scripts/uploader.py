@@ -202,6 +202,71 @@ def subir_hoja(client, nombre_hoja: str, filas: list[list]) -> bool:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# ACUMULADOR DE SINERGIAS
+# ════════════════════════════════════════════════════════════════════════════
+
+def _clave_sinergia(s: dict) -> str:
+    """Clave de deduplicación: par de actores + tipo, normalizado."""
+    a = (s.get("actor_a") or "").lower().strip()
+    b = (s.get("actor_b") or "").lower().strip()
+    t = (s.get("tipo_sinergia") or "").lower().strip()
+    # Orden canónico para que A↔B == B↔A
+    par = "|".join(sorted([a, b]))
+    return f"{par}|{t}"
+
+
+def acumular_sinergias(client, nuevas: list[dict]) -> bool:
+    """
+    Lee las sinergias existentes en Sheets, fusiona con las nuevas,
+    deduplica por (actor_a, actor_b, tipo_sinergia) y reescribe la hoja.
+    Las sinergias antiguas se conservan; las nuevas se agregan al tope.
+    """
+    try:
+        sh   = client.open_by_key(SPREADSHEET_ID)
+        hoja = sh.worksheet(HOJAS["sinergias"])
+
+        # ── Leer existentes ──────────────────────────────────────────────────
+        existentes_raw = hoja.get_all_records()
+        # Filtrar fila de metadatos (no tiene actor_a)
+        existentes = [r for r in existentes_raw if r.get("actor_a", "").strip()
+                      and r.get("actor_a") != "actor_a"]
+        log.info(f"  Sinergias existentes en Sheets: {len(existentes)}")
+        log.info(f"  Sinergias nuevas detectadas:    {len(nuevas)}")
+
+        # ── Fusionar: nuevas primero, luego existentes ───────────────────────
+        vistas: set[str] = set()
+        combinadas: list[dict] = []
+
+        for s in nuevas + existentes:
+            clave = _clave_sinergia(s)
+            if clave not in vistas:
+                vistas.add(clave)
+                combinadas.append(s)
+
+        log.info(f"  Total tras deduplicar: {len(combinadas)} "
+                 f"({len(combinadas) - len(existentes):+d} respecto a semana anterior)")
+
+        # ── Reescribir hoja ──────────────────────────────────────────────────
+        filas = a_filas(combinadas, COLUMNAS_SINERGIAS)
+        hoja.clear()
+        hoja.update(filas, value_input_option="USER_ENTERED")
+        hoja.format("1:1", {
+            "textFormat":      {"bold": True},
+            "backgroundColor": {"red": 0.2, "green": 0.4, "blue": 0.6},
+        })
+        meta = [f"Actualizado: {datetime.now().strftime('%Y-%m-%d %H:%M')} | "
+                f"Total acumulado: {len(combinadas)} sinergias | Talento País Pipeline"]
+        hoja.append_row(meta)
+
+        log.info(f"  ✓ Sinergias: {len(combinadas)} registros acumulados en Sheets")
+        return True
+
+    except Exception as e:
+        log.error(f"  Error acumulando sinergias: {e}")
+        return False
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ════════════════════════════════════════════════════════════════════════════
 
@@ -238,14 +303,9 @@ def main():
 
     # ── Hoja Sinergias ────────────────────────────────────────────────────────
     if "sinergias" in hojas_a_subir:
-        log.info("\n[3/3] Subiendo Sinergias (oportunidades de colaboración IA)...")
-        datos = cargar_procesado("sinergias_ia")
-        if datos:
-            log.info(f"  Sinergias IA a subir: {len(datos)}")
-            filas = a_filas(datos, COLUMNAS_SINERGIAS)
-            subir_hoja(client, HOJAS["sinergias"], filas)
-        else:
-            log.warning("  sinergias_ia.json no encontrado — hoja Sinergias no se actualiza")
+        log.info("\n[3/3] Subiendo Sinergias (modo acumulativo)...")
+        nuevas = cargar_procesado("sinergias_ia") or []
+        acumular_sinergias(client, nuevas)
 
     log.info("\nPipeline ETAPA 3 completado.")
     log.info(f"Ver resultado: https://docs.google.com/spreadsheets/d/{SPREADSHEET_ID}/edit")
