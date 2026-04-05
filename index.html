@@ -822,6 +822,40 @@
   .toast-text strong { display: block; margin-bottom: 2px; color: var(--verde-claro); }
   .toast-text span { color: var(--gris-azul); font-size: 12px; }
 
+  /* ── MODAL INFORME SINERGIA ── */
+  .si-overlay { display:none; position:fixed; inset:0; background:rgba(5,13,30,.88); backdrop-filter:blur(6px); z-index:600; align-items:center; justify-content:center; overflow-y:auto; padding:20px; }
+  .si-overlay.open { display:flex; }
+  .si-box { background:linear-gradient(155deg,#0d1f3c,#0a1628); border:1px solid var(--borde-sutil); border-radius:20px; width:min(760px,95vw); max-height:92vh; overflow-y:auto; position:relative; box-shadow:0 24px 80px rgba(0,0,0,.65); animation:bmIn .22s ease; flex-shrink:0; }
+  .si-header { background:linear-gradient(135deg,rgba(52,211,153,.07),rgba(37,99,235,.05)); border-bottom:1px solid var(--borde-sutil); padding:28px 32px 22px; position:relative; }
+  .si-eyebrow { font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--verde-claro); margin-bottom:8px; }
+  .si-inf-title { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; letter-spacing:-.3px; margin-bottom:10px; }
+  .si-meta { display:flex; gap:8px; flex-wrap:wrap; }
+  .si-chip { font-size:11px; padding:3px 11px; border-radius:20px; border:1px solid var(--borde); color:var(--gris-azul); }
+  .si-chip.verde { background:rgba(52,211,153,.1); border-color:rgba(52,211,153,.25); color:var(--verde-claro); }
+  .si-chip.azul  { background:rgba(37,99,235,.1);  border-color:rgba(37,99,235,.25);  color:var(--azul-cielo); }
+  .si-body { padding:26px 32px; }
+  .si-sec { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--gris-azul); margin:22px 0 10px; border-bottom:1px solid var(--borde-sutil); padding-bottom:7px; }
+  .si-sec:first-child { margin-top:0; }
+  .si-actors { display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap; }
+  .si-actor-card { background:rgba(255,255,255,.04); border:1px solid var(--borde); border-radius:10px; padding:12px 16px; flex:1; min-width:140px; }
+  .si-actor-name { font-size:13px; font-weight:600; margin-bottom:4px; }
+  .si-actor-role { font-size:11px; color:var(--gris-azul); line-height:1.5; }
+  .si-arrow-mid { color:var(--verde-claro); font-size:20px; padding-top:14px; flex-shrink:0; }
+  .si-why { font-size:13px; color:var(--blanco); line-height:1.75; background:rgba(255,255,255,.03); border:1px solid var(--borde-sutil); border-radius:10px; padding:16px 18px; }
+  .si-evidence { font-size:12px; color:var(--gris-azul); line-height:1.65; border-left:3px solid var(--verde-claro); padding:10px 14px; background:rgba(52,211,153,.04); border-radius:0 8px 8px 0; font-style:italic; }
+  .si-rec-box { background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(52,211,153,.05)); border:1px solid rgba(37,99,235,.2); border-radius:12px; padding:18px 20px; }
+  .si-rec-label { font-size:12px; font-weight:600; color:var(--azul-cielo); margin-bottom:8px; }
+  .si-rec-text { font-size:13px; color:var(--blanco); line-height:1.75; }
+  .si-footer-bar { display:flex; align-items:center; justify-content:space-between; padding:16px 32px; border-top:1px solid var(--borde-sutil); gap:12px; flex-wrap:wrap; }
+  .si-close { position:absolute; top:16px; right:18px; background:none; border:none; color:var(--gris-azul); font-size:20px; cursor:pointer; transition:color .15s; }
+  .si-close:hover { color:var(--blanco); }
+  .btn-pdf { padding:9px 20px; border-radius:8px; background:var(--dorado); color:#0b1220; font-size:13px; font-weight:600; border:none; cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif; display:inline-flex; align-items:center; gap:7px; }
+  .btn-pdf:hover { background:var(--dorado-claro); transform:translateY(-1px); }
+  .si-src-txt { font-size:11px; color:var(--gris-azul); }
+  .si-src-txt a { color:var(--azul-cielo); }
+  .btn-informe { padding:8px 16px; border-radius:7px; background:rgba(52,211,153,.12); border:1px solid rgba(52,211,153,.3); color:var(--verde-claro); font-size:12px; font-weight:500; cursor:pointer; transition:all .2s; font-family:'DM Sans',sans-serif; }
+  .btn-informe:hover { background:rgba(52,211,153,.22); transform:translateY(-1px); }
+
   /* ── CHATBOT ── */
   #chatbot-container { position:fixed; bottom:24px; right:24px; z-index:1000; }
   #chat-toggle { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#1e3a5f,#2563eb); color:white; border:none; cursor:pointer; box-shadow:0 4px 20px rgba(37,99,235,0.5); font-size:22px; display:flex; align-items:center; justify-content:center; transition:all .2s; }
@@ -1636,6 +1670,44 @@
   </div>
 </div>
 
+<!-- ─────── MODAL INFORME SINERGIA ─────── -->
+<div class="si-overlay" id="si-overlay" onclick="if(event.target===this)cerrarInformeSinergia()">
+  <div class="si-box">
+    <button class="si-close" onclick="cerrarInformeSinergia()">✕</button>
+    <div id="si-print-zone">
+      <div class="si-header">
+        <div class="si-eyebrow">Informe IA · Talento País · <span id="si-fecha-gen"></span></div>
+        <div class="si-inf-title" id="si-inf-tipo">—</div>
+        <div class="si-meta">
+          <span class="si-chip verde" id="si-sector-chip">—</span>
+          <span class="si-chip azul"  id="si-tipo-chip">—</span>
+          <span class="si-chip"       id="si-fecha-chip"></span>
+        </div>
+      </div>
+      <div class="si-body">
+        <div class="si-sec">Actores involucrados</div>
+        <div class="si-actors" id="si-actors-list"></div>
+
+        <div class="si-sec">Por qué la IA detectó esta sinergia</div>
+        <div class="si-why" id="si-why-text"></div>
+
+        <div class="si-sec" id="si-ev-sec">Evidencia textual extraída de documentos públicos</div>
+        <div class="si-evidence" id="si-ev-text"></div>
+
+        <div class="si-sec">Relevancia para tomadores de decisión</div>
+        <div class="si-rec-box">
+          <div class="si-rec-label">💡 Acción recomendada</div>
+          <div class="si-rec-text" id="si-rec-text"></div>
+        </div>
+      </div>
+    </div>
+    <div class="si-footer-bar">
+      <span class="si-src-txt">Fuente: <a id="si-fuente-link" href="#" target="_blank">ver documento original →</a></span>
+      <button class="btn-pdf" onclick="descargarInformePDF()">⬇ Descargar PDF</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─────── CHATBOT ─────── -->
 <div id="chatbot-container">
   <button id="chat-toggle">🤖</button>
@@ -1662,6 +1734,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 
 // ==================== NAVEGACIÓN ====================
@@ -2081,7 +2154,8 @@ function sinRenderizar() {
   }
 
   container.innerHTML = '';
-  pagina.forEach(row => {
+  pagina.forEach((row, i) => {
+    const realIdx     = inicio + i;
     const actores     = ['actor_a','actor_b','actor_c'].map(k => row[k]).filter(a => a && a.trim());
     const actoresHTML = actores.map(a => `<div class="sin-min">${a}</div>`).join('<div class="sin-arrow">→</div>');
     const tipoLabel   = row.tipo_sinergia || 'Colaboración';
@@ -2105,9 +2179,172 @@ function sinRenderizar() {
       ${fecha ? `<div style="font-size:11px;color:var(--gris-azul);margin:4px 0 12px;">${fecha}</div>` : ''}
       <p class="sin-desc">${row.descripcion || ''}</p>
       ${evidencia ? `<div class="sin-evidencia"><b>📎 Evidencia textual</b>"${evidencia}"</div>` : ''}
-      ${fuente ? `<div class="sin-actions">${fuente}</div>` : ''}
+      <div class="sin-actions">
+        ${fuente}
+        <button class="btn-informe" onclick="abrirInformeSinergia(${realIdx})">📋 Ver informe completo</button>
+      </div>
     `;
     container.appendChild(box);
+  });
+}
+
+// ==================== MODAL INFORME SINERGIA ====================
+
+const ACTOR_ROLES_MAP = {
+  'ministerio de energía':    'Diseña la política energética nacional. Lidera H₂ Verde y el Plan DPS.',
+  'min. energía':              'Diseña la política energética nacional. Lidera H₂ Verde y el Plan DPS.',
+  'ministerio de educación':  'Acredita carreras universitarias y administra Becas Chile.',
+  'mineduc':                   'Acredita carreras universitarias y administra Becas Chile.',
+  'corfo':                     'Financia innovación, fomenta inversión y apoya emprendimiento estratégico.',
+  'anid':                      'Financia investigación científica: Fondecyt, Fondef y becas doctorales.',
+  'sence':                     'Administra capacitación laboral, franquicia tributaria y becas sectoriales.',
+  'cancillería':               'Relaciones exteriores, cooperación técnica internacional.',
+  'decyti':                    'Diplomacia científica y gestión de acuerdos de cooperación en I+D.',
+  'agcid':                     'Cooperación técnica y becas para formación en el extranjero.',
+  'prochile':                  'Promueve exportaciones y apertura de mercados, especialmente Asia-Pacífico.',
+  'cochilco':                  'Estadísticas y proyecciones de la industria del litio y cobre.',
+  'ministerio de minería':     'Política minera nacional, regulación del litio y ENAMI.',
+  'cenia':                     'Centro Nacional de IA — investigación y transferencia tecnológica.',
+};
+
+function _getRolActor(nombre) {
+  if (!nombre) return 'Institución participante en el ecosistema de talento estratégico de Chile.';
+  const key = nombre.toLowerCase();
+  for (const [k, v] of Object.entries(ACTOR_ROLES_MAP)) {
+    if (key.includes(k)) return v;
+  }
+  return 'Institución participante en el ecosistema de talento estratégico de Chile.';
+}
+
+function _getRecomendacion(tipo, sector, actores) {
+  const a = actores.join(' y ');
+  const s = sector || 'sectores estratégicos';
+  const t = (tipo || '').toLowerCase();
+  if (t.includes('complementariedad'))
+    return `Crear una mesa de trabajo formal entre ${a} para alinear programas y evitar duplicación de esfuerzos en ${s}. Establecer hitos trimestrales medibles.`;
+  if (t.includes('brecha') || t.includes('formación'))
+    return `Diseñar un programa conjunto entre ${a} para cerrar la brecha de talento en ${s}. Priorizar becas de especialización, pasantías y diplomados con doble certificación.`;
+  if (t.includes('financiamiento') || t.includes('fondo'))
+    return `Coordinar convocatorias conjuntas entre ${a} en ${s} para evitar solapamiento de fondos y maximizar cobertura. Evaluar crear un fondo común de acceso simplificado.`;
+  if (t.includes('internacionalización') || t.includes('asia') || t.includes('pacífico'))
+    return `Aprovechar los acuerdos internacionales vigentes entre ${a} para lanzar un programa de movilidad de talento en ${s} con contrapartes de Asia-Pacífico. Meta: 50 profesionales/año.`;
+  return `Formalizar la colaboración entre ${a} mediante un convenio marco de cooperación técnica en ${s}. Primer paso: reunión de alineamiento estratégico en los próximos 60 días.`;
+}
+
+function abrirInformeSinergia(idx) {
+  const row = sinFiltrados[idx];
+  if (!row) return;
+
+  const actores = ['actor_a','actor_b','actor_c'].map(k => row[k]).filter(a => a && a.trim());
+
+  // Cabecera
+  document.getElementById('si-fecha-gen').textContent    = new Date().toLocaleDateString('es-CL', {year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('si-inf-tipo').textContent     = row.tipo_sinergia  || 'Sinergia Interinstitucional';
+  document.getElementById('si-sector-chip').textContent  = row.sector_label   || 'Sector estratégico';
+  document.getElementById('si-tipo-chip').textContent    = row.tipo_sinergia  || 'Colaboración';
+  document.getElementById('si-fecha-chip').textContent   = row.fecha ? `📅 ${row.fecha}` : '';
+
+  // Actores
+  const actoresDiv = document.getElementById('si-actors-list');
+  const parts = [];
+  actores.forEach((a, i) => {
+    parts.push(`<div class="si-actor-card"><div class="si-actor-name">${a}</div><div class="si-actor-role">${_getRolActor(a)}</div></div>`);
+    if (i < actores.length - 1) parts.push('<div class="si-arrow-mid">⟷</div>');
+  });
+  actoresDiv.innerHTML = parts.join('');
+
+  // Por qué la IA detectó esta sinergia
+  document.getElementById('si-why-text').textContent = row.descripcion
+    || 'El modelo analizó memorias anuales, programas y licitaciones de estas instituciones e identificó objetivos complementarios que, coordinados, podrían generar mayor impacto en el desarrollo de talento estratégico.';
+
+  // Evidencia
+  const evid = (row.evidencia || '').trim();
+  document.getElementById('si-ev-sec').style.display  = evid ? '' : 'none';
+  document.getElementById('si-ev-text').style.display = evid ? '' : 'none';
+  document.getElementById('si-ev-text').textContent   = evid ? `"${evid}"` : '';
+
+  // Recomendación
+  document.getElementById('si-rec-text').textContent = _getRecomendacion(row.tipo_sinergia, row.sector_label, actores);
+
+  // Fuente
+  const fl = document.getElementById('si-fuente-link');
+  if (row.fuente && row.fuente.startsWith('http')) {
+    fl.href = row.fuente; fl.parentElement.style.display = '';
+  } else {
+    fl.parentElement.style.display = 'none';
+  }
+
+  document.getElementById('si-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarInformeSinergia() {
+  document.getElementById('si-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function descargarInformePDF() {
+  const zone  = document.getElementById('si-print-zone');
+  const tipo  = (document.getElementById('si-inf-tipo').textContent || 'sinergia')
+                  .replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ\s]/g,'').trim().replace(/\s+/g,'_').toLowerCase();
+  const fecha = new Date().toISOString().split('T')[0];
+
+  const opt = {
+    margin:      [14, 14, 14, 14],
+    filename:    `TalentoPais_Informe_${tipo}_${fecha}.pdf`,
+    image:       { type: 'jpeg', quality: 0.97 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+    jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak:   { mode: 'avoid-all' },
+  };
+
+  // Clonar y aplicar tema claro para PDF legible
+  const clone = zone.cloneNode(true);
+  clone.style.cssText = 'font-family:Arial,Helvetica,sans-serif;background:#fff;color:#1a1a2e;padding:10px;width:700px;';
+  clone.querySelectorAll('*').forEach(el => {
+    const cs = window.getComputedStyle(el);
+    el.style.background    = 'transparent';
+    el.style.boxShadow     = 'none';
+    el.style.backdropFilter= 'none';
+    // Texto
+    const c = cs.color;
+    if (!c || c === 'rgba(0, 0, 0, 0)') el.style.color = '#333';
+    else if (c.includes('139,163,193') || c.includes('96,165,250')) el.style.color = '#555';
+    else el.style.color = '#1a1a2e';
+  });
+  // Bordes legibles
+  clone.querySelectorAll('.si-actor-card,.si-why,.si-evidence,.si-rec-box,.si-header').forEach(el => {
+    el.style.border = '1px solid #ccc';
+    el.style.borderRadius = '8px';
+    el.style.padding = '12px';
+    el.style.marginBottom = '10px';
+  });
+  clone.querySelectorAll('.si-evidence').forEach(el => {
+    el.style.borderLeft = '3px solid #059669';
+    el.style.color = '#374151';
+  });
+  clone.querySelectorAll('.si-chip').forEach(el => {
+    el.style.border = '1px solid #aaa';
+    el.style.color  = '#333';
+    el.style.background = '#f5f5f5';
+    el.style.borderRadius = '20px';
+    el.style.padding = '2px 10px';
+    el.style.fontSize = '11px';
+  });
+
+  // Agregar logo/footer
+  const footer = document.createElement('div');
+  footer.style.cssText = 'margin-top:20px;padding-top:12px;border-top:1px solid #ddd;font-size:10px;color:#888;text-align:center;';
+  footer.textContent = `Generado por Talento País · talentopaischile.vercel.app · ${new Date().toLocaleDateString('es-CL')} · Datos procesados por pipeline IA semanal`;
+  clone.appendChild(footer);
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;';
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  html2pdf().set(opt).from(clone).save().then(() => {
+    document.body.removeChild(wrapper);
   });
 }
 
