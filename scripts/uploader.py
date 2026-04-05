@@ -60,10 +60,12 @@ COLUMNAS_BRECHAS = [
 COLUMNAS_SINERGIAS = [
     "fecha",
     "sector_label",
+    "region",
     "actor_a",
     "actor_b",
     "actor_c",
     "tipo_sinergia",
+    "carrera",
     "descripcion",
     "evidencia",
     "fuente",

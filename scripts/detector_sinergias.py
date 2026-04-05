@@ -1,18 +1,20 @@
 """
 detector_sinergias.py — Talento País
-Pipeline ETAPA 1.5: Detecta oportunidades de colaboración institucional
-usando Google News RSS + scraping de ministerios + Groq (Llama 3.3, gratis).
+Pipeline ETAPA 2.5: Detecta dos tipos de sinergias y las combina.
 
-Fuentes:
-  - Google News RSS (sin API key, totalmente gratis)
-  - Páginas públicas de ministerios y organismos chilenos
-  - datos/raw/planes_estrategicos.json (si existe, generado por preparar_planes.py)
+TIPO A — Institucional (Groq):
+  Google News RSS + scraping ministerios → Llama 3.3 extrae colaboraciones
+  reales entre instituciones públicas (CORFO-ANID, Min.Energía-AGCID, etc.)
 
-IA:
-  - Groq API — Llama 3.3 70B (plan gratuito: 1000 req/día, sin tarjeta)
+TIPO B — Match educación-industria (algorítmico, sin Groq):
+  Cruza programas_relevantes_por_sector (carreras_estrategicas.json)
+  con oportunidades.json para detectar:
+    "INACAP Antofagasta forma técnicos en minería → SQM demanda ese perfil
+     en Antofagasta → CORFO debería intermediar la alianza"
 
-Salida:
-  datos/procesados/sinergias_ia.json
+Corre después de processor.py (necesita oportunidades.json).
+
+Salida: datos/procesados/sinergias_ia.json
 """
 
 import os
@@ -373,28 +375,149 @@ def cargar_planes() -> dict[str, str]:
         return {}
 
 
+# ── TIPO B: Match educación-industria (algorítmico, sin Groq) ────────────────
+
+def detectar_matches_educacion_industria() -> list[dict]:
+    """
+    Cruza programas educativos por región con demanda laboral real para
+    detectar matches institución-empresa accionables.
+
+    Sin llamadas Groq — matching 100% algorítmico.
+    Requiere: oportunidades.json (processor.py) + carreras_estrategicas.json
+    """
+    # ── Cargar programas relevantes ──────────────────────────────────────────
+    carreras_path = RAW_DIR / "carreras_estrategicas.json"
+    if not carreras_path.exists():
+        log.warning("  carreras_estrategicas.json no encontrado — skip matches")
+        return []
+
+    with open(carreras_path, encoding="utf-8") as f:
+        carreras = json.load(f)
+
+    programas_por_sector = carreras.get("programas_relevantes_por_sector", {})
+    if not programas_por_sector:
+        log.warning("  programas_relevantes_por_sector vacío — corre preparar_mallas.py primero")
+        return []
+
+    # ── Cargar oportunidades laborales procesadas ────────────────────────────
+    op_path = PROC_DIR / "oportunidades.json"
+    if not op_path.exists():
+        log.warning("  oportunidades.json no encontrado — skip matches")
+        return []
+
+    with open(op_path, encoding="utf-8") as f:
+        oportunidades = json.load(f)
+
+    # ── Indexar demanda laboral por (sector, region) → {organización: count} ─
+    demanda: dict[tuple, dict] = {}
+    for op in oportunidades:
+        if op.get("tipo") != "oferta_laboral":
+            continue
+        sector = op.get("sector_principal", "")
+        region = op.get("region", "No especificada")
+        org    = (op.get("organizacion") or "").strip()
+        if not (sector and region and org and org != "Desconocida"):
+            continue
+        key = (sector, region)
+        demanda.setdefault(key, {})
+        demanda[key][org] = demanda[key].get(org, 0) + 1
+
+    if not demanda:
+        log.warning("  Sin demanda laboral indexada — verifica oportunidades.json")
+        return []
+
+    # ── Generar matches ──────────────────────────────────────────────────────
+    matches: list[dict] = []
+    vistos:  set[str]   = set()
+    fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+
+    for sector, programas in programas_por_sector.items():
+        sector_label = SECTORES.get(sector, {}).get("label", sector)
+
+        for prog in programas:
+            if prog.get("relevancia") != "alta":
+                continue
+
+            region = prog.get("region_sede", "No especificada")
+            key    = (sector, region)
+            if key not in demanda:
+                continue
+
+            inst    = prog["nomb_inst"]
+            carrera = prog["nomb_carrera"].title()
+            mat     = prog["matriculados"]
+
+            # Top 3 empresas con más ofertas en esa región/sector
+            top_empresas = sorted(demanda[key].items(), key=lambda x: -x[1])[:3]
+
+            for empresa, n_ofertas in top_empresas:
+                # Evitar duplicados y auto-matches
+                clave = f"{inst.lower()}|{empresa.lower()}|{sector}|{region.lower()}"
+                if clave in vistos or empresa.lower() == inst.lower():
+                    continue
+                vistos.add(clave)
+
+                desc = (
+                    f"{inst} ({region}) forma {mat:,} estudiantes en {carrera}. "
+                    f"{empresa} publicó {n_ofertas} oferta{'s' if n_ofertas > 1 else ''} "
+                    f"en {region} para el sector {sector_label}. "
+                    f"Perfil de egresado compatible con la demanda detectada."
+                )
+                evidencia = (
+                    f"{n_ofertas} oferta{'s' if n_ofertas > 1 else ''} laboral"
+                    f"{'es' if n_ofertas > 1 else ''} de {empresa} en {region} "
+                    f"detectada{'s' if n_ofertas > 1 else ''} por el scraper semanal."
+                )
+
+                matches.append({
+                    "actor_a":       inst,
+                    "actor_b":       empresa,
+                    "actor_c":       "CORFO",
+                    "tipo_sinergia": "match educación-industria",
+                    "descripcion":   desc,
+                    "evidencia":     evidencia,
+                    "fuente":        "Pipeline Talento País — matching algorítmico",
+                    "sector":        sector,
+                    "sector_label":  sector_label,
+                    "fecha":         fecha_hoy,
+                    "estado":        "detectada",
+                    "region":        region,
+                    "carrera":       carrera,
+                    "matriculados":  mat,
+                    "n_ofertas":     n_ofertas,
+                })
+
+    log.info(f"  Matches educación-industria: {len(matches)} "
+             f"({len(programas_por_sector)} sectores × regiones)")
+    return matches
+
+
 def main():
     log.info("=" * 60)
-    log.info("TALENTO PAÍS — Detector de Sinergias IA (Etapa 1.5)")
+    log.info("TALENTO PAÍS — Detector de Sinergias IA (Etapa 2.5)")
     log.info(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     log.info(f"Modelo: {GROQ_MODEL}")
     log.info("=" * 60)
 
     todas_sinergias: list[dict] = []
 
-    log.info("\n[1/4] Cargando planes estratégicos nacionales...")
+    log.info("\n[1/5] Detectando matches educación-industria (algorítmico)...")
+    matches_edu = detectar_matches_educacion_industria()
+    todas_sinergias.extend(matches_edu)
+
+    log.info("\n[2/5] Cargando planes estratégicos nacionales...")
     textos_planes = cargar_planes()
 
-    log.info("\n[2/4] Scrapeando ministerios y organismos...")
+    log.info("\n[3/5] Scrapeando ministerios y organismos...")
     textos_por_sector: dict[str, list[str]] = {k: [] for k in SECTORES}
     for fuente in FUENTES_MINISTERIOS:
         texto = scrape_pagina(fuente)
         if texto:
             for sec in fuente["sectores"]:
                 textos_por_sector.setdefault(sec, []).append(texto)
-        time.sleep(1)   # cortesía con los servidores
+        time.sleep(1)
 
-    log.info("\n[3/4] Analizando sectores con Groq (Llama 3.3 70B)...")
+    log.info("\n[4/5] Analizando sectores con Groq (Llama 3.3 70B)...")
 
     for sector_key, sector_info in SECTORES.items():
         label = sector_info["label"]
@@ -428,12 +551,26 @@ def main():
 
         time.sleep(6)
 
+    log.info("\n[5/5] Deduplicando y guardando...")
     vistas: set[str] = set()
-    unicas = [s for s in todas_sinergias
-              if (k := f"{s.get('actor_a','').lower()}|{s.get('actor_b','').lower()}|{s.get('tipo_sinergia','').lower()}")
-              not in vistas and not vistas.add(k)]
+    unicas = []
+    for s in todas_sinergias:
+        # Matches educación-industria incluyen región en la clave para no colapsar
+        if s.get("tipo_sinergia") == "match educación-industria":
+            k = (f"{s.get('actor_a','').lower()}|{s.get('actor_b','').lower()}"
+                 f"|{s.get('sector','')}|{s.get('region','').lower()}")
+        else:
+            k = (f"{s.get('actor_a','').lower()}|{s.get('actor_b','').lower()}"
+                 f"|{s.get('tipo_sinergia','').lower()}")
+        if k not in vistas:
+            vistas.add(k)
+            unicas.append(s)
 
-    log.info(f"\nTotal sinergias únicas: {len(unicas)}")
+    tipo_a = sum(1 for s in unicas if s.get("tipo_sinergia") != "match educación-industria")
+    tipo_b = sum(1 for s in unicas if s.get("tipo_sinergia") == "match educación-industria")
+    log.info(f"\nSinergias institucionales (Groq): {tipo_a}")
+    log.info(f"Matches educación-industria:      {tipo_b}")
+    log.info(f"Total único:                      {len(unicas)}")
     out = PROC_DIR / "sinergias_ia.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump(unicas, f, ensure_ascii=False, indent=2)

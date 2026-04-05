@@ -34,15 +34,15 @@ jobs:
           Mercado_Publico_API_KEY: ${{ secrets.MERCADO_PUBLICO_API_KEY }}
           JOOBLE_API_KEY:          ${{ secrets.JOOBLE_API_KEY }}
 
-      - name: Etapa 1.5 — Detector de Sinergias IA
+      - name: Etapa 2 — Processor
+        continue-on-error: true
+        run: python scripts/processor.py
+
+      - name: Etapa 2.5 — Detector de Sinergias IA + Matches educación-industria
         continue-on-error: true
         run: python scripts/detector_sinergias.py
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-
-      - name: Etapa 2 — Processor
-        continue-on-error: true
-        run: python scripts/processor.py
 
       - name: Etapa 3 — Uploader a Google Sheets
         run: python scripts/uploader.py
