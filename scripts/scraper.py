@@ -822,7 +822,9 @@ def scrapear_remoteok() -> list[dict]:
 
 def scrapear_adzuna() -> list[dict]:
     """
-    Adzuna — API de empleos gratuita (250 req/día). Cubre Chile directamente.
+    Adzuna — API de empleos gratuita (250 req/día).
+    Nota: Chile (cl) no está soportado → usamos 'gb' (UK) con términos en inglés.
+    Los resultados miden demanda global de estos perfiles, relevante para brechas.
     Requiere: ADZUNA_APP_ID y ADZUNA_APP_KEY como secrets de GitHub.
     """
     app_id  = os.environ.get("ADZUNA_APP_ID", "")
@@ -832,52 +834,53 @@ def scrapear_adzuna() -> list[dict]:
         guardar_raw("adzuna", [])
         return []
 
-    log.info("=== Adzuna Chile ===")
+    log.info("=== Adzuna (demanda global) ===")
+    # Términos en inglés — Adzuna no soporta Chile (cl), usamos gb+us para medir demanda global
     terminos = [
-        "litio", "energía solar", "energía eólica", "inteligencia artificial",
-        "machine learning", "data science", "hidrógeno verde",
-        "oceanografía", "astronomía", "energía renovable",
+        "lithium mining", "renewable energy", "solar energy",
+        "artificial intelligence", "machine learning", "data science",
+        "green hydrogen", "oceanography", "astronomy", "energy storage",
     ]
-    BASE      = "https://api.adzuna.com/v1/api/jobs/cl/search/1"
     resultados: list[dict] = []
     vistos: set[str]       = set()
 
-    for termino in terminos:
-        params = {
-            "app_id": app_id, "app_key": app_key,
-            "what": termino, "results_per_page": 20,
-            "content-type": "application/json",
-        }
-        try:
-            r = requests.get(BASE, params=params, timeout=15)
-            r.raise_for_status()
-            data = r.json()
-        except Exception as e:
-            log.warning(f"  Adzuna ({termino}): {e}")
-            time.sleep(2)
-            continue
-
-        for job in data.get("results", []):
-            jid = str(job.get("id", ""))
-            if jid in vistos:
+    for pais in ("gb", "us"):
+        BASE = f"https://api.adzuna.com/v1/api/jobs/{pais}/search/1"
+        for termino in terminos:
+            params = {
+                "app_id": app_id, "app_key": app_key,
+                "what": termino, "results_per_page": 10,
+            }
+            try:
+                r = requests.get(BASE, params=params, timeout=15)
+                r.raise_for_status()
+                data = r.json()
+            except Exception as e:
+                log.warning(f"  Adzuna [{pais}] ({termino}): {e}")
+                time.sleep(2)
                 continue
-            vistos.add(jid)
-            titulo      = job.get("title", "")
-            descripcion = job.get("description", "")[:300]
-            resultados.append({
-                "fuente":         "Adzuna",
-                "tipo":           "oferta_laboral",
-                "titulo":         titulo,
-                "organizacion":   job.get("company", {}).get("display_name", ""),
-                "region":         job.get("location", {}).get("display_name", "Chile"),
-                "descripcion":    descripcion,
-                "url":            job.get("redirect_url", ""),
-                "sectores":       detectar_sectores(f"{titulo} {descripcion}") or
-                                  detectar_sectores(termino),
-                "fecha_cierre":   "",
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-        time.sleep(1)
+
+            for job in data.get("results", []):
+                jid = str(job.get("id", ""))
+                if jid in vistos:
+                    continue
+                vistos.add(jid)
+                titulo      = job.get("title", "")
+                descripcion = job.get("description", "")[:300]
+                resultados.append({
+                    "fuente":         "Adzuna",
+                    "tipo":           "oferta_laboral",
+                    "titulo":         titulo,
+                    "organizacion":   job.get("company", {}).get("display_name", ""),
+                    "region":         job.get("location", {}).get("display_name", "Global"),
+                    "descripcion":    descripcion,
+                    "url":            job.get("redirect_url", ""),
+                    "sectores":       detectar_sectores(f"{titulo} {descripcion}") or
+                                      detectar_sectores(termino),
+                    "fecha_cierre":   "",
+                    "fecha_scraping": datetime.now().isoformat(),
+                })
+            time.sleep(1)
 
     log.info(f"  Adzuna: {len(resultados)} ofertas")
     guardar_raw("adzuna", resultados)
@@ -898,23 +901,26 @@ def scrapear_jooble() -> list[dict]:
         return []
 
     log.info("=== Jooble ===")
+    # Términos simples sin "Chile" en el keyword — la ubicación va en el campo location
     terminos = [
-        "litio Chile", "energía renovable Chile", "inteligencia artificial Chile",
-        "data science Chile", "hidrógeno verde Chile",
-        "oceanografía Chile", "astrónomo Chile",
+        "litio", "energía renovable", "inteligencia artificial",
+        "data science", "hidrógeno", "oceanografía", "astrónomo",
     ]
     url        = f"https://jooble.org/api/{api_key}"
     resultados: list[dict] = []
     vistos: set[str]       = set()
 
     for termino in terminos:
-        payload = json.dumps({"keywords": termino, "location": "Chile", "page": "1"})
         try:
-            r = requests.post(url, data=payload,
-                              headers={**HEADERS, "Content-Type": "application/json"},
-                              timeout=15)
+            r = requests.post(
+                url,
+                json={"keywords": termino, "location": "Chile"},
+                headers={"Content-Type": "application/json"},
+                timeout=15,
+            )
             r.raise_for_status()
             data = r.json()
+            log.info(f"  Jooble ({termino}): {data.get('totalCount', 0)} resultados totales")
         except Exception as e:
             log.warning(f"  Jooble ({termino}): {e}")
             time.sleep(2)
