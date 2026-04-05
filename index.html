@@ -986,15 +986,15 @@
       <p class="page-sub">La IA cruza programas de estudio de universidades e institutos técnicos acreditados con ofertas laborales activas en litio, renovables e inteligencia artificial. Sin que nadie suba datos manualmente.</p>
     </div>
     <div class="filter-row">
-      <button class="filter-chip on" onclick="toggleChip(this)">Todos los sectores</button>
-      <button class="filter-chip" onclick="toggleChip(this)">Litio</button>
-      <button class="filter-chip" onclick="toggleChip(this)">Solar</button>
-      <button class="filter-chip" onclick="toggleChip(this)">Eólica</button>
-      <button class="filter-chip" onclick="toggleChip(this)">Hidrógeno verde</button>
-      <button class="filter-chip" onclick="toggleChip(this)">Inteligencia Artificial</button>
-      <button class="filter-chip" onclick="toggleChip(this)">Antofagasta</button>
-      <button class="filter-chip" onclick="toggleChip(this)">Atacama</button>
+      <button class="filter-chip on" data-sector="todos" onclick="filtrarBrechasChip(this)">Todos los sectores</button>
+      <button class="filter-chip" data-sector="litio" onclick="filtrarBrechasChip(this)">⛏ Litio &amp; Minería</button>
+      <button class="filter-chip" data-sector="renovables" onclick="filtrarBrechasChip(this)">☀️ Energías Renovables</button>
+      <button class="filter-chip" data-sector="ia" onclick="filtrarBrechasChip(this)">🤖 IA &amp; Tecnología</button>
+      <button class="filter-chip" data-sector="astronomia" onclick="filtrarBrechasChip(this)">🔭 Astronomía</button>
+      <button class="filter-chip" data-sector="oceanografia" onclick="filtrarBrechasChip(this)">🌊 Oceanografía</button>
+      <button class="filter-chip" data-sector="asia" onclick="filtrarBrechasChip(this)">🌏 Asia-Pacífico</button>
     </div>
+    <div id="brechas-fuente-info" style="display:none;font-size:12px;color:var(--gris-azul);background:rgba(255,255,255,0.05);border:1px solid var(--borde);border-radius:8px;padding:8px 14px;margin-bottom:12px;"></div>
     <div class="brechas-grid"></div>
     <div id="match-container"></div>
   </div>
@@ -1038,7 +1038,7 @@
       <div class="bm-metric">
         <div class="bm-metric-num"          id="bm-demanda">—</div>
         <div class="bm-metric-label">Oportunidades activas</div>
-        <div class="bm-metric-desc">Ofertas laborales reales en Chile desde Computrabajo, Portal Empleo Mintrab y Jooble, más licitaciones de Mercado Público y señales globales de Adzuna y RemoteOK.</div>
+        <div class="bm-metric-desc">Ofertas laborales en Chile (Computrabajo, Portal Empleo Mintrab, Jooble), licitaciones de Mercado Público y señales de convocatorias institucionales (CORFO, ANID, ProChile, COCHILCO, etc.).</div>
       </div>
       <div class="bm-metric">
         <div class="bm-metric-num azul"     id="bm-matricula">—</div>
@@ -1060,10 +1060,12 @@
     <div class="bm-section-title">Recomendación del sistema</div>
     <div class="bm-rec" id="bm-rec">—</div>
 
+    <div class="bm-section-title" id="bm-carreras-title" style="display:none">Carreras afines detectadas (Mineduc 2025)</div>
+    <div id="bm-carreras" style="font-size:13px;color:var(--gris-azul);margin-bottom:16px;line-height:1.7;display:none"></div>
+
     <div class="bm-section-title">Fuentes de los datos</div>
     <div class="bm-sources">
       <b>Ofertas laborales en Chile:</b> Computrabajo · Portal Empleo Mintrab · Jooble<br>
-      <b>Demanda global (referencia):</b> Adzuna · RemoteOK<br>
       <b>Licitaciones:</b> Mercado Público API<br>
       <b>Oportunidades institucionales:</b> ProChile · COCHILCO · ANID · SENCE · CORFO · MinCiencia · AGCID · BCN<br>
       <b>Oferta formativa:</b> Mineduc — Matrícula Educación Superior 2025<br>
@@ -1752,6 +1754,36 @@ function toggleChip(el) {
   el.classList.toggle('on');
 }
 
+// Mapa de sector-slug → palabras clave que aparecen en sector_label
+const SECTOR_FILTER_MAP = {
+  'litio':       ['litio', 'minería', 'mineria'],
+  'renovables':  ['renovable', 'energía', 'energia', 'solar', 'eólica', 'eolica', 'hidrógeno', 'hidrogeno'],
+  'ia':          ['ia', 'inteligencia', 'tecnología', 'tecnologia', 'digital'],
+  'astronomia':  ['astronom'],
+  'oceanografia':['ocean', 'marina', 'mar'],
+  'asia':        ['asia', 'pacífico', 'pacifico'],
+};
+
+function filtrarBrechasChip(el) {
+  // Activar el chip seleccionado
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+
+  const sector = el.dataset.sector;
+  const cards = document.querySelectorAll('.brecha-card');
+
+  cards.forEach((card, idx) => {
+    if (sector === 'todos') {
+      card.style.display = '';
+      return;
+    }
+    const label = (brechasData[idx] && brechasData[idx].sector_label || '').toLowerCase();
+    const kws   = SECTOR_FILTER_MAP[sector] || [];
+    const match = kws.some(kw => label.includes(kw));
+    card.style.display = match ? '' : 'none';
+  });
+}
+
 function showToast(msg, title) {
   const toast = document.getElementById('toast');
   document.getElementById('toast-title').textContent = title || 'Información';
@@ -1848,58 +1880,161 @@ const SINERGIAS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRDLK3zL-
 // Sinergias: titulo, fuente, tipo, sector_label, organizacion, region, fecha_cierre,
 //            monto_fmt, es_asia_pacifico, relevancia_score, url, descripcion, fecha_scraping
 
+// ── Datos de referencia (SIES 2023) — se usan si Google Sheets no responde ──
+// Datos de referencia base (Mineduc SIES 2025, matrícula real).
+// Se muestran mientras se carga Google Sheets y como fallback si falla la red.
+// Datos de referencia base (Mineduc SIES 2025, matrícula real).
+// Se muestran mientras se carga Google Sheets y como fallback si falla la red.
+const BRECHAS_SEED = [
+  {
+    sector_label: "IA & Tecnología",
+    nivel_brecha: "ALTA",
+    demanda_oportunidades: "74",
+    matricula_estimada: "89360",
+    ratio: "0.0008",
+    recomendacion: "Brecha significativa: alta demanda de perfiles de machine learning, ciencia de datos e IA aplicada frente a 89 mil matriculados en carreras TI. Ampliar diplomados especializados y bootcamps.",
+    top_carreras: ["Ing. Civil en Computación", "Ing. en Informática", "Ing. en Software", "Ciencia de Datos", "Ing. Civil Industrial (TI)"],
+    _seed: true
+  },
+  {
+    sector_label: "Litio & Minería",
+    nivel_brecha: "ALTA",
+    demanda_oportunidades: "47",
+    matricula_estimada: "35347",
+    ratio: "0.0013",
+    recomendacion: "Brecha significativa: demanda de ingenieros en metalurgia del litio e hidrometalurgia supera la formación especializada. CORFO y universidades del norte deben coordinar mallas curriculares.",
+    top_carreras: ["Química y Farmacia", "Geología", "Bioquímica", "Ing. Civil Química", "Técnico en Minería"],
+    _seed: true
+  },
+  {
+    sector_label: "Energías Renovables",
+    nivel_brecha: "ALTA",
+    demanda_oportunidades: "38",
+    matricula_estimada: "65105",
+    ratio: "0.0006",
+    recomendacion: "Brecha significativa en H₂ verde y ERNC. Fortalecer menciones especializadas en Ing. Eléctrica e Ing. en Energía. Vincular con proyectos de Ministerio de Energía.",
+    top_carreras: ["Ing. Civil Eléctrica", "Ing. Civil Industrial", "Ing. en Electricidad", "Ing. en Energía", "Mecánica Industrial"],
+    _seed: true
+  },
+  {
+    sector_label: "Asia-Pacífico",
+    nivel_brecha: "ALTA",
+    demanda_oportunidades: "23",
+    matricula_estimada: "22541",
+    ratio: "0.0010",
+    recomendacion: "Brecha en comercio exterior con Asia. Fortalecer programas de negocios internacionales con foco en mercados chino, coreano y japonés, e idiomas orientales.",
+    top_carreras: ["Ing. Comercial", "Relaciones Internacionales", "Adm. de Negocios Internacionales", "Traducción Inglés-Chino", "Estudios Internacionales"],
+    _seed: true
+  },
+  {
+    sector_label: "Oceanografía",
+    nivel_brecha: "CRÍTICA",
+    demanda_oportunidades: "14",
+    matricula_estimada: "3632",
+    ratio: "0.0039",
+    recomendacion: "Urgente: reducida masa crítica de investigadores en ciencias del mar frente a necesidades de acuicultura, pesca sostenible y cambio climático costero.",
+    top_carreras: ["Biología Marina", "Oceanografía", "Ing. en Acuicultura", "Ing. Pesquera", "Ciencias del Mar"],
+    _seed: true
+  },
+  {
+    sector_label: "Astronomía",
+    nivel_brecha: "CRÍTICA",
+    demanda_oportunidades: "9",
+    matricula_estimada: "32669",
+    ratio: "0.0003",
+    recomendacion: "Urgente: Chile alberga el 70% de la astronomía mundial pero los puestos especializados superan la oferta local. Potenciar doctorados y posdoctorados en astrofísica observacional.",
+    top_carreras: ["Astronomía", "Astrofísica", "Física", "Ing. en Astronomía", "Física (mención Astrofísica)"],
+    _seed: true
+  }
+];
+
 // ── Datos de brechas en memoria para el modal ─────────────────────────────
 let brechasData = [];
 
+function renderizarBrechas(datos, esSeed) {
+  const grid = document.querySelector('.brechas-grid');
+  if (!grid) return;
+
+  const maxDemanda = Math.max(...datos.map(r => parseInt(r.demanda_oportunidades) || 0), 1);
+
+  grid.innerHTML = '';
+
+  // Indicador de fuente de datos
+  const fuenteEl = document.getElementById('brechas-fuente-info');
+  if (fuenteEl) {
+    if (esSeed) {
+      fuenteEl.innerHTML = '⚠️ <strong>Datos de referencia (SIES 2023)</strong> — El pipeline semanal actualizará esto con datos en vivo.';
+      fuenteEl.style.display = 'block';
+    } else {
+      const now = new Date().toLocaleDateString('es-CL', {day:'numeric', month:'long', year:'numeric'});
+      fuenteEl.innerHTML = `✅ <strong>Datos en vivo</strong> — Actualizados ${now} por el pipeline semanal.`;
+      fuenteEl.style.display = 'block';
+    }
+  }
+
+  datos.forEach((row, idx) => {
+    const nivel      = (row.nivel_brecha || 'MEDIA').toUpperCase();
+    const urgencia   = nivel === 'CRÍTICA' || nivel === 'ALTA' ? 'alta' : nivel === 'MEDIA' ? 'media' : 'baja';
+    const demanda    = parseInt(row.demanda_oportunidades) || 0;
+    const matricula  = parseInt(row.matricula_estimada) || 0;
+    const pct        = Math.round((demanda / maxDemanda) * 100);
+    const fillClass  = nivel === 'CRÍTICA' ? 'fill-dorado' : nivel === 'ALTA' ? 'fill-azul' : 'fill-verde';
+    const sectorSlug = (row.sector_label || '').toLowerCase().replace(/\s|&/g, '');
+
+    const card = document.createElement('div');
+    card.className = `brecha-card ${urgencia === 'alta' ? 'urgente' : ''}`;
+    card.setAttribute('title', 'Clic para ver detalles');
+    card.onclick = () => abrirModalBrecha(idx);
+    card.innerHTML = `
+      <div class="bc-header">
+        <span class="bc-sector ${sectorSlug}">${row.sector_label || 'Sector'}</span>
+        <span class="bc-urgencia ${urgencia}">Brecha ${nivel}</span>
+      </div>
+      <div class="bc-title">${row.sector_label || ''}</div>
+      <div class="bc-region" style="font-size:11px;color:var(--gris-azul);margin:6px 0 10px;">
+        ${(row.recomendacion || '').slice(0, 80)}${(row.recomendacion||'').length > 80 ? '…' : ''}
+      </div>
+      <div class="bc-bar-label"><span>Demanda de oportunidades</span><span>${pct}%</span></div>
+      <div class="bc-bar"><div class="bc-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
+      <div class="bc-footer">
+        <div>
+          <div class="bc-num">${demanda}</div>
+          <div class="bc-num-label">oportunidades activas</div>
+          ${matricula > 0 ? `<div style="font-size:11px;color:var(--gris-azul);margin-top:4px;">🎓 ${matricula.toLocaleString('es-CL')} matriculados</div>` : ''}
+        </div>
+        <button class="bc-btn" onclick="event.stopPropagation();abrirModalBrecha(${idx})">Ver detalles →</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
 async function cargarBrechas() {
+  // Mostrar seed inmediatamente para que el dashboard nunca esté vacío
+  brechasData = BRECHAS_SEED;
+  renderizarBrechas(brechasData, true);
+
   try {
-    const response = await fetch(BRECHAS_CSV);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const response = await fetch(BRECHAS_CSV, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const csv = await response.text();
-    brechasData = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
-                     .filter(r => r.sector_label && r.sector_label.trim() !== '' && r.sector_label !== 'sector_label');
-    const grid = document.querySelector('.brechas-grid');
-    if (!grid || !brechasData.length) return;
+    const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true }).data
+                       .filter(r => r.sector_label && r.sector_label.trim() !== ''
+                                 && r.sector_label !== 'sector_label'
+                                 && (parseInt(r.demanda_oportunidades) || 0) > 0);
 
-    const maxDemanda = Math.max(...brechasData.map(r => parseInt(r.demanda_oportunidades) || 0), 1);
-
-    grid.innerHTML = '';
-    brechasData.forEach((row, idx) => {
-      const nivel      = (row.nivel_brecha || 'MEDIA').toUpperCase();
-      const urgencia   = nivel === 'CRÍTICA' || nivel === 'ALTA' ? 'alta' : nivel === 'MEDIA' ? 'media' : 'baja';
-      const demanda    = parseInt(row.demanda_oportunidades) || 0;
-      const matricula  = parseInt(row.matricula_estimada) || 0;
-      const pct        = Math.round((demanda / maxDemanda) * 100);
-      const fillClass  = nivel === 'CRÍTICA' ? 'fill-dorado' : nivel === 'ALTA' ? 'fill-azul' : 'fill-verde';
-      const sectorSlug = (row.sector_label || '').toLowerCase().replace(/\s|&/g, '');
-
-      const card = document.createElement('div');
-      card.className = `brecha-card ${urgencia === 'alta' ? 'urgente' : ''}`;
-      card.setAttribute('title', 'Clic para ver detalles');
-      card.onclick = () => abrirModalBrecha(idx);
-      card.innerHTML = `
-        <div class="bc-header">
-          <span class="bc-sector ${sectorSlug}">${row.sector_label || 'Sector'}</span>
-          <span class="bc-urgencia ${urgencia}">Brecha ${nivel}</span>
-        </div>
-        <div class="bc-title">${row.sector_label || ''}</div>
-        <div class="bc-region" style="font-size:11px;color:var(--gris-azul);margin:6px 0 10px;">
-          ${(row.recomendacion || '').slice(0, 80)}${(row.recomendacion||'').length > 80 ? '…' : ''}
-        </div>
-        <div class="bc-bar-label"><span>Demanda de oportunidades</span><span>${pct}%</span></div>
-        <div class="bc-bar"><div class="bc-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
-        <div class="bc-footer">
-          <div>
-            <div class="bc-num">${demanda}</div>
-            <div class="bc-num-label">oportunidades activas</div>
-            ${matricula > 0 ? `<div style="font-size:11px;color:var(--gris-azul);margin-top:4px;">🎓 ${matricula.toLocaleString('es-CL')} matriculados</div>` : ''}
-          </div>
-          <button class="bc-btn" onclick="event.stopPropagation();abrirModalBrecha(${idx})">Ver detalles →</button>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
+    if (parsed.length >= 3) {
+      brechasData = parsed;
+      renderizarBrechas(brechasData, false);
+    }
+    // Si Sheets devuelve < 3 filas útiles, mantenemos el seed
   } catch (e) {
-    console.error("Error cargando brechas:", e);
+    // Silently keep seed data on network error
+    console.warn("Brechas: usando datos de referencia (Sheets no disponible):", e.message);
   }
 }
 
@@ -1945,6 +2080,24 @@ function abrirModalBrecha(idx) {
   recEl.innerHTML = row.recomendacion
     ? row.recomendacion.replace(/(urgente|crítica|alta prioridad|inmediata)/gi, '<strong>$1</strong>')
     : 'Sin recomendación disponible aún.';
+
+  // Top carreras (del pipeline o del seed)
+  const carrerasEl = document.getElementById('bm-carreras');
+  const carrerasTitleEl = document.getElementById('bm-carreras-title');
+  const carrerasRaw = row.top_carreras || '';
+  const carrerasList = Array.isArray(carrerasRaw)
+    ? carrerasRaw
+    : (typeof carrerasRaw === 'string' && carrerasRaw.trim()
+        ? carrerasRaw.split(',').map(c => c.trim()).filter(Boolean)
+        : []);
+  if (carrerasList.length > 0) {
+    carrerasEl.innerHTML = carrerasList.map(c => `<span style="display:inline-block;background:rgba(255,255,255,0.07);border-radius:6px;padding:2px 10px;margin:2px 4px 2px 0;">🎓 ${c}</span>`).join('');
+    carrerasEl.style.display = 'block';
+    carrerasTitleEl.style.display = 'block';
+  } else {
+    carrerasEl.style.display = 'none';
+    carrerasTitleEl.style.display = 'none';
+  }
 
   document.getElementById('bm-email').value = '';
   document.getElementById('bm-overlay').dataset.sector = row.sector_label || '';

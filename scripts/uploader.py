@@ -54,6 +54,7 @@ COLUMNAS_BRECHAS = [
     "matricula_estimada",
     "ratio",
     "recomendacion",
+    "top_carreras",
 ]
 
 COLUMNAS_SINERGIAS = [

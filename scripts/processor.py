@@ -362,9 +362,13 @@ def calcular_brechas(
             nivel = "BAJA"
 
         # Top carreras del sector (desde Mineduc)
-        top_carreras = (
-            mineduc.get("carreras_por_sector", {}).get(sector, [])[:5]
-        )
+        # Soporta estructura nueva (resumen_por_sector[sector]["top_carreras"]) y legacy
+        resumen_sector = mineduc.get("resumen_por_sector", {}).get(sector, {})
+        top_carreras_raw = resumen_sector.get("top_carreras", mineduc.get("carreras_por_sector", {}).get(sector, []))
+        top_carreras = [
+            c["nomb_carrera"] if isinstance(c, dict) else str(c)
+            for c in top_carreras_raw[:5]
+        ]
 
         brechas.append({
             "sector":               sector,
@@ -427,7 +431,7 @@ def generar_resumen(
         "por_sector":            por_sector,
         "sectores_criticos":     [b["sector_label"] for b in brechas if b["nivel_brecha"] == "CRÍTICA"],
         "sectores_alta_brecha":  [b["sector_label"] for b in brechas if b["nivel_brecha"] == "ALTA"],
-        "total_matriculados_sectores": mineduc.get("total_en_sectores", 0),
+        "total_matriculados_sectores": mineduc.get("total_en_sectores", mineduc.get("total_en_sectores_estrategicos", 0)),
         "total_matricula_pais":        mineduc.get("total_matricula_pais", 0),
         "top_regiones": _top_regiones(oportunidades),
         "fuentes": _conteo_fuentes(oportunidades),
