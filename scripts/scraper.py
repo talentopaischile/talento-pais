@@ -761,132 +761,22 @@ def scrapear_sence() -> list[dict]:
     return resultados
 
 
-# ── FUENTE 21 — REMOTEOK (API pública, sin API key) ──────────────────────────
+# ── FUENTE 21 — REMOTEOK (desactivado — mide demanda global, no Chile) ───────
 
 def scrapear_remoteok() -> list[dict]:
-    """
-    RemoteOK — API pública gratuita, sin clave.
-    Filtra empleos remotos tech/IA relevantes para sectores estratégicos.
-    """
-    log.info("=== RemoteOK ===")
-    # Tags relevantes para nuestros sectores
-    tags_busqueda = [
-        "machine-learning", "data-science", "artificial-intelligence",
-        "python", "renewable-energy", "mining", "geology",
-    ]
-    resultados = []
-    vistos: set[str] = set()
-
-    for tag in tags_busqueda:
-        url = f"https://remoteok.com/api?tag={tag}"
-        try:
-            r = requests.get(url, headers={**HEADERS, "Accept": "application/json"}, timeout=15)
-            r.raise_for_status()
-            data = r.json()
-        except Exception as e:
-            log.warning(f"  RemoteOK ({tag}): {e}")
-            time.sleep(2)
-            continue
-
-        # La API devuelve un array; el primer elemento es metadata, ignorarlo
-        jobs = [j for j in data if isinstance(j, dict) and j.get("id")]
-        for job in jobs:
-            jid = str(job.get("id", ""))
-            if jid in vistos:
-                continue
-            vistos.add(jid)
-            titulo = job.get("position", "")
-            empresa = job.get("company", "")
-            descripcion = job.get("description", "")[:300]
-            sectores = detectar_sectores(f"{titulo} {descripcion}")
-            if not sectores:
-                sectores = ["ia_tecnologia"]   # RemoteOK es mayormente tech
-            resultados.append({
-                "fuente":         "RemoteOK",
-                "tipo":           "oferta_laboral",
-                "titulo":         titulo,
-                "organizacion":   empresa,
-                "region":         "Remoto",
-                "descripcion":    descripcion,
-                "url":            job.get("url", f"https://remoteok.com/jobs/{jid}"),
-                "sectores":       sectores,
-                "fecha_cierre":   "",
-                "fecha_scraping": datetime.now().isoformat(),
-            })
-        time.sleep(2)   # cortesía — API pública compartida
-
-    log.info(f"  RemoteOK: {len(resultados)} ofertas remotas")
-    guardar_raw("remoteok", resultados)
-    return resultados
+    """Desactivado: mide empleos remotos internacionales, no demanda laboral en Chile."""
+    log.info("=== RemoteOK (desactivado — demanda no es Chile-específica) ===")
+    guardar_raw("remoteok", [])
+    return []
 
 
-# ── FUENTE 22 — ADZUNA CHILE (API gratuita, requiere app_id + app_key) ────────
+# ── FUENTE 22 — ADZUNA (desactivado — no cubre Chile) ────────────────────────
 
 def scrapear_adzuna() -> list[dict]:
-    """
-    Adzuna — API de empleos gratuita (250 req/día).
-    Nota: Chile (cl) no está soportado → usamos 'gb' (UK) con términos en inglés.
-    Los resultados miden demanda global de estos perfiles, relevante para brechas.
-    Requiere: ADZUNA_APP_ID y ADZUNA_APP_KEY como secrets de GitHub.
-    """
-    app_id  = os.environ.get("ADZUNA_APP_ID", "")
-    app_key = os.environ.get("ADZUNA_APP_KEY", "")
-    if not app_id or not app_key:
-        log.warning("  Adzuna: ADZUNA_APP_ID / ADZUNA_APP_KEY no configurados — saltando.")
-        guardar_raw("adzuna", [])
-        return []
-
-    log.info("=== Adzuna (demanda global) ===")
-    # Términos en inglés — Adzuna no soporta Chile (cl), usamos gb+us para medir demanda global
-    terminos = [
-        "lithium mining", "renewable energy", "solar energy",
-        "artificial intelligence", "machine learning", "data science",
-        "green hydrogen", "oceanography", "astronomy", "energy storage",
-    ]
-    resultados: list[dict] = []
-    vistos: set[str]       = set()
-
-    for pais in ("gb", "us"):
-        BASE = f"https://api.adzuna.com/v1/api/jobs/{pais}/search/1"
-        for termino in terminos:
-            params = {
-                "app_id": app_id, "app_key": app_key,
-                "what": termino, "results_per_page": 10,
-            }
-            try:
-                r = requests.get(BASE, params=params, timeout=15)
-                r.raise_for_status()
-                data = r.json()
-            except Exception as e:
-                log.warning(f"  Adzuna [{pais}] ({termino}): {e}")
-                time.sleep(2)
-                continue
-
-            for job in data.get("results", []):
-                jid = str(job.get("id", ""))
-                if jid in vistos:
-                    continue
-                vistos.add(jid)
-                titulo      = job.get("title", "")
-                descripcion = job.get("description", "")[:300]
-                resultados.append({
-                    "fuente":         "Adzuna",
-                    "tipo":           "oferta_laboral",
-                    "titulo":         titulo,
-                    "organizacion":   job.get("company", {}).get("display_name", ""),
-                    "region":         job.get("location", {}).get("display_name", "Global"),
-                    "descripcion":    descripcion,
-                    "url":            job.get("redirect_url", ""),
-                    "sectores":       detectar_sectores(f"{titulo} {descripcion}") or
-                                      detectar_sectores(termino),
-                    "fecha_cierre":   "",
-                    "fecha_scraping": datetime.now().isoformat(),
-                })
-            time.sleep(1)
-
-    log.info(f"  Adzuna: {len(resultados)} ofertas")
-    guardar_raw("adzuna", resultados)
-    return resultados
+    """Desactivado: Adzuna no soporta Chile (cl) — mide demanda en UK/EEUU, no útil para brechas chilenas."""
+    log.info("=== Adzuna (desactivado — Chile no soportado) ===")
+    guardar_raw("adzuna", [])
+    return []
 
 
 # ── FUENTE 23 — JOOBLE (API gratuita, requiere api_key) ──────────────────────
