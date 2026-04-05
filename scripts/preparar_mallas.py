@@ -1,17 +1,17 @@
 """
 preparar_mallas.py — Talento País
-Evalúa la relevancia real de las carreras Mineduc para cada sector estratégico
-usando Groq (Llama 3.3 70B, gratuito).  Corre UNA VEZ AL AÑO.
+Evalúa la relevancia de cada (carrera, tipo_institución) para los sectores
+estratégicos y construye un índice de programas con granularidad institucional.
 
-Eficiencia: 1 llamada Groq por sector = 6 llamadas totales (~3 000 tokens).
-Input:  datos/raw/carreras_estrategicas.json
-Output: datos/raw/carreras_estrategicas.json (actualizado in-place)
-        Agrega en resumen_por_sector[sector]:
-          "relevancia_malla": [{nomb_carrera, matriculados, relevancia, razon, matriculados_ponderados}]
-          "matriculados_ponderados": int
-        Agrega a nivel raíz:
-          "matriculados_ponderados_por_sector": {sector: int}
-          "fecha_evaluacion_mallas": ISO date
+Eficiencia: 1 llamada Groq por sector = 6 llamadas totales / año (~4 000 tokens).
+El top-30 por matrícula cubre ~75 % de los estudiantes del sector.
+
+Input:  datos/raw/carreras_estrategicas.json  (campo "detalle", 1 558 registros)
+Output: datos/raw/carreras_estrategicas.json  (actualizado in-place)
+        Agrega:
+          "programas_relevantes_por_sector"  — lista (inst, sede, carrera, relevancia)
+          "matriculados_ponderados_por_sector" — int ponderado por relevancia
+          "fecha_evaluacion_mallas"
 
 Pesos: alta = 100 %  |  media = 50 %  |  baja = 0 %
 
@@ -26,6 +26,7 @@ import json
 import time
 import logging
 import argparse
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
@@ -35,7 +36,10 @@ import requests
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(), logging.FileHandler("preparar_mallas.log", encoding="utf-8")],
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("preparar_mallas.log", encoding="utf-8"),
+    ],
 )
 log = logging.getLogger(__name__)
 
@@ -45,74 +49,83 @@ GROQ_URL     = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL   = "llama-3.3-70b-versatile"
 ENTRADA      = Path(__file__).parent.parent / "datos" / "raw" / "carreras_estrategicas.json"
 
-# Pesos por nivel de relevancia
-PESOS = {"alta": 1.0, "media": 0.5, "baja": 0.0}
+TOP_N_PARES  = 30    # pares únicos (carrera, tipo_inst) por sector → 1 llamada Groq
+PESOS        = {"alta": 1.0, "media": 0.5, "baja": 0.0}
 
-# ─── Descripción de cada sector (qué perfil necesita) ────────────────────────
+TIPO_ABREV   = {
+    "Universidades":                  "Univ",
+    "Institutos Profesionales":       "IP",
+    "Centros de Formación Técnica":   "CFT",
+}
+
+# ─── Descripción de cada sector para el prompt ───────────────────────────────
 SECTOR_DESC = {
     "litio": (
-        "Litio y Minería: profesionales que trabajen en extracción/procesamiento de litio "
-        "(hidrometalurgia, electroquímica, salmueras), exploración geológica, ingeniería de minas, "
+        "Litio y Minería: extracción/procesamiento de litio (hidrometalurgia, "
+        "electroquímica, salmueras), exploración geológica, ingeniería de minas, "
         "metalurgia extractiva, química industrial minera."
     ),
     "energias_renovables": (
-        "Energías Renovables: diseño e instalación de sistemas fotovoltaicos, eólicos y de "
-        "almacenamiento; hidrógeno verde (electrolizadores, fuel cells); ingeniería eléctrica "
-        "de potencia; eficiencia energética industrial."
+        "Energías Renovables: diseño e instalación de sistemas fotovoltaicos, eólicos "
+        "y de almacenamiento; hidrógeno verde; ingeniería eléctrica de potencia; "
+        "eficiencia energética industrial."
     ),
     "ia_tecnologia": (
-        "IA y Tecnología: machine learning, deep learning, ciencia de datos, desarrollo de "
-        "software, sistemas inteligentes, ciberseguridad, computación en la nube, "
-        "automatización de procesos con IA."
+        "IA y Tecnología: machine learning, deep learning, ciencia de datos, desarrollo "
+        "de software, sistemas inteligentes, ciberseguridad, computación en la nube, "
+        "automatización con IA."
     ),
     "astronomia": (
-        "Astronomía: astrofísica observacional e instrumental, física teórica, procesamiento "
-        "de imágenes astronómicas, manejo de telescopios y radiotelescopios, astroquímica."
+        "Astronomía: astrofísica observacional e instrumental, física teórica, "
+        "procesamiento de imágenes astronómicas, manejo de telescopios, astroquímica."
     ),
     "oceanografia": (
-        "Oceanografía y Ciencias del Mar: oceanografía física/química/biológica, biología "
-        "marina, acuicultura, pesquerías sostenibles, cambio climático oceánico, "
-        "gestión de ecosistemas costeros."
+        "Oceanografía y Ciencias del Mar: oceanografía física/química/biológica, "
+        "biología marina, acuicultura, pesquerías sostenibles, cambio climático oceánico."
     ),
     "asia_pacifico": (
-        "Asia-Pacífico: comercio exterior con Asia (China, Japón, Corea), idiomas asiáticos, "
-        "relaciones internacionales, negociación intercultural, logística de exportaciones, "
-        "diplomacia económica."
+        "Asia-Pacífico: comercio exterior con Asia (China, Japón, Corea), idiomas "
+        "asiáticos, relaciones internacionales, negociación intercultural, "
+        "logística de exportaciones, diplomacia económica."
     ),
 }
 
-# ─── Prompt (tokens mínimos, respuesta estructurada) ─────────────────────────
+# ─── Prompt (tokens mínimos) ──────────────────────────────────────────────────
 PROMPT = """\
-Eres un experto en educación superior chilena. Evalúa la relevancia de cada carrera \
-para el sector indicado. Considera el perfil real del egresado en Chile, no solo el nombre.
+Eres experto en educación superior chilena. Evalúa qué tan relevantes son estos \
+programas para el sector indicado, considerando el perfil REAL del egresado.
 
 SECTOR: {desc}
 
 CRITERIO:
-- "alta": egresados trabajan DIRECTAMENTE en este sector (formación específica)
-- "media": aportan habilidades aplicables pero la carrera no es específica del sector
+- "alta": egresados trabajan DIRECTAMENTE en este sector
+- "media": aportan habilidades aplicables pero la carrera no es específica
 - "baja": poca o ninguna relación con el sector
 
-CARRERAS:
+PROGRAMAS (formato: tipo | carrera):
 {lista}
 
-Responde SOLO con un JSON array, sin markdown ni texto adicional:
-[{{"c": "NOMBRE_EXACTO", "r": "alta|media|baja", "x": "razón en ≤8 palabras"}}]
+Responde SOLO con JSON array, sin markdown:
+[{{"c":"NOMBRE_EXACTO_CARRERA","t":"tipo","r":"alta|media|baja","x":"razón ≤8 palabras"}}]
 """
 
 
-def llamar_groq(sector: str, carreras: list[dict]) -> list[dict]:
+# ════════════════════════════════════════════════════════════════════════════
+# GROQ
+# ════════════════════════════════════════════════════════════════════════════
+
+def llamar_groq(sector: str, pares: list[tuple[str, str, int]]) -> list[dict]:
     """
-    Una sola llamada Groq para evaluar todas las carreras del sector.
-    Reintenta una vez si hay rate-limit (429).
+    pares: [(nomb_carrera, tipo_inst_abrev, matriculados_total), ...]
+    Devuelve: [{"c": carrera, "t": tipo, "r": relevancia, "x": razon}, ...]
     """
     if not GROQ_API_KEY:
         log.warning("  GROQ_API_KEY no configurada — skip")
         return []
 
     lista = "\n".join(
-        f"- {c['nomb_carrera']} ({c['matriculados']:,} mat.)"
-        for c in carreras
+        f"- {t} | {c} ({mat:,} mat.)"
+        for c, t, mat in pares
     )
     prompt = PROMPT.format(desc=SECTOR_DESC.get(sector, sector), lista=lista)
 
@@ -120,7 +133,7 @@ def llamar_groq(sector: str, carreras: list[dict]) -> list[dict]:
         "model":    GROQ_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.1,
-        "max_tokens":  600,
+        "max_tokens":  900,
     }
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -138,8 +151,6 @@ def llamar_groq(sector: str, carreras: list[dict]) -> list[dict]:
             r.raise_for_status()
 
             texto = r.json()["choices"][0]["message"]["content"].strip()
-
-            # Limpiar posible markdown ```json ... ```
             for parte in texto.split("```"):
                 parte = parte.strip().lstrip("json").strip()
                 if parte.startswith("["):
@@ -147,138 +158,167 @@ def llamar_groq(sector: str, carreras: list[dict]) -> list[dict]:
                     break
 
             resultado = json.loads(texto)
-            log.info(f"  Groq → {len(resultado)} evaluaciones para '{sector}'")
+            log.info(f"  Groq → {len(resultado)} evaluaciones")
             return resultado
 
         except json.JSONDecodeError as e:
-            log.warning(f"  Groq respuesta no parseable ({sector}): {e}")
+            log.warning(f"  Groq respuesta no parseable: {e}")
             return []
         except Exception as e:
-            log.error(f"  Groq error ({sector}, intento {intento+1}): {e}")
+            log.error(f"  Groq error (intento {intento+1}): {e}")
             if intento == 0:
                 time.sleep(10)
 
     return []
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# MAIN
+# ════════════════════════════════════════════════════════════════════════════
+
 def main():
-    parser = argparse.ArgumentParser(description="Evalúa relevancia de carreras Mineduc por sector")
-    parser.add_argument("--sector", default=None, help="Procesar solo un sector (ej: litio)")
-    parser.add_argument("--force",  action="store_true", help="Reevaluar aunque ya exista")
+    parser = argparse.ArgumentParser(description="Evalúa relevancia curricular por institución")
+    parser.add_argument("--sector", default=None)
+    parser.add_argument("--force",  action="store_true")
     args = parser.parse_args()
 
     if not ENTRADA.exists():
-        log.error(f"No encontrado: {ENTRADA}  — corre primero el pipeline con el CSV Mineduc")
+        log.error(f"No encontrado: {ENTRADA}")
         return
 
     with open(ENTRADA, encoding="utf-8") as f:
         datos = json.load(f)
 
-    resumen  = datos.get("resumen_por_sector", {})
+    detalle  = datos.get("detalle", [])
+    if not detalle:
+        log.error("El campo 'detalle' está vacío — regenera carreras_estrategicas.json")
+        return
+
     sectores = [args.sector] if args.sector else list(SECTOR_DESC.keys())
+    programas_relevantes   = datos.get("programas_relevantes_por_sector", {})
     matriculados_ponderados = datos.get("matriculados_ponderados_por_sector", {})
 
     log.info("=" * 60)
-    log.info("TALENTO PAÍS — Evaluación de mallas curriculares")
-    log.info(f"Sectores: {sectores}  |  Force: {args.force}")
-    log.info(f"Groq: {'configurado' if GROQ_API_KEY else 'NO CONFIGURADO'}")
+    log.info("TALENTO PAÍS — preparar_mallas.py")
+    log.info(f"Registros detalle: {len(detalle):,}  |  Sectores: {sectores}")
+    log.info(f"Groq: {'OK' if GROQ_API_KEY else 'NO CONFIGURADO'}")
     log.info("=" * 60)
 
     for sector in sectores:
-        info = resumen.get(sector)
-        if not info:
-            log.warning(f"  '{sector}' no encontrado en carreras_estrategicas.json — skip")
+        # ── Skip si ya evaluado ──────────────────────────────────────────────
+        if not args.force and programas_relevantes.get(sector):
+            n   = len(programas_relevantes[sector])
+            mat = matriculados_ponderados.get(sector, 0)
+            log.info(f"\n  {sector}: ya evaluado ({n} programas, {mat:,} mat. pond.) — skip")
             continue
 
-        # No reevaluar si ya existe y no se forzó
-        if not args.force and info.get("relevancia_malla"):
-            mat_pond = info.get("matriculados_ponderados", 0)
-            matriculados_ponderados[sector] = mat_pond
-            log.info(
-                f"  {sector}: ya evaluado "
-                f"({len(info['relevancia_malla'])} carreras, {mat_pond:,} mat. pond.) — skip"
-            )
+        # ── Filtrar registros del sector ─────────────────────────────────────
+        registros_sector = [r for r in detalle if sector in r.get("sectores", [])]
+        if not registros_sector:
+            log.warning(f"  {sector}: sin registros en detalle — skip")
             continue
 
-        carreras = info.get("top_carreras", [])
-        if not carreras:
-            log.warning(f"  {sector}: sin carreras — skip")
-            continue
+        log.info(f"\n=== {sector.upper()} ({len(registros_sector)} registros) ===")
 
-        log.info(f"\n=== {sector.upper()} ({len(carreras)} carreras) ===")
+        # ── Top-N pares únicos (carrera, tipo_inst) por matrícula total ───────
+        sumas: dict[tuple, int] = defaultdict(int)
+        for r in registros_sector:
+            tipo = TIPO_ABREV.get(r.get("tipo_inst_1", ""), r.get("tipo_inst_1", "")[:4])
+            sumas[(r["nomb_carrera"], tipo)] += r["matriculados"]
 
-        evaluaciones = llamar_groq(sector, carreras)
-
-        # Mapa nombre-normalizado → evaluación (Groq puede devolver nombre distinto)
-        eval_map: dict[str, dict] = {}
-        for ev in evaluaciones:
-            clave = (ev.get("c") or ev.get("carrera") or "").upper().strip()
-            eval_map[clave] = {
-                "relevancia": ev.get("r") or ev.get("relevancia") or "baja",
-                "razon":      ev.get("x") or ev.get("razon")       or "",
-            }
-
-        # Calcular matrícula ponderada carrera a carrera
-        total_pond   = 0
-        resultado    = []
-        alta_count   = 0
-        media_count  = 0
-        baja_count   = 0
-
-        for c in carreras:
-            nombre   = c["nomb_carrera"].upper().strip()
-            ev       = eval_map.get(nombre, {})
-            # Fallback: buscar coincidencia parcial si Groq abrevió el nombre
-            if not ev:
-                for k, v in eval_map.items():
-                    if k[:20] == nombre[:20]:
-                        ev = v
-                        break
-            relevancia = ev.get("relevancia", "media")   # default media si Groq no devolvió
-            peso       = PESOS.get(relevancia, 0.0)
-            mat_pond   = round(c["matriculados"] * peso)
-            total_pond += mat_pond
-
-            resultado.append({
-                "nomb_carrera":            c["nomb_carrera"],
-                "matriculados":            c["matriculados"],
-                "relevancia":              relevancia,
-                "razon":                   ev.get("razon", ""),
-                "matriculados_ponderados": mat_pond,
-            })
-
-            if   relevancia == "alta":  alta_count  += 1
-            elif relevancia == "media": media_count += 1
-            else:                        baja_count  += 1
-
-        info["relevancia_malla"]      = resultado
-        info["matriculados_ponderados"] = total_pond
-        matriculados_ponderados[sector] = total_pond
-
-        mat_total = info.get("total_matriculados", 0)
-        pct = round(total_pond / mat_total * 100) if mat_total else 0
+        top_pares = sorted(sumas.items(), key=lambda x: -x[1])[:TOP_N_PARES]
+        mat_top   = sum(v for _, v in top_pares)
+        mat_total = sum(r["matriculados"] for r in registros_sector)
         log.info(
-            f"  Alta: {alta_count} | Media: {media_count} | Baja: {baja_count}\n"
-            f"  Matrícula: {mat_total:,} → ponderada: {total_pond:,} ({pct}%)"
+            f"  Top-{TOP_N_PARES} pares ({mat_top:,}/{mat_total:,} mat. = "
+            f"{round(mat_top/mat_total*100) if mat_total else 0}%)"
         )
 
-        time.sleep(7)   # cortesía con Groq (límite ~1 req/6s en plan gratis)
+        pares_groq = [(c, t, v) for (c, t), v in top_pares]
 
-    # Guardar resultado
+        # ── Llamada Groq ─────────────────────────────────────────────────────
+        evaluaciones = llamar_groq(sector, pares_groq)
+
+        # Mapa (carrera_upper, tipo) → evaluación
+        eval_map: dict[tuple, dict] = {}
+        for ev in evaluaciones:
+            c = (ev.get("c") or ev.get("carrera") or "").upper().strip()
+            t = (ev.get("t") or ev.get("tipo") or "").strip()
+            if c:
+                eval_map[(c, t)] = {
+                    "relevancia": ev.get("r") or ev.get("relevancia") or "baja",
+                    "razon":      ev.get("x") or ev.get("razon")       or "",
+                }
+
+        # ── Aplicar relevancia a TODOS los registros del sector ───────────────
+        programas: list[dict] = []
+        total_pond = 0
+
+        for r in registros_sector:
+            nombre = r["nomb_carrera"].upper().strip()
+            tipo   = TIPO_ABREV.get(r.get("tipo_inst_1", ""), r.get("tipo_inst_1", "")[:4])
+
+            ev = eval_map.get((nombre, tipo)) or eval_map.get((nombre, ""))
+            # Fallback: coincidencia parcial por primeras 20 letras
+            if not ev:
+                for (k_c, k_t), v in eval_map.items():
+                    if k_c[:20] == nombre[:20]:
+                        ev = v
+                        break
+            # Default para carreras no evaluadas (estaban fuera del top-N)
+            relevancia = (ev or {}).get("relevancia", "media")
+            razon      = (ev or {}).get("razon", "no evaluada directamente")
+            peso       = PESOS.get(relevancia, 0.0)
+            mat_pond   = round(r["matriculados"] * peso)
+            total_pond += mat_pond
+
+            if relevancia != "baja":
+                programas.append({
+                    "nomb_inst":    r["nomb_inst"],
+                    "region_sede":  r.get("region_sede", "No especificada"),
+                    "nomb_carrera": r["nomb_carrera"],
+                    "tipo_inst":    r.get("tipo_inst_1", ""),
+                    "nivel":        r.get("nivel_carrera_1", ""),
+                    "modalidad":    r.get("modalidad", ""),
+                    "matriculados": r["matriculados"],
+                    "relevancia":   relevancia,
+                    "razon":        razon,
+                    "matriculados_ponderados": mat_pond,
+                })
+
+        # Ordenar por matrícula ponderada desc
+        programas.sort(key=lambda x: -x["matriculados_ponderados"])
+
+        programas_relevantes[sector]    = programas
+        matriculados_ponderados[sector] = total_pond
+
+        alta  = sum(1 for p in programas if p["relevancia"] == "alta")
+        media = sum(1 for p in programas if p["relevancia"] == "media")
+        log.info(
+            f"  Programas relevantes: {len(programas)} "
+            f"(alta={alta}, media={media}) | mat. pond.: {total_pond:,}"
+        )
+
+        time.sleep(7)   # respetar rate limit Groq (~1 req/6s plan gratuito)
+
+    # ── Guardar ──────────────────────────────────────────────────────────────
+    datos["programas_relevantes_por_sector"]  = programas_relevantes
     datos["matriculados_ponderados_por_sector"] = matriculados_ponderados
-    datos["fecha_evaluacion_mallas"]            = datetime.now().isoformat()
+    datos["fecha_evaluacion_mallas"]           = datetime.now().isoformat()
 
     with open(ENTRADA, "w", encoding="utf-8") as f:
         json.dump(datos, f, ensure_ascii=False, indent=2)
 
     log.info("\n" + "=" * 60)
     log.info(f"Guardado: {ENTRADA}")
-    log.info("Resumen matrícula ponderada:")
+    log.info("Matrícula ponderada por sector:")
     mat_raw = datos.get("matriculados_por_sector", {})
-    for s, v in matriculados_ponderados.items():
+    for s in SECTOR_DESC:
         orig = mat_raw.get(s, 0)
-        pct  = round(v / orig * 100) if orig else 0
-        log.info(f"  {s:22s}: {orig:>7,} bruto → {v:>7,} ponderado ({pct:>3}%)")
+        pond = matriculados_ponderados.get(s, 0)
+        pct  = round(pond / orig * 100) if orig else 0
+        n    = len(programas_relevantes.get(s, []))
+        log.info(f"  {s:22s}: {orig:>7,} → {pond:>7,} ({pct:>3}%) | {n} programas")
 
 
 if __name__ == "__main__":
